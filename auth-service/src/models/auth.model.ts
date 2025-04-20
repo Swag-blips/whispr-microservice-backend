@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Auth } from "../../types/types";
+import { AuthPayload } from "../../types/types";
 
 const authSchema = new mongoose.Schema(
   {
@@ -24,11 +24,14 @@ const authSchema = new mongoose.Schema(
     isVerified: {
       type: Boolean,
       required: true,
+      default: false,
     },
   },
   { timestamps: true }
 );
 
-const Auth = mongoose.model<Auth>("Auth", authSchema);
+authSchema.index({ username: "text", email: "text" });
+
+const Auth = mongoose.model<AuthPayload>("Auth", authSchema);
 
 export default Auth;

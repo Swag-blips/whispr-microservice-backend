@@ -6,11 +6,13 @@ import errorHandler from "./middleware/errorHandler";
 import logRequests from "./middleware/logRequests";
 import authRoutes from "./routes/auth.route";
 import connectToMongo from "./config/dbConnect";
+import helmet from "helmet";
 dotenv.config();
 
 const app = express();
 
 app.use(cors());
+app.use(helmet());
 const PORT = process.env.PORT || 3001;
 
 app.use(errorHandler);
