@@ -17,7 +17,7 @@ const sendMail = async (email: string, username: string, token: string) => {
     let mailOptions = {
       from: process.env.NODEMAILER_EMAIL as string,
       to: email,
-      subject: "Email verificatiaon required",
+      subject: "Email verification required",
       html: `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0;">
 

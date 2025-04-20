@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
-import { AuthPayload } from "../../types/types";
+import mongoose, { Model } from "mongoose";
+import { AuthUser } from "../../types/types";
 import argon2 from "argon2";
 import logger from "../utils/logger";
 
@@ -53,6 +53,16 @@ authSchema.pre("save", async function save(next) {
 
   return next();
 });
-const Auth = mongoose.model<AuthPayload>("Auth", authSchema);
+
+authSchema.methods.comparePassword = async function (
+  candidatePassword: string
+) {
+  try {
+    return argon2.verify(this.password, candidatePassword);
+  } catch (error) {
+    throw error;
+  }
+};
+const Auth = mongoose.model<AuthUser>("Auth", authSchema);
 
 export default Auth;

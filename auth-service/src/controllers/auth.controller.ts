@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
 import logger from "../utils/logger";
 import Auth from "../models/auth.model";
-import { generateMailToken } from "../utils/generateToken";
+import {
+  generateAccessToken,
+  generateMailToken,
+  generateRefreshToken,
+} from "../utils/generateToken";
 import sendMail from "../utils/sendMail";
 import { decodeEmailToken } from "../utils/decodeToken";
 
@@ -59,9 +63,9 @@ export const verifyEmail = async (req: Request, res: Response) => {
         .json({ suucess: false, message: "Token required to verify email" });
     }
 
-    const { userId, exp } = decodeEmailToken(token);
+    const { userId, exp, email } = decodeEmailToken(token);
 
-    if (Date.now() >= exp) {
+    if (Date.now() >= exp * 1000) {
       res
         .status(401)
         .json({ success: false, message: "Verification link has expired" });
@@ -71,9 +75,42 @@ export const verifyEmail = async (req: Request, res: Response) => {
       isVerified: true,
     });
 
-    res
-      .status(200)
-      .json({ success: true, message: "Email verified successfully" });
+    const accessToken = generateAccessToken(userId, email);
+    const refreshToken = generateRefreshToken(userId, email);
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: error });
+  }
+};
+
+export const Login = async (req: Request, res: Response) => {
+  try {
+    const { username, password } = req.body;
+
+    const user = await Auth.findOne({ username });
+
+    if (!user) {
+      res.status(400).json({ success: false, message: "invalid credentials" });
+      return;
+    }
+
+    const isValid = await user.comparePassword(password);
+
+    if (isValid) {
+      res.status(200).json({
+        success: true,
+        message: "Login successful please verify OTP",
+      });
+    } else {
+      res.status(400).json({ success: false, message: "invalid credentials" });
+    }
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: error });

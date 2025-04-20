@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { AuthPayload } from "../../types/types";
+import { AuthUser } from "../../types/types";
 
 export const registrationSchema = Joi.object({
   username: Joi.string().min(6).max(30).required(),
@@ -7,6 +7,11 @@ export const registrationSchema = Joi.object({
   password: Joi.string().min(6).required(),
   avatar: Joi.string(),
 });
-export const validateRegistration = (data: AuthPayload) => {
+
+export const loginSchema = Joi.object({
+  username: Joi.string().min(6).max(30).required(),
+  password: Joi.string().required(),
+});
+export const validateRegistration = (data: AuthUser) => {
   return registrationSchema.validate(data);
 };
