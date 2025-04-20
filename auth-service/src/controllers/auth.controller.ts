@@ -3,6 +3,7 @@ import logger from "../utils/logger";
 import Auth from "../models/auth.model";
 import { generateMailToken } from "../utils/generateToken";
 import sendMail from "../utils/sendMail";
+import { decodeEmailToken } from "../utils/decodeToken";
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint");
@@ -45,6 +46,36 @@ export const register = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: error });
-    return;
+  }
+};
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const token = req.query.token as string;
+
+    if (!token) {
+      res
+        .status(400)
+        .json({ suucess: false, message: "Token required to verify email" });
+    }
+
+    const { userId, exp } = decodeEmailToken(token);
+
+    if (Date.now() >= exp) {
+      res
+        .status(401)
+        .json({ success: false, message: "Verification link has expired" });
+      return;
+    }
+    await Auth.findByIdAndUpdate(userId, {
+      isVerified: true,
+    });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Email verified successfully" });
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: error });
   }
 };
