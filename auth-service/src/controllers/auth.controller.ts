@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { validateRegistration } from "../utils/validate";
 import logger from "../utils/logger";
+import Auth from "../models/auth.model";
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint");
@@ -17,8 +18,33 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-    
+    const exisitingUser = await Auth.findOne({ email });
+
+    if (exisitingUser) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User already exists" });
+    }
+
+    const user = new Auth({
+      username,
+      password,
+      email,
+      avatar,
+    });
+
+    await user.save();
+
+    return res.status(201).json({
+      success: true,
+      user: {
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+      },
+    });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
+    res.status(500).json({ message: error });
   }
 };
