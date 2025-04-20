@@ -13,12 +13,13 @@ const app = express();
 
 app.use(cors());
 app.use(helmet());
+app.use(express.json());
 const PORT = process.env.PORT || 3001;
 
 app.use(errorHandler);
 app.use(logRequests);
 
-app.get("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 
 app.listen(PORT, () => {
   logger.info(`auth service is running on port ${PORT}`);

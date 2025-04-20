@@ -8,22 +8,11 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { username, email, password, avatar } = req.body;
 
-    const error = validateRegistration(req.body);
-
-    if (error) {
-      logger.warn(error.error?.details[0].message);
-      return res.status(400).json({
-        success: false,
-        message: error.error?.details[0].message,
-      });
-    }
-
     const exisitingUser = await Auth.findOne({ email });
 
     if (exisitingUser) {
-      return res
-        .status(401)
-        .json({ success: false, message: "User already exists" });
+      res.status(401).json({ success: false, message: "User already exists" });
+      return;
     }
 
     const user = new Auth({
@@ -35,7 +24,7 @@ export const register = async (req: Request, res: Response) => {
 
     await user.save();
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       user: {
         username: user.username,
@@ -43,8 +32,11 @@ export const register = async (req: Request, res: Response) => {
         avatar: user.avatar,
       },
     });
+
+    return;
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: error });
+    return;
   }
 };

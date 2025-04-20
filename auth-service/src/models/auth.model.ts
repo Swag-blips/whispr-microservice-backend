@@ -47,9 +47,11 @@ authSchema.pre("save", async function save(next) {
     const hash = await argon2.hash(schema.password);
 
     return next();
-  } catch (error) {
-    logger.error(error);
-    return next(error);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      logger.error(error);
+      return next(error);
+    }
   }
 });
 const Auth = mongoose.model<AuthPayload>("Auth", authSchema);
