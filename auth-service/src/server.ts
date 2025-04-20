@@ -25,3 +25,7 @@ app.listen(PORT, () => {
   logger.info(`auth service is running on port ${PORT}`);
   connectToMongo();
 });
+
+process.on("unhandledRejection", (error) => {
+  logger.error("unhandledRejection", error);
+});

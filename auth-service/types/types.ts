@@ -10,3 +10,9 @@ export interface AuthUser extends mongoose.Document {
   avatar: string | null;
   comparePassword: (candidatePassword: string) => Promise<boolean>;
 }
+
+export interface Otp extends mongoose.Document {
+  userId: Types.ObjectId,
+  otp: string;
+  expiresAt: Date;
+}

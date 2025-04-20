@@ -36,3 +36,8 @@ app.use(
 app.listen(PORT, () => {
   logger.info(`api gateway is running on port ${PORT}`);
 });
+
+// The unhandledRejection listener
+process.on("unhandledRejection", (error) => {
+  logger.error("unhandledRejection", error);
+});

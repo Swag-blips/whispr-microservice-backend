@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { register, verifyEmail } from "../controllers/auth.controller";
+import { Login, register, verifyEmail } from "../controllers/auth.controller";
 import { loginSchema, registrationSchema } from "../utils/validate";
 import validateRequest from "../middleware/validateRequest";
 
 const router = Router();
 
 router.post("/register", validateRequest(registrationSchema), register);
-router.get("/verify-email", validateRequest(loginSchema), verifyEmail);
+router.post("/login", validateRequest(loginSchema), Login);
+router.get("/verify-email", verifyEmail);
 
 export default router;
