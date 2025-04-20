@@ -39,20 +39,19 @@ authSchema.index({ username: "text", email: "text" });
 
 authSchema.pre("save", async function save(next) {
   const schema = this;
-  try {
-    if (!schema.isModified("password")) {
-      return next();
-    }
 
-    const hash = await argon2.hash(schema.password);
-
-    return next();
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      logger.error(error);
-      return next(error);
+  if (schema.isModified("password")) {
+    try {
+      schema.password = await argon2.hash(schema.password);
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error(error);
+        next(error);
+      }
     }
   }
+
+  return next();
 });
 const Auth = mongoose.model<AuthPayload>("Auth", authSchema);
 

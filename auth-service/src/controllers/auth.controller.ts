@@ -1,14 +1,17 @@
 import { Request, Response } from "express";
-import { validateRegistration } from "../utils/validate";
 import logger from "../utils/logger";
 import Auth from "../models/auth.model";
+import { generateMailToken } from "../utils/generateToken";
+import sendMail from "../utils/sendMail";
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint");
   try {
     const { username, email, password, avatar } = req.body;
 
-    const exisitingUser = await Auth.findOne({ email });
+    const exisitingUser = await Auth.findOne({
+      $or: [{ email }, { username }],
+    });
 
     if (exisitingUser) {
       res.status(401).json({ success: false, message: "User already exists" });
@@ -20,8 +23,12 @@ export const register = async (req: Request, res: Response) => {
       password,
       email,
       avatar,
+      isVerified: false,
     });
 
+    const token = generateMailToken(user._id, email);
+
+    sendMail(email, username, token);
     await user.save();
 
     res.status(201).json({
@@ -30,6 +37,7 @@ export const register = async (req: Request, res: Response) => {
         username: user.username,
         email: user.email,
         avatar: user.avatar,
+        isVerified: user.isVerified,
       },
     });
 

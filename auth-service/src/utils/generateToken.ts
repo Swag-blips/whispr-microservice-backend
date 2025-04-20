@@ -6,8 +6,17 @@ export const generateAccessToken = (
   email: string
 ) => {};
 
-export const generateMailToken = (userId: Types.ObjectId) => {
-  const token = jwt.sign(userId, process.env.JWT_SECRET_KEY as string, {
-    expiresIn: "5m",
-  });
+export const generateMailToken = (userId: Types.ObjectId, email: string) => {
+  const token = jwt.sign(
+    {
+      userId,
+      email,
+    },
+    process.env.JWT_SECRET_KEY as string,
+    {
+      expiresIn: "5m",
+    }
+  );
+
+  return token;
 };
