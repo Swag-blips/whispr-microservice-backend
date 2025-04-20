@@ -5,6 +5,7 @@ import cors from "cors";
 import errorHandler from "./middleware/errorHandler";
 import logRequests from "./middleware/logRequests";
 import authRoutes from "./routes/auth.route";
+import connectToMongo from "./config/dbConnect";
 dotenv.config();
 
 const app = express();
@@ -19,4 +20,5 @@ app.get("/api/auth", authRoutes);
 
 app.listen(PORT, () => {
   logger.info(`auth service is running on port ${PORT}`);
+  connectToMongo();
 });
