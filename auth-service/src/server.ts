@@ -7,7 +7,6 @@ import logRequests from "./middleware/logRequests";
 import authRoutes from "./routes/auth.route";
 import connectToMongo from "./config/dbConnect";
 import helmet from "helmet";
-import redisClient from "./config/redis";
 
 dotenv.config();
 

@@ -173,3 +173,8 @@ export const verifyOtp = async (req: Request, res: Response) => {
     res.status(500).json({ message: error });
   }
 };
+
+
+const resendOtp = (req:Request, res:Response) => {
+  
+}
