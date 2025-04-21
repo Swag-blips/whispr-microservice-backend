@@ -9,8 +9,7 @@ import {
 import { decodeEmailToken } from "../utils/decodeToken";
 import crypto from "crypto";
 import { sendOtpMail, sendVerificationMail } from "../utils/sendMail";
-import Otp from "../models/otp.model";
-import argon2 from "argon2";
+import redisClient from "../config/redis";
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint");
@@ -105,14 +104,15 @@ export const Login = async (req: Request, res: Response) => {
 
     const isValid = await user.comparePassword(password);
     const generatedOtp = crypto.randomInt(100000, 999999);
-    const expiryTime = new Date(Date.now() + 5 * 60 * 1000);
+    const expiryTime = 5 * 60;
 
     if (isValid) {
-      await Otp.create({
-        userId: user._id,
-        otp: generatedOtp,
-        expiryTime,
-      });
+      await redisClient.set(
+        `otp:${user.email}`,
+        generatedOtp,
+        "EX",
+        expiryTime
+      );
 
       await sendOtpMail(user.email, generatedOtp);
       res.status(200).json({
@@ -129,37 +129,45 @@ export const Login = async (req: Request, res: Response) => {
   }
 };
 
-const verifyOtp = async (req: Request, res: Response) => {
+export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    const { otp } = req.body;
+    const { otp, email } = req.body;
 
-    const hashedOtp = await argon2.hash(otp);
+    if (!otp || !email) {
+      res
+        .status(400)
+        .json({ success: false, message: "Otp and email is required" });
+      return;
+    }
 
-    const otpDoc = await Otp.findOne({ otp: hashedOtp });
-    logger.info(otpDoc);
-    const currentTime = new Date(Date.now());
-
+    const otpDoc = await redisClient.get(`otp:${email}`);
+    logger.info("otp document", otpDoc);
     if (!otpDoc) {
-      res.status(400).json({ message: "Otp has expired" });
+      res.status(400).json({ success: false, message: "Expired Otp" });
       return;
     }
 
-    if (currentTime > otpDoc.expiryTime) {
-      res.status(400).json({ message: "Otp has expired" });
+    if (otpDoc !== otp) {
+      res.status(400).json({ success: false, message: "Invalid OTP" });
       return;
     }
 
-    const accessToken = generateAccessToken(otpDoc.userId);
-    const refreshToken = generateRefreshToken(otpDoc.userId);
+    const user = await Auth.findOne({ email });
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Otp successfully verified",
-        accessToken,
-        refreshToken,
-      });
+    if (!user) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return;
+    }
+    await redisClient.del(`otp:${email}`);
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    res.status(200).json({
+      success: true,
+      message: "Otp successfully verified",
+      accessToken,
+      refreshToken,
+    });
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: error });

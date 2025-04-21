@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 import { Types } from "mongoose";
 
 export interface AuthUser extends mongoose.Document {
