@@ -12,7 +12,11 @@ export interface AuthUser extends mongoose.Document {
 }
 
 export interface Otp extends mongoose.Document {
-  userId: Types.ObjectId,
+  userId: Types.ObjectId;
   otp: string;
+  expiryTime: Date;
   expiresAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  compareOtp: (candidateOtp: string) => Promise<boolean>;
 }

@@ -16,16 +16,19 @@ const otpSchema = new mongoose.Schema(
     },
     expiresAt: {
       type: Date,
+      expires: "5m",
+      default: Date.now(),
+    },
+
+    expiryTime: {
+      type: Date,
       required: true,
-      index: true,
     },
   },
   { timestamps: true }
 );
 
 otpSchema.index({ userId: "text", otp: "text" });
-
-otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 otpSchema.pre("save", async function hashOtp(next) {
   try {
@@ -35,9 +38,13 @@ otpSchema.pre("save", async function hashOtp(next) {
       schema.otp = modifiedOtp;
     }
   } catch (error) {
+    if (error instanceof Error) {
+      next(error);
+    }
     logger.error(error);
   }
 });
+
 const Otp = mongoose.model<Otp>("Otp", otpSchema);
 
 export default Otp;

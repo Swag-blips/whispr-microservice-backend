@@ -1,11 +1,10 @@
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 
-export const generateAccessToken = (userId: Types.ObjectId, email: string) => {
+export const generateAccessToken = (userId: Types.ObjectId) => {
   const token = jwt.sign(
     {
       userId,
-      email,
     },
     process.env.JWT_SECRET_KEY as string,
     {
@@ -16,11 +15,10 @@ export const generateAccessToken = (userId: Types.ObjectId, email: string) => {
   return token;
 };
 
-export const generateRefreshToken = (userId: Types.ObjectId, email: string) => {
+export const generateRefreshToken = (userId: Types.ObjectId) => {
   const token = jwt.sign(
     {
       userId,
-      email,
     },
     process.env.JWT_SECRET_KEY as string,
     {

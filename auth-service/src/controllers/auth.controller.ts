@@ -10,6 +10,7 @@ import { decodeEmailToken } from "../utils/decodeToken";
 import crypto from "crypto";
 import { sendOtpMail, sendVerificationMail } from "../utils/sendMail";
 import Otp from "../models/otp.model";
+import argon2 from "argon2";
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint");
@@ -107,10 +108,10 @@ export const Login = async (req: Request, res: Response) => {
     const expiryTime = new Date(Date.now() + 5 * 60 * 1000);
 
     if (isValid) {
-      const otp = await Otp.create({
+      await Otp.create({
         userId: user._id,
         otp: generatedOtp,
-        expiresAt: expiryTime,
+        expiryTime,
       });
 
       await sendOtpMail(user.email, generatedOtp);
@@ -122,6 +123,43 @@ export const Login = async (req: Request, res: Response) => {
       res.status(400).json({ success: false, message: "invalid credentials" });
       return;
     }
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: error });
+  }
+};
+
+const verifyOtp = async (req: Request, res: Response) => {
+  try {
+    const { otp } = req.body;
+
+    const hashedOtp = await argon2.hash(otp);
+
+    const otpDoc = await Otp.findOne({ otp: hashedOtp });
+    logger.info(otpDoc);
+    const currentTime = new Date(Date.now());
+
+    if (!otpDoc) {
+      res.status(400).json({ message: "Otp has expired" });
+      return;
+    }
+
+    if (currentTime > otpDoc.expiryTime) {
+      res.status(400).json({ message: "Otp has expired" });
+      return;
+    }
+
+    const accessToken = generateAccessToken(otpDoc.userId);
+    const refreshToken = generateRefreshToken(otpDoc.userId);
+
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Otp successfully verified",
+        accessToken,
+        refreshToken,
+      });
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: error });
