@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   Login,
   register,
+  resendOtp,
   verifyEmail,
   verifyOtp,
 } from "../controllers/auth.controller";
@@ -14,5 +15,6 @@ router.post("/register", validateRequest(registrationSchema), register);
 router.post("/login", validateRequest(loginSchema), Login);
 router.get("/verify-email", verifyEmail);
 router.post("/verify-otp", validateRequest(otpSchema), verifyOtp);
+router.post("/resend-otp", resendOtp);
 
 export default router;

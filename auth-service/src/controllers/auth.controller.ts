@@ -62,7 +62,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     if (!token) {
       res
         .status(400)
-        .json({ suucess: false, message: "Token required to verify email" });
+        .json({ success: false, message: "Token required to verify email" });
       return;
     }
 
@@ -70,7 +70,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
     if (Date.now() >= exp * 1000) {
       res
-        .status(401)
+        .status(410)
         .json({ success: false, message: "Verification link has expired" });
       return;
     }
@@ -174,7 +174,45 @@ export const verifyOtp = async (req: Request, res: Response) => {
   }
 };
 
+export const resendOtp = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
 
-const resendOtp = (req:Request, res:Response) => {
-  
-}
+    if (!email) {
+      res
+        .status(400)
+        .json({ success: false, message: "Email is required to send otp" });
+      return;
+    }
+
+    const exisitingOtp = await redisClient.get(`otp:${email}`);
+
+    if (exisitingOtp) {
+      const ttl = await redisClient.ttl(`otp:${email}`);
+      res.status(429).json({
+        success: false,
+        message: `An OTP was recently sent. Please wait ${ttl} seconds before retrying.`,
+      });
+      return;
+    }
+    const generatedOtp = crypto.randomInt(100000, 999999);
+    const expiryTime = 5 * 60;
+
+    const otp = await redisClient.set(
+      `otp:${email}`,
+      generatedOtp,
+      "EX",
+      expiryTime
+    );
+
+    if (otp === "OK") {
+      await sendOtpMail(email, generatedOtp);
+    }
+
+    res.status(200).json({ success: true, message: "otp sent to your mail" });
+    return;
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: error });
+  }
+};
