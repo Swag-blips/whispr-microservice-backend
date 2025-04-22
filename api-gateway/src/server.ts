@@ -20,9 +20,6 @@ app.use(errorHandler);
 app.use(limiter);
 app.use(logRequests);
 
-app.get("/", (req: Request, res: Response) => {
-  res.json({ message: "ok" });
-});
 
 app.use(
   "/v1/auth",
