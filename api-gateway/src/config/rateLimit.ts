@@ -1,6 +1,6 @@
 import rateLimit from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
-import redisClient from "../../../auth-service/src/config/redis";
+import redisClient from "./redis";
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

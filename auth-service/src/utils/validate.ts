@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { AuthUser } from "../../types/types";
+import { AuthUser } from "../types/types";
 
 export const registrationSchema = Joi.object({
   username: Joi.string().min(6).max(30).required(),

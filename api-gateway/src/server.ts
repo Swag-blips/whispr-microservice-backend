@@ -20,7 +20,6 @@ app.use(errorHandler);
 app.use(limiter);
 app.use(logRequests);
 
-
 app.use(
   "/v1/auth",
   proxy(process.env.AUTH_SERVICE_PORT as string, {

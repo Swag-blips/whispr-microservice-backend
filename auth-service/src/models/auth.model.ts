@@ -1,5 +1,5 @@
 import mongoose, { Model } from "mongoose";
-import { AuthUser } from "../../types/types";
+import { AuthUser } from "../types/types";
 import argon2 from "argon2";
 import logger from "../utils/logger";
 
