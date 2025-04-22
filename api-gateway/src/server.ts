@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import proxy from "express-http-proxy";
 import logger from "./utils/logger";
@@ -6,6 +6,7 @@ import helmet from "helmet";
 import errorHandler from "./middleware/errorHandler";
 import proxyOptions from "./config/proxyOptions";
 import logRequests from "./middleware/logRequests";
+import limiter from "./config/rateLimit";
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
@@ -16,8 +17,12 @@ app.use(helmet());
 app.use(express.json());
 
 app.use(errorHandler);
-
+app.use(limiter);
 app.use(logRequests);
+
+app.get("/", (req: Request, res: Response) => {
+  res.json({ message: "ok" });
+});
 
 app.use(
   "/v1/auth",
