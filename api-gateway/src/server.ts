@@ -33,6 +33,19 @@ app.use(
     },
   })
 );
+app.use(
+  "/v1/user",
+  proxy(process.env.USER_SERVICE_PORT as string, {
+    ...proxyOptions,
+    userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
+      logger.info(
+        `response gotten from user service ${proxyRes.statusCode} ${proxyResData}`
+      );
+
+      return proxyResData;
+    },
+  })
+);
 
 app.listen(PORT, () => {
   logger.info(`api gateway is running on port ${PORT}`);

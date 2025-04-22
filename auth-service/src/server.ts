@@ -7,6 +7,7 @@ import logRequests from "./middleware/logRequests";
 import authRoutes from "./routes/auth.route";
 import connectToMongo from "./config/dbConnect";
 import helmet from "helmet";
+import { connectToRabbitMq } from "./config/rabbitMq";
 
 dotenv.config();
 
@@ -22,9 +23,11 @@ app.use(logRequests);
 
 app.use("/api/auth", authRoutes);
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   logger.info(`auth service is running on port ${PORT}`);
-  connectToMongo();
+  await connectToMongo();
+  await
+   connectToRabbitMq();
 });
 
 process.on("unhandledRejection", (error) => {

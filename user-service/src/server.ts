@@ -6,6 +6,7 @@ import logger from "./utils/logger";
 import errorHandler from "./middleware/errorHandler";
 import logRequests from "./middleware/logRequests";
 import connectToMongo from "./config/dbConnect";
+import { connectToRabbitMq } from "./config/rabbitMq";
 
 dotenv.config();
 
@@ -19,9 +20,10 @@ const PORT = process.env.PORT || 3002;
 app.use(errorHandler);
 app.use(logRequests);
 
-app.listen(PORT, () => {
-  logger.info(`auth service is running on port ${PORT}`);
-  connectToMongo();
+app.listen(PORT, async () => {
+  logger.info(`user service is running on port ${PORT}`);
+  await connectToMongo();
+  await connectToRabbitMq();
 });
 
 process.on("unhandledRejection", (error) => {
