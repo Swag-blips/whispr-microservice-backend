@@ -10,11 +10,12 @@ import { decodeEmailToken } from "../utils/decodeToken";
 import crypto from "crypto";
 import { sendOtpMail, sendVerificationMail } from "../utils/sendMail";
 import redisClient from "../config/redis";
+import { publishEvent } from "../config/rabbitMq";
 
 export const register = async (req: Request, res: Response) => {
-  logger.info("Registration endpoint");
+  logger.info("Registration endpoint hit");
   try {
-    const { username, email, password, avatar } = req.body;
+    const { username, email, password } = req.body;
 
     const exisitingUser = await Auth.findOne({
       $or: [{ email }, { username }],
@@ -29,7 +30,6 @@ export const register = async (req: Request, res: Response) => {
       username,
       password,
       email,
-      avatar,
       isVerified: false,
     });
 
@@ -38,12 +38,16 @@ export const register = async (req: Request, res: Response) => {
     sendVerificationMail(email, username, token);
     await user.save();
 
+    await publishEvent("user.created", {
+      username,
+      email,
+    });
+
     res.status(201).json({
       success: true,
       user: {
         username: user.username,
         email: user.email,
-        avatar: user.avatar,
         isVerified: user.isVerified,
       },
     });

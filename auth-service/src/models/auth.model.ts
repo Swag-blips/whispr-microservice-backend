@@ -22,10 +22,6 @@ const authSchema = new mongoose.Schema(
       required: true,
       min: 6,
     },
-    avatar: {
-      type: String,
-      default: "",
-    },
     isVerified: {
       type: Boolean,
       required: true,

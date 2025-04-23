@@ -26,8 +26,7 @@ app.use("/api/auth", authRoutes);
 app.listen(PORT, async () => {
   logger.info(`auth service is running on port ${PORT}`);
   await connectToMongo();
-  await
-   connectToRabbitMq();
+  await connectToRabbitMq();
 });
 
 process.on("unhandledRejection", (error) => {
