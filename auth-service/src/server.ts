@@ -24,7 +24,7 @@ app.use(limiter);
 app.use(errorHandler);
 app.use(logRequests);
 
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", limiter, authRoutes);
 
 export const server = app.listen(PORT, async () => {
   logger.info(`auth service is running on port ${PORT}`);
