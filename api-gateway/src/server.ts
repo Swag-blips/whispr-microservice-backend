@@ -63,6 +63,27 @@ app.use(
   })
 );
 
+app.use(
+  "/v1/friend",
+  proxy(process.env.FRIEND_SERVICE_PORT as string, {
+    ...proxyOptions,
+    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      if (proxyReqOpts.headers) {
+        proxyReqOpts.headers["Content-Type"] = "application/json";
+      }
+
+      return proxyReqOpts;
+    },
+    userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
+      logger.info(
+        `response gotten from friend service ${proxyRes.statusCode} ${proxyResData}`
+      );
+
+      return proxyResData;
+    },
+  })
+);
+
 app.listen(PORT, () => {
   logger.info(`api gateway is running on port ${PORT}`);
 });
