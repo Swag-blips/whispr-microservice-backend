@@ -8,6 +8,7 @@ import logRequests from "./middleware/logRequests";
 import connectToMongo from "./config/dbConnect";
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
 import handleCreatedUser from "./events/eventHandler";
+import userRoutes from "./routes/user.route";
 
 dotenv.config();
 
@@ -20,6 +21,8 @@ const PORT = process.env.PORT || 3002;
 
 app.use(errorHandler);
 app.use(logRequests);
+
+app.use("/api/user", userRoutes);
 
 const startServer = async () => {
   try {
