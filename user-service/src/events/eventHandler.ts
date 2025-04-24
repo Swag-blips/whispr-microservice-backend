@@ -5,6 +5,7 @@ import logger from "../utils/logger";
 const handleCreatedUser = async (user: EventUser) => {
   try {
     await User.create({
+      _id: user._id,
       email: user.email,
       username: user.username,
     });

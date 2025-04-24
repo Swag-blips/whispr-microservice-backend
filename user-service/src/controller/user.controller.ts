@@ -33,6 +33,8 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
 
+    logger.info(userId);
+
     const currentUser = await User.findById(userId);
 
     if (!currentUser) {

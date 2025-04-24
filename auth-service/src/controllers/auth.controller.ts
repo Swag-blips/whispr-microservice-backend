@@ -39,6 +39,7 @@ export const register = async (req: Request, res: Response) => {
     await user.save();
 
     await publishEvent("user.created", {
+      _id: user._id,
       username,
       email,
     });
