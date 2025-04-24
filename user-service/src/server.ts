@@ -24,7 +24,7 @@ app.use(limiter);
 app.use(errorHandler);
 app.use(logRequests);
 
-app.use("/api/user", userRoutes);
+app.use("/api/user", limiter, userRoutes);
 
 const startServer = async () => {
   try {
