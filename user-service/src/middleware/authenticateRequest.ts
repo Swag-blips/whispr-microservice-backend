@@ -2,6 +2,12 @@ import { NextFunction, Request, Response } from "express";
 
 import jwt from "jsonwebtoken";
 import logger from "../utils/logger";
+import { Types } from "mongoose";
+
+interface DecodedUser {
+  userId: Types.ObjectId;
+}
+
 const authenticateRequest = (
   req: Request,
   res: Response,
@@ -18,10 +24,10 @@ const authenticateRequest = (
     const decodedToken = jwt.verify(
       token,
       process.env.JWT_SECRET_KEY as string
-    );
+    ) as DecodedUser;
 
     if (decodedToken) {
-      logger.info(`decoded token here ${JSON.stringify(decodedToken)}`);
+      req.userId = decodedToken.userId;
       next();
     }
   } catch (error) {

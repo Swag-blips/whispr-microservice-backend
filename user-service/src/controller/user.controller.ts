@@ -21,8 +21,29 @@ export const getUser = async (req: Request, res: Response) => {
     }
 
     res.status(200).json({ success: true, user: user });
+    return;
   } catch (error) {
-    logger.error(error);
+    logger.error("An error occured in the getUser controller", error);
+    res.status(500).json({ message: error });
+  }
+};
+
+export const getCurrentUser = async (req: Request, res: Response) => {
+  logger.info("Get current user endpoint hit");
+  try {
+    const userId = req.userId;
+
+    const currentUser = await User.findById(userId);
+
+    if (!currentUser) {
+      res.status(404).json({ success: false, message: "user not found" });
+      return;
+    }
+
+    res.status(200).json({ success: false, currentUser });
+    return;
+  } catch (error) {
+    logger.error("An error occured in the getCurrentUser controller", error);
     res.status(500).json({ message: error });
   }
 };

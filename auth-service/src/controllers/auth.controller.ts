@@ -172,6 +172,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
       accessToken,
       refreshToken,
     });
+    return;
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: error });
