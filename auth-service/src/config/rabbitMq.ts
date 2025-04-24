@@ -12,7 +12,7 @@ export async function connectToRabbitMq() {
     channel = await connection.createChannel();
 
     await channel.assertExchange(EXCHANGE_NAME, "topic", { durable: true });
-    logger.info("Connected to rabbimq");
+    logger.info("Connected to rabbitmq");
     return channel;
   } catch (error) {
     console.log(error);

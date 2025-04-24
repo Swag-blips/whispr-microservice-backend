@@ -9,7 +9,7 @@ export const registrationSchema = Joi.object({
 });
 
 export const loginSchema = Joi.object({
-  username: Joi.string().min(6).max(30).required(),
+  email: Joi.string().email().required(),
   password: Joi.string().required(),
 });
 

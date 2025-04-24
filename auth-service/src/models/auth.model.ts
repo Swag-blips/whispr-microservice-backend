@@ -5,13 +5,6 @@ import logger from "../utils/logger";
 
 const authSchema = new mongoose.Schema(
   {
-    username: {
-      type: String,
-      required: true,
-      min: 6,
-      max: 30,
-      unique: true,
-    },
     email: {
       type: String,
       required: true,
@@ -31,7 +24,7 @@ const authSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-authSchema.index({ username: "text", email: "text" });
+authSchema.index({ email: "text" });
 
 authSchema.pre("save", async function save(next) {
   const schema = this;

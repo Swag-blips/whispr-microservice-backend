@@ -17,9 +17,7 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
 
-    const exisitingUser = await Auth.findOne({
-      $or: [{ email }, { username }],
-    });
+    const exisitingUser = await Auth.findOne({ email });
 
     if (exisitingUser) {
       res.status(401).json({ success: false, message: "User already exists" });
@@ -27,7 +25,6 @@ export const register = async (req: Request, res: Response) => {
     }
 
     const user = new Auth({
-      username,
       password,
       email,
       isVerified: false,
@@ -47,7 +44,7 @@ export const register = async (req: Request, res: Response) => {
     res.status(201).json({
       success: true,
       user: {
-        username: user.username,
+        username: username,
         email: user.email,
         isVerified: user.isVerified,
       },
@@ -98,9 +95,9 @@ export const verifyEmail = async (req: Request, res: Response) => {
 export const Login = async (req: Request, res: Response) => {
   logger.info("Login endpoint hit");
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    const user = await Auth.findOne({ username });
+    const user = await Auth.findOne({ email });
 
     if (!user) {
       res.status(400).json({ success: false, message: "invalid credentials" });

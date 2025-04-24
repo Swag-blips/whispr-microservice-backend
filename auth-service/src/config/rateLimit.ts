@@ -4,7 +4,7 @@ import redisClient from "./redis";
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20,
+  max: 40,
   standardHeaders: true,
   legacyHeaders: false,
 
