@@ -11,7 +11,7 @@ import { connectToRabbitMq } from "./config/rabbitMq";
 
 dotenv.config();
 
-const app = express();
+export const app = express();
 
 app.use(cors());
 app.use(helmet());
@@ -23,7 +23,7 @@ app.use(logRequests);
 
 app.use("/api/auth", authRoutes);
 
-app.listen(PORT, async () => {
+export const server = app.listen(PORT, async () => {
   logger.info(`auth service is running on port ${PORT}`);
   await connectToMongo();
   await connectToRabbitMq();
