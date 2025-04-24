@@ -27,7 +27,8 @@ export const getUser = async (req: Request, res: Response) => {
     )
       .sort({ score: { $meta: "textScore" } })
       .limit(10)
-      .lean();
+      .lean()
+      .select("-email");
 
     res.status(200).json({ success: true, results });
     await redisClient.set(

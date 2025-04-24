@@ -1,6 +1,6 @@
 import Redis from "ioredis";
 
-const redisClient = new Redis({
+const redisClient: any = new Redis({
   host: "127.0.0.1",
   port: 6379,
 });

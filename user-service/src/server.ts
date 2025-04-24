@@ -9,6 +9,7 @@ import connectToMongo from "./config/dbConnect";
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
 import handleCreatedUser from "./events/eventHandler";
 import userRoutes from "./routes/user.route";
+import limiter from "./config/rateLimit";
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.use(helmet());
 app.use(express.json());
 const PORT = process.env.PORT || 3002;
 
+app.use(limiter);
 app.use(errorHandler);
 app.use(logRequests);
 

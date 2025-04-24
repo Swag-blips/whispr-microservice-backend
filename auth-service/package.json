@@ -23,7 +23,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.13.2",
     "nodemailer": "^6.10.1",
-    "pino": "^9.6.0"
+    "pino": "^9.6.0",
+    "rate-limit-redis": "^4.2.0"
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.7",

@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.route";
 import connectToMongo from "./config/dbConnect";
 import helmet from "helmet";
 import { connectToRabbitMq } from "./config/rabbitMq";
+import limiter from "./config/rateLimit";
 
 dotenv.config();
 
@@ -17,6 +18,8 @@ app.use(cors());
 app.use(helmet());
 app.use(express.json());
 const PORT = process.env.PORT || 3001;
+
+app.use(limiter);
 
 app.use(errorHandler);
 app.use(logRequests);

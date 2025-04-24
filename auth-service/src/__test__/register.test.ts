@@ -57,5 +57,5 @@ afterAll(async () => {
   await Auth.deleteMany({});
   await mongoose.connection.close();
   server.close();
-  redisClient.quit();
+  await redisClient.quit();
 });
