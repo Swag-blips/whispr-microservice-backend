@@ -94,18 +94,17 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
       return;
     }
 
-    //TODO EMIT TO CHAT SERVICE TO CREATE CHAT TO CREATE CHAT BETWEEN BOTH USERS
     await publishEvent("friends.created", {
       user1: senderId,
       user2: receiverId,
     });
 
-    // TODO publish to chat service
     await publishEvent("chat.created", {
       participants: [senderId, receiverId],
     });
 
-    await existingRequest.deleteOne();
+    existingRequest.status = "Accepted";
+    await existingRequest.save();
     res.status(201).json({ success: true, message: "Friend request accepted" });
   } catch (error) {
     logger.error(error);

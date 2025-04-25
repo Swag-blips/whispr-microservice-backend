@@ -12,6 +12,10 @@ const notificationSchema = new mongoose.Schema(
       ref: "User",
       index: true,
     },
+    type: {
+      type: String,
+      enums: ["Accepted", "Pending", "Message"],
+    },
   },
   { timestamps: true }
 );

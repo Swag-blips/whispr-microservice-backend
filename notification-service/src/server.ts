@@ -8,7 +8,8 @@ import logRequests from "./middleware/logRequests";
 import logger from "./utils/logger";
 import connectToMongo from "./config/dbConnect";
 import limiter from "./middleware/rateLimit";
-import { connectToRabbitMq } from "./config/rabbitMq";
+import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
+import { handleFriendRequestNotification } from "../events/eventHandler";
 
 dotenv.config();
 
@@ -27,6 +28,10 @@ const startServer = async () => {
   try {
     await connectToMongo();
     await connectToRabbitMq();
+    await consumeEvent(
+      "friendRequest.created",
+      handleFriendRequestNotification
+    );
 
     app.listen(PORT, async () => {
       logger.info(`notification service is running on port ${PORT}`);
