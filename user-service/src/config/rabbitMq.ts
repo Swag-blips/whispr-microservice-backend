@@ -1,6 +1,5 @@
 import amq from "amqplib";
 import logger from "../utils/logger";
-import { EventUser } from "../types/types";
 
 let connection = null;
 let channel: amq.Channel | null = null;
@@ -23,9 +22,9 @@ export async function connectToRabbitMq() {
   }
 }
 
-export async function consumeEvent(
+export async function consumeEvent<T>(
   routingKey: string,
-  callback: (content: EventUser) => void
+  callback: (content: T) => void
 ) {
   if (!channel) {
     await connectToRabbitMq();

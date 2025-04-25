@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 import { connection } from "../config/dbConnect";
 import User from "../model/user.model";
-import { EventUser, IncomingFriendsMessage } from "../types/types";
+import { IncomingFriendsMessage, IncomingUserMessage } from "../types/types";
 import logger from "../utils/logger";
 
-export const handleCreatedUser = async (user: EventUser) => {
+export const handleCreatedUser = async (user: IncomingUserMessage) => {
   try {
     await User.create({
       _id: user._id,
