@@ -2,11 +2,12 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
-import logger from "./utils/logger";
+
 import errorHandler from "./middleware/errorHandler";
 import logRequests from "./middleware/logRequests";
-import limiter from "./config/rateLimit";
+import logger from "./utils/logger";
 import connectToMongo from "./config/dbConnect";
+import limiter from "./middleware/rateLimit";
 import { connectToRabbitMq } from "./config/rabbitMq";
 
 dotenv.config();
@@ -16,7 +17,7 @@ const app = express();
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3004;
 
 app.use(limiter);
 app.use(errorHandler);
@@ -28,7 +29,7 @@ const startServer = async () => {
     await connectToRabbitMq();
 
     app.listen(PORT, async () => {
-      logger.info(`friend service is running on port ${PORT}`);
+      logger.info(`notification service is running on port ${PORT}`);
     });
   } catch (error) {
     logger.error(error);
