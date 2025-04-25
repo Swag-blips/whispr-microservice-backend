@@ -18,3 +18,20 @@ export const connectToRabbitMq = async () => {
     logger.error(error);
   }
 };
+
+export const publishEvent = async (routingKey: string, message: object) => {
+  if (!channel) {
+    await connectToRabbitMq();
+  }
+  try {
+    channel?.publish(
+      EXCHANGE_NAME,
+      routingKey,
+      Buffer.from(JSON.stringify(message))
+    );
+
+    logger.info("Message publsihed from friend service");
+  } catch (error) {
+    logger.error(error);
+  }
+};

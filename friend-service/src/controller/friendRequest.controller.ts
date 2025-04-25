@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import logger from "../utils/logger";
 import FriendRequest from "../models/friendRequest.model";
+import { publishEvent } from "../config/rabbitMq";
 
 export const sendFriendRequest = async (req: Request, res: Response) => {
   logger.info("send friend request endpoint hit");
@@ -47,6 +48,10 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
     });
 
     // TODO publish to notification service
+    await publishEvent("friendRequest.created", {
+      from: senderId,
+      to: receiverId,
+    });
 
     res
       .status(201)
@@ -90,6 +95,15 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
     }
 
     //TODO EMIT TO CHAT SERVICE TO CREATE CHAT TO CREATE CHAT BETWEEN BOTH USERS
+    await publishEvent("friends.created", {
+      user1: senderId,
+      user2: receiverId,
+    });
+
+    // TODO publish to chat service
+    await publishEvent("chat.created", {
+      participants: [senderId, receiverId],
+    });
 
     await existingRequest.deleteOne();
     res.status(201).json({ success: true, message: "Friend request accepted" });

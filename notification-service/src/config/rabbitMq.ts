@@ -12,8 +12,8 @@ export const connectToRabbitMq = async () => {
     channel = await connection.createChannel();
 
     await channel.assertExchange(EXCHANGE_NAME, "topic", { durable: true });
-    logger.info("Connected to rabbitmq")
-    return channel
+    logger.info("Connected to rabbitmq");
+    return channel;
   } catch (error) {
     logger.error(error);
   }
