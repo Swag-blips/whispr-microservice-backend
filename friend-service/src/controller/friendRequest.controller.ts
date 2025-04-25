@@ -93,7 +93,11 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
 
       return;
     }
-
+    if (existingRequest.status === "Accepted") {
+      res
+        .status(400)
+        .json({ success: false, message: "Friend already accepted" });
+    }
     await publishEvent("friends.created", {
       user1: senderId,
       user2: receiverId,

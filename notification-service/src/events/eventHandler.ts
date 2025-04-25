@@ -1,6 +1,6 @@
-import Notification from "../src/model/notification.model";
-import { Notification as NotificationEvent } from "../src/types/type";
-import logger from "../src/utils/logger";
+import Notification from "../model/notification.model";
+import { Notification as NotificationEvent } from "../types/type";
+import logger from "../utils/logger";
 
 export const handleFriendRequestNotification = async (
   event: NotificationEvent

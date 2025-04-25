@@ -9,7 +9,7 @@ import logger from "./utils/logger";
 import connectToMongo from "./config/dbConnect";
 import limiter from "./middleware/rateLimit";
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
-import { handleFriendRequestNotification } from "../events/eventHandler";
+import { handleFriendRequestNotification } from "./events/eventHandler";
 
 dotenv.config();
 

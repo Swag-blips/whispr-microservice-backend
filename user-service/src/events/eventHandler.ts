@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { connection } from "../config/dbConnect";
 import User from "../model/user.model";
-import { EventUser } from "../types/types";
+import { EventUser, IncomingFriendsMessage } from "../types/types";
 import logger from "../utils/logger";
 
 export const handleCreatedUser = async (user: EventUser) => {
@@ -19,29 +19,30 @@ export const handleCreatedUser = async (user: EventUser) => {
 };
 
 let session: mongoose.mongo.ClientSession | undefined;
-export const handleAddFriends = async (message: any) => {
+export const handleAddFriends = async (content: IncomingFriendsMessage) => {
   try {
-    const { user1, user2 } = message;
+    const { user1, user2 } = content;
     session = await connection?.startSession();
 
-    await session?.withTransaction(
-      async () => {
-        await User.findByIdAndUpdate(
-          user1,
-          {
-            $push: { friends: user2 },
-          },
-          { session }
-        );
+    await session?.withTransaction(async () => {
+      await User.findByIdAndUpdate(
+        user1,
+        {
+          $push: { friends: user2 },
+        },
+        { session }
+      );
 
-        await User.findByIdAndUpdate(user2, {
+      await User.findByIdAndUpdate(
+        user2,
+        {
           $push: { friends: user1 },
-        });
-      },
-      { session }
-    );
+        },
+        { session }
+      );
+    });
   } catch (error) {
-    logger.error(error);
+    logger.error("Transaction failed", error);
   } finally {
     await session?.endSession();
   }
