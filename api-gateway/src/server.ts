@@ -31,6 +31,7 @@ app.use(
 
       return proxyReqOpts;
     },
+    parseReqBody: false,
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
       logger.info(
         `response gotten from auth service ${proxyRes.statusCode} ${proxyResData}`
