@@ -7,6 +7,10 @@ export interface EventUser {
   bio?: string;
 }
 
+export interface IncomingFriendsMessage {
+  user1: Types.ObjectId;
+  user2: Types.ObjectId;
+}
 export interface User extends EventUser {
   avatar: string;
 }
