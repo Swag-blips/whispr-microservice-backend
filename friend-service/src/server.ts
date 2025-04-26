@@ -7,6 +7,7 @@ import errorHandler from "./middleware/errorHandler";
 import logRequests from "./middleware/logRequests";
 import limiter from "./config/rateLimit";
 import connectToMongo from "./config/dbConnect";
+import friendRoutes from "./routes/friendRequest.route";
 import { connectToRabbitMq } from "./config/rabbitMq";
 
 dotenv.config();
@@ -21,6 +22,8 @@ const PORT = process.env.PORT || 3003;
 app.use(limiter);
 app.use(errorHandler);
 app.use(logRequests);
+
+app.use("/api/friend", friendRoutes);
 
 const startServer = async () => {
   try {

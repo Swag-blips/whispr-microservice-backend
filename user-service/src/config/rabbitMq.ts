@@ -42,7 +42,7 @@ export async function consumeEvent<T>(
     await connectToRabbitMq();
   }
 
-  try {
+  try { 
     const q = await channel?.assertQueue(queueName, { durable: true });
     await channel?.bindQueue(queueName, EXCHANGE_NAME, routingKey);
     channel?.consume(queueName, (msg) => {

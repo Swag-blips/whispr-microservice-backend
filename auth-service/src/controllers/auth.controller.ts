@@ -6,6 +6,7 @@ import {
   generateMailToken,
   generateRefreshToken,
 } from "../utils/generateToken";
+import jwt from "jsonwebtoken";
 import { decodeEmailToken } from "../utils/decodeToken";
 import crypto from "crypto";
 import { sendOtpMail, sendVerificationMail } from "../utils/sendMail";
@@ -75,7 +76,13 @@ export const verifyEmail = async (req: Request, res: Response) => {
       return;
     }
 
-    const { userId, exp, email } = decodeEmailToken(token);
+    const decodedToken = decodeEmailToken(token);
+    if (!decodedToken) {
+      res.status(400).json({ success: false, message: "Invalid token" });
+      return;
+    }
+
+    const { userId, exp, email } = decodedToken;
 
     if (Date.now() >= exp * 1000) {
       res
@@ -224,5 +231,55 @@ export const resendOtp = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: error });
+  }
+};
+
+export const refreshToken = async (req: Request, res: Response) => {
+  const { refreshToken, email } = req.body;
+
+  if (!refreshToken || !email) {
+    res.status(400).json({
+      success: false,
+      message: "refresh token  and email is required",
+    });
+    return;
+  }
+  try {
+    const verifiedRefreshToken = jwt.verify(
+      refreshToken,
+      process.env.JWT_SECRET_KEY as string
+    );
+
+    const user = await Auth.findOne({
+      email,
+    });
+
+    if (!user) {
+      res.status(400).json({ success: false, message: "User does not exist" });
+      return;
+    }
+
+    if (!verifiedRefreshToken) {
+      res
+        .status(400)
+        .json({ success: false, message: "Invalid refresh token" });
+      return;
+    }
+
+    const accessToken = generateAccessToken(user._id);
+
+    res.status(200).json({ success: true, accessToken });
+    return;
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.name === "TokenExpiredError") {
+        res.status(401).json({ success: false, message: "Token has expired" });
+        return;
+      } else {
+        res.status(500).json({ message: error });
+        logger.error(error);
+        return;
+      }
+    }
   }
 };

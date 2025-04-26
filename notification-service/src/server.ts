@@ -2,7 +2,6 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
-
 import errorHandler from "./middleware/errorHandler";
 import logRequests from "./middleware/logRequests";
 import logger from "./utils/logger";
@@ -26,8 +25,8 @@ app.use(logRequests);
 
 const startServer = async () => {
   try {
-    await connectToMongo();
     await connectToRabbitMq();
+    await connectToMongo();
     await consumeEvent(
       "friendRequest.created",
       handleFriendRequestNotification

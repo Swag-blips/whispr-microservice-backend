@@ -5,7 +5,9 @@ import {
   sendFriendRequest,
 } from "../controller/friendRequest.controller";
 
-const app = express();
+const router = express.Router();
 
-app.post("/sendFriendRequest", authenticateRequest, sendFriendRequest);
-app.post("/acceptFriendRequest", authenticateRequest, acceptFriendRequest);
+router.post("/sendFriendRequest", authenticateRequest, sendFriendRequest);
+router.post("/acceptFriendRequest", authenticateRequest, acceptFriendRequest);
+
+export default router;

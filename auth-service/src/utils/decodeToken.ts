@@ -1,13 +1,22 @@
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
+import logger from "./logger";
 
-interface JwtPayload {
+export interface JwtPayload {
   userId: Types.ObjectId;
   exp: number;
   email: string;
 }
 export const decodeEmailToken = (token: string) => {
-  const decodedToken = jwt.decode(token) as JwtPayload;
+  try {
+    const decodedToken = jwt.decode(token) as JwtPayload;
 
-  return decodedToken;
+    if (!decodedToken) {
+      return;
+    }
+
+    return decodedToken;
+  } catch (error) {
+    logger.error(error);
+  }
 };
