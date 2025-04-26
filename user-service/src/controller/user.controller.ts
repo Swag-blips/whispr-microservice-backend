@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import logger from "../utils/logger";
-import User from "../model/user.model";
+import User from "../models/user.model";
 import redisClient from "../config/redis";
 export const getUser = async (req: Request, res: Response) => {
   logger.info("get user endpoint hit");

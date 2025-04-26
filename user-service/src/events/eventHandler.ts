@@ -1,11 +1,10 @@
 import mongoose from "mongoose";
 import { connection } from "../config/dbConnect";
-import User from "../model/user.model";
+import User from "../models/user.model";
 import { IncomingFriendsMessage, IncomingUserMessage } from "../types/types";
 import logger from "../utils/logger";
 
 export const handleCreateUser = async (user: IncomingUserMessage) => {
-
   try {
     await User.create({
       _id: user._id,
@@ -48,5 +47,3 @@ export const handleAddFriends = async (content: IncomingFriendsMessage) => {
     await session?.endSession();
   }
 };
-
-

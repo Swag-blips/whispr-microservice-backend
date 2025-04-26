@@ -1,4 +1,4 @@
-import Notification from "../model/notification.model";
+import Notification from "../models/notification.model";
 import { Notification as NotificationEvent } from "../types/type";
 import logger from "../utils/logger";
 
