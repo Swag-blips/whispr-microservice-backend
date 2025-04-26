@@ -30,7 +30,7 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
         { from: receiverId, to: senderId },
         { from: senderId, to: receiverId },
       ],
-    });
+    });  
 
     if (existingRequest) {
       logger.error("Attempted duplicate friend request");

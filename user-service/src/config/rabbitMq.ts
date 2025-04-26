@@ -24,7 +24,7 @@ export async function connectToRabbitMq() {
         "x-message-ttl": RETRY_DELAY,
       },
     });
-    logger.info("Connected to rabbimq");
+    logger.info("Connected to rabbitmq");
 
     return channel;
   } catch (error) {

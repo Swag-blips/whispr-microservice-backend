@@ -27,7 +27,7 @@ export async function publishEvent(routingKey: string, message: object) {
 
   channel?.publish(
     EXCHANGE_NAME,
-    routingKey,
+    routingKey, 
     Buffer.from(JSON.stringify(message))
   );
 
