@@ -6,7 +6,6 @@ let channel: amq.Channel | null = null;
 
 const EXCHANGE_NAME = "whispr_event";
 
-
 export const connectToRabbitMq = async () => {
   try {
     connection = await amq.connect(process.env.RABBITMQ_URL as string);

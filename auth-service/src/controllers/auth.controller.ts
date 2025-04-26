@@ -240,7 +240,7 @@ export const refreshToken = async (req: Request, res: Response) => {
   if (!refreshToken || !email) {
     res.status(400).json({
       success: false,
-      message: "refresh token  and email is required",
+      message: "refresh token and email is required",
     });
     return;
   }
