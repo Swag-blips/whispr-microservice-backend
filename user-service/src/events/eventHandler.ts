@@ -4,7 +4,8 @@ import User from "../model/user.model";
 import { IncomingFriendsMessage, IncomingUserMessage } from "../types/types";
 import logger from "../utils/logger";
 
-export const handleCreatedUser = async (user: IncomingUserMessage) => {
+export const handleCreateUser = async (user: IncomingUserMessage) => {
+
   try {
     await User.create({
       _id: user._id,
@@ -47,3 +48,5 @@ export const handleAddFriends = async (content: IncomingFriendsMessage) => {
     await session?.endSession();
   }
 };
+
+

@@ -35,6 +35,7 @@ export async function connectToRabbitMq() {
 
 export async function consumeEvent<T>(
   routingKey: string,
+  queueName: string,
   callback: (content: T) => void
 ) {
   if (!channel) {
@@ -42,15 +43,17 @@ export async function consumeEvent<T>(
   }
 
   try {
-    const q = await channel?.assertQueue(QUEUE_NAME, { durable: true });
-    await channel?.bindQueue(QUEUE_NAME, EXCHANGE_NAME, routingKey);
-    channel?.consume(QUEUE_NAME, (msg) => {
+    const q = await channel?.assertQueue(queueName, { durable: true });
+    await channel?.bindQueue(queueName, EXCHANGE_NAME, routingKey);
+    channel?.consume(queueName, (msg) => {
       if (msg !== null) {
         const content = JSON.parse(msg.content.toString());
-        logger.info(content);
+
         try {
           callback(content);
           channel?.ack(msg);
+
+          return;
         } catch (err) {
           logger.error("Error processing message", err);
 
