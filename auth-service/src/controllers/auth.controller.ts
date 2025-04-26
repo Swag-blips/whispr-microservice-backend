@@ -32,7 +32,14 @@ export const register = async (req: Request, res: Response) => {
 
     const token = generateMailToken(user._id, email);
 
-    sendVerificationMail(email, username, token);
+    const verificationEmail = sendVerificationMail(email, username, token);
+
+    if (!verificationEmail) {
+      res
+        .status(400)
+        .json({ success: false, message: "Error sending verfification mail" });
+      return;
+    }
     await user.save();
 
     await publishEvent("user.created", {

@@ -59,12 +59,15 @@ export const sendVerificationMail = async (
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
         logger.error(error);
+        return false;
       } else {
         logger.info(`Email sent ${info.response}`);
+        return true;
       }
     });
   } catch (error) {
     logger.error(error);
+    return false;
   }
 };
 export const sendOtpMail = async (email: string, otp: number) => {

@@ -6,6 +6,9 @@ let channel: amq.Channel | null = null;
 
 const EXCHANGE_NAME = "whispr_event";
 const QUEUE_NAME = "user.create.queue";
+const MAX_RETRIES = 5;
+const RETRY_DELAY = 10000;
+const RETRY_QUEUE = "user.create.retry.queue";
 
 export async function connectToRabbitMq() {
   try {
@@ -13,6 +16,14 @@ export async function connectToRabbitMq() {
     channel = await connection.createChannel();
 
     await channel.assertExchange(EXCHANGE_NAME, "topic", { durable: true });
+    await channel.assertQueue(RETRY_QUEUE, {
+      durable: true,
+      arguments: {
+        "x-dead-letter-exchange": EXCHANGE_NAME,
+        "x-dead-letter-routing-key": QUEUE_NAME,
+        "x-message-ttl": RETRY_DELAY,
+      },
+    });
     logger.info("Connected to rabbimq");
 
     return channel;
@@ -42,6 +53,26 @@ export async function consumeEvent<T>(
           channel?.ack(msg);
         } catch (err) {
           logger.error("Error processing message", err);
+
+          const retries = (msg.properties.headers?.["x-retries"] ||
+            0) as number;
+          const newRetries = retries + 1;
+
+          if (newRetries <= MAX_RETRIES) {
+            channel?.publish("", RETRY_QUEUE, msg.content, {
+              headers: {
+                "x-retries": newRetries,
+              },
+              persistent: true,
+            });
+            channel?.ack(msg);
+            logger.info(`Retrying message. Attempt ${newRetries}`);
+          } else {
+            logger.error(
+              `Message failed after ${MAX_RETRIES} retries. Discarding.`
+            );
+            channel?.ack(msg);
+          }
         }
       }
     });
