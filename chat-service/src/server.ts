@@ -3,6 +3,7 @@ import logger from "./utils/logger";
 import connectToMongo from "./config/dbConnect";
 import limiter from "./config/rateLimit";
 import logRequests from "./utils/logRequests";
+import { app, server } from "./socket/socket";
 import helmet from "helmet";
 import cors from "cors";
 import errorHandler from "./middleware/errorHandler";
@@ -13,7 +14,6 @@ import { handleCreateChat } from "./events/eventHandler";
 
 dotenv.config();
 
-const app = express();
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
@@ -32,7 +32,7 @@ const startServer = async () => {
       handleCreateChat
     );
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       logger.info("chat service is listening on port", PORT);
     });
   } catch (error) {
