@@ -1,4 +1,5 @@
+import { Types } from "mongoose";
+
 export interface ChatCreatedEvent {
-  user1: string;
-  user2: string;
+  participants: Array<Types.ObjectId>;
 }
