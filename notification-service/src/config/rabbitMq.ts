@@ -21,7 +21,7 @@ export const connectToRabbitMq = async () => {
       durable: true,
       arguments: {
         "x-dead-letter-exchange": EXCHANGE_NAME,
-        "x-dead-letter-routing-name": QUEUE_NAME,
+        "x-dead-letter-routing-name": RETRY_QUEUE,
         "x-message-ttl": RETRY_DELAY,
       },
     });

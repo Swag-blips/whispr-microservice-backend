@@ -5,7 +5,11 @@ import limiter from "./config/rateLimit";
 import logRequests from "./utils/logRequests";
 import helmet from "helmet";
 import cors from "cors";
-import errorHandler from "./middleware/ErrorHandler";
+import errorHandler from "./middleware/errorHandler";
+import dotenv from "dotenv";
+import { connectToRabbitMq } from "./config/rabbitMq";
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
@@ -19,6 +23,7 @@ const PORT = process.env.PORT || 3005;
 const startServer = async () => {
   try {
     await connectToMongo();
+    await connectToRabbitMq();
 
     app.listen(PORT, () => {
       logger.info("server is listening on port", PORT);

@@ -5,7 +5,7 @@ let connection = null;
 let channel: amq.Channel | null = null;
 
 const EXCHANGE_NAME = "whispr_event";
-const QUEUE_NAME = "user.create.queue";
+// const QUEUE_NAME = "user.create.queue";
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 10000;
 const RETRY_QUEUE = "user.create.retry.queue";
@@ -20,7 +20,7 @@ export async function connectToRabbitMq() {
       durable: true,
       arguments: {
         "x-dead-letter-exchange": EXCHANGE_NAME,
-        "x-dead-letter-routing-key": QUEUE_NAME,
+        "x-dead-letter-routing-key": RETRY_QUEUE,
         "x-message-ttl": RETRY_DELAY,
       },
     });
@@ -42,7 +42,7 @@ export async function consumeEvent<T>(
     await connectToRabbitMq();
   }
 
-  try { 
+  try {
     const q = await channel?.assertQueue(queueName, { durable: true });
     await channel?.bindQueue(queueName, EXCHANGE_NAME, routingKey);
     channel?.consume(queueName, (msg) => {
