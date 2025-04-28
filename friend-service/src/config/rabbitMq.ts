@@ -31,7 +31,7 @@ export const publishEvent = async (routingKey: string, message: object) => {
       Buffer.from(JSON.stringify(message))
     );
 
-    logger.info("Message publsihed from friend service");
+    logger.info("Message published from friend service");
   } catch (error) {
     logger.error(error);
   }

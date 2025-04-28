@@ -32,6 +32,8 @@ const startServer = async () => {
     app.listen(PORT, () => {
       logger.info(`user service is running on port ${PORT}`);
     });
+    
+
     await connectToMongo();
     await connectToRabbitMq();
     await consumeEvent<IncomingUserMessage>(
@@ -40,8 +42,8 @@ const startServer = async () => {
       handleCreateUser
     );
     await consumeEvent<IncomingFriendsMessage>(
-      "friends.created",
-      "friends.create.queue",
+      "friends.accept.created",
+      "friends.accept.create.queue",
       handleAddFriends
     );
   } catch (error) {

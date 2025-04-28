@@ -4,7 +4,7 @@ import logger from "../utils/logger";
 let connection: amq.ChannelModel | null = null;
 let channel: amq.Channel | null = null;
 
-const EXCHANGE_NAME = "whsipr_event";
+const EXCHANGE_NAME = "whispr_event";
 const RETRY_QUEUE = "chat.created.retry.queue";
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 10000;
@@ -25,6 +25,8 @@ export const connectToRabbitMq = async () => {
       },
     });
     logger.info("Connected to rabbitMq");
+
+    return channel;
   } catch (error) {
     logger.error("an error occured connecting to rabbitmq", error);
   }
@@ -35,15 +37,18 @@ export const consumeEvent = async <T>(
   routingKey: string,
   callback: (content: T) => void
 ) => {
+  logger.info("consume event started");
   if (!connection) {
     await connectToRabbitMq();
   }
+
   try {
     const q = await channel?.assertQueue(queueName, { durable: true });
 
     await channel?.bindQueue(queueName, EXCHANGE_NAME, routingKey);
 
     channel?.consume(queueName, (msg) => {
+      logger.info("message coming in chat service", msg);
       if (msg !== null) {
         try {
           const message = JSON.parse(msg.content.toString());
@@ -62,7 +67,7 @@ export const consumeEvent = async <T>(
           if (newRetry <= MAX_RETRIES) {
             channel?.publish("", RETRY_QUEUE, msg?.content, {
               headers: {
-                retries: newRetry,
+                "x-retries": newRetry,
               },
               persistent: true,
             });
