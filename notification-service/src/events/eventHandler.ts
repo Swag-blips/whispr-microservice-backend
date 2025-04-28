@@ -9,7 +9,7 @@ export const handleFriendRequestNotification = async (
     await Notification.create({
       from: event.from,
       to: event.to,
-      type: "Pending",
+      
     });
 
     logger.info("Friend request notification created");

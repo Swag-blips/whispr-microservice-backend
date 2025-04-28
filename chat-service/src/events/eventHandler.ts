@@ -8,7 +8,9 @@ export const handleCreateChat = async (content: ChatCreatedEvent) => {
 
     await Chat.create({
       participants,
+      type: "private",
     });
+    logger.info("Chat created successfully");
   } catch (error) {
     logger.error("error creating a chat", error);
   }

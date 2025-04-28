@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ChatSchema } from "../types/type";
 
 const chatSchema = new mongoose.Schema(
   {
@@ -7,8 +8,14 @@ const chatSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         index: true,
+        required: true,
       },
     ],
+    type: {
+      type: String,
+      enum: ["private", "group"],
+      default: "private",
+    },
     lastMessage: {
       type: String,
       default: "",
@@ -24,6 +31,6 @@ const chatSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Chat = mongoose.model("Chat", chatSchema);
+const Chat = mongoose.model<ChatSchema>("Chat", chatSchema);
 
 export default Chat;
