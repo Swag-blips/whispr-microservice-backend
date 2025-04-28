@@ -7,7 +7,9 @@ import helmet from "helmet";
 import cors from "cors";
 import errorHandler from "./middleware/errorHandler";
 import dotenv from "dotenv";
-import { connectToRabbitMq } from "./config/rabbitMq";
+import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
+import { ChatCreatedEvent } from "./types/type";
+import { handleCreateChat } from "./events/eventHandler";
 
 dotenv.config();
 
@@ -24,6 +26,11 @@ const startServer = async () => {
   try {
     await connectToMongo();
     await connectToRabbitMq();
+    await consumeEvent<ChatCreatedEvent>(
+      "chat.created.queue",
+      "chat.created",
+      handleCreateChat
+    );
 
     app.listen(PORT, () => {
       logger.info("server is listening on port", PORT);
