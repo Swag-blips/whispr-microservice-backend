@@ -35,7 +35,7 @@ export const consumeEvent = async <T>(
   routingKey: string,
   callback: (content: T) => void
 ) => {
-  if (connection) {
+  if (!connection) {
     await connectToRabbitMq();
   }
   try {

@@ -23,6 +23,7 @@ export const publishEvent = async (routingKey: string, message: object) => {
   if (!channel) {
     await connectToRabbitMq();
   }
+  
   try {
     channel?.publish(
       EXCHANGE_NAME,

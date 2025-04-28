@@ -33,7 +33,7 @@ const startServer = async () => {
     );
 
     app.listen(PORT, () => {
-      logger.info("server is listening on port", PORT);
+      logger.info("chat service is listening on port", PORT);
     });
   } catch (error) {
     logger.error(error);

@@ -3,6 +3,7 @@ import { ChatCreatedEvent } from "../types/type";
 import logger from "../utils/logger";
 
 export const handleCreateChat = async (content: ChatCreatedEvent) => {
+  logger.info("handle creat chat event");
   try {
     const { participants } = content;
 

@@ -9,7 +9,6 @@ import limiter from "./config/rateLimit";
 import connectToMongo from "./config/dbConnect";
 import friendRoutes from "./routes/friendRequest.route";
 import { connectToRabbitMq } from "./config/rabbitMq";
-
 dotenv.config();
 
 const app = express();

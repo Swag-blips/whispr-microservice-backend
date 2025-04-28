@@ -3,7 +3,7 @@ import logger from "../utils/logger";
 
 
 const connectToMongo = async () => {
-  logger.info(process.env.MONGODB_URI);
+ 
   try {
     const connection = await mongoose.connect(
       process.env.MONGODB_URI as string
