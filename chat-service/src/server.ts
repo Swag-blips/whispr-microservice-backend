@@ -11,6 +11,8 @@ import dotenv from "dotenv";
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
 import { ChatCreatedEvent } from "./types/type";
 import { handleCreateChat } from "./events/eventHandler";
+import { fetchPermissions } from "./utils/fetchPermissions";
+import redisClient from "./config/redis";
 
 dotenv.config();
 
