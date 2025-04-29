@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import logger from "../utils/logger";
 import redisClient from "../config/redis";
-
 import Message from "../models/message.model";
 import Chat from "../models/chat.model";
 import { io } from "../socket/socket";
@@ -95,6 +94,8 @@ export const getMessages = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
 
+    const userId = req.userId
+
     if (!chatId) {
       res.status(400).json({ success: false, message: "Chat Id is required" });
       return;
@@ -142,20 +143,33 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
     const { chatId } = req.params;
 
     const { participants } = req.body;
+
+    const userId = req.userId;
+
     if (!chatId) {
       res.status(400).json({ success: false, message: "ChatId is required" });
       return;
     }
 
-    const chat = await Chat.findByIdAndUpdate(chatId, {
-      $push: { participants: participants },
-    });
+    const chat = await Chat.findById(chatId);
 
     if (!chat) {
       res.status(404).json({ success: false, message: "Chat not found" });
       return;
     }
 
+    if (!chat.participants.includes(userId)) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized access, you must be a member to update details",
+      });
+      return;
+    }
+
+    chat.participants.push(...participants);
+
+    await chat.save();
+    
     res.status(201).json({ success: true, message: "User added to chat" });
     return;
   } catch (error) {
@@ -166,21 +180,33 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
 
 export const removeMemberFromGroup = async (req: Request, res: Response) => {
   try {
-    const { chatId, memberId } = req.params;
+    const { chatId } = req.params;
+
+    const { memberId } = req.body;
+
+    const userId = req.userId;
 
     if (!chatId) {
       res.status(400).json({ success: false, message: "ChatId is required" });
       return;
     }
 
-    const chat = await Chat.findByIdAndUpdate(chatId, {
-      $pull: { participants: memberId },
-    });
+    const chat = await Chat.findById(chatId);
 
     if (!chat) {
       res.status(400).json({ success: false, message: "chat not found" });
       return;
     }
+    if (!chat.participants.includes(userId)) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized access, you must be a member to update details",
+      });
+      return;
+    }
+
+    chat.participants.filter((participant) => participant !== memberId);
+    await chat.save();
     res.status(201).json({ success: true, message: "User removed from chat" });
     return;
   } catch (error) {
@@ -194,6 +220,8 @@ export const updateGroupDetails = async (req: Request, res: Response) => {
     const { chatId } = req.params;
     const { bio, groupName } = req.body;
 
+    const userId = req.userId;
+
     if (!chatId) {
       res.status(400).json({ success: false, message: "ChatId is required" });
       return;
@@ -203,6 +231,14 @@ export const updateGroupDetails = async (req: Request, res: Response) => {
 
     if (!chat) {
       res.status(404).json({ success: false, message: "chat not found" });
+      return;
+    }
+
+    if (!chat.participants.includes(userId)) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized access, you must be a member to update details",
+      });
       return;
     }
 

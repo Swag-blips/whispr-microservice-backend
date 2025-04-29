@@ -1,5 +1,6 @@
 import rateLimit from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
+import type { RedisReply } from "rate-limit-redis"; // if exported
 import redisClient from "./redisClient";
 
 const limiter = rateLimit({
@@ -9,7 +10,11 @@ const limiter = rateLimit({
   legacyHeaders: false,
 
   store: new RedisStore({
-    sendCommand: (...args) => redisClient.call(...args),
+    sendCommand: (...args: string[]): Promise<RedisReply> => {
+      return redisClient.call(
+        ...(args as [string, ...string[]])
+      ) as Promise<RedisReply>;
+    },
   }),
 });
 

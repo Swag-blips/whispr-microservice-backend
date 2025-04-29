@@ -6,7 +6,7 @@ import errorHandler from "./middleware/errorHandler";
 import logRequests from "./middleware/logRequests";
 import logger from "./utils/logger";
 import connectToMongo from "./config/dbConnect";
-import limiter from "./middleware/rateLimit";
+import limiter from "./config/rateLimit";
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
 import { handleFriendRequestNotification } from "./events/eventHandler";
 
