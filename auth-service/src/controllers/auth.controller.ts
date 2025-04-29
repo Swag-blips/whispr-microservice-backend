@@ -12,11 +12,12 @@ import crypto from "crypto";
 import { sendOtpMail, sendVerificationMail } from "../utils/sendMail";
 import redisClient from "../config/redis";
 import { publishEvent } from "../config/rabbitMq";
+import { queue } from "../utils/imageWorker";
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint hit");
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, avatar } = req.body;
 
     const exisitingUser = await Auth.findOne({ email });
 
@@ -42,6 +43,8 @@ export const register = async (req: Request, res: Response) => {
       return;
     }
     await user.save();
+
+    await queue.add("avatar-upload", { imagePath: avatar, userId:user._id});
 
     await publishEvent("user.created", {
       _id: user._id,
