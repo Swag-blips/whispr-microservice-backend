@@ -16,6 +16,7 @@ const chatSchema = new mongoose.Schema(
     },
     bio: {
       type: String,
+      default: "Not much here yet... This group is fire",
     },
     type: {
       type: String,

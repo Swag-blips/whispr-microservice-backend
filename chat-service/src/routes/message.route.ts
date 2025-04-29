@@ -1,8 +1,19 @@
 import express from "express";
 import authenticateRequest from "../middleware/authenticateRequest";
-import { createGroup, sendMessage } from "../controller/message.controller";
+import {
+  addMemberToGroup,
+  createGroup,
+  removeMemberFromGroup,
+  sendMessage,
+  updateGroupDetails,
+} from "../controller/message.controller";
 import validateRequest from "../middleware/validateRequest";
-import { createGroupSchema, messageSchema } from "../utils/validate";
+import {
+  addToGroupSchema,
+  createGroupSchema,
+  messageSchema,
+  removeFromGroupSchema,
+} from "../utils/validate";
 
 const router = express.Router();
 
@@ -13,6 +24,26 @@ router.post(
   sendMessage
 );
 
-router.post("/group", validateRequest(createGroupSchema), createGroup);
+router.post(
+  "/group",
+  authenticateRequest,
+  validateRequest(createGroupSchema),
+  createGroup
+);
+router.post(
+  "/group/add/:chatId",
+  authenticateRequest,
+  validateRequest(addToGroupSchema),
+  addMemberToGroup
+);
+
+router.post(
+  "/group/remove/:chatId",
+  authenticateRequest,
+  validateRequest(removeFromGroupSchema),
+  removeMemberFromGroup
+);
+
+router.put("/group/:chatId", authenticateRequest, updateGroupDetails);
 
 export default router;

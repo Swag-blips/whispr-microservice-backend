@@ -8,7 +8,7 @@ export const generateAccessToken = (userId: Types.ObjectId) => {
     },
     process.env.JWT_SECRET_KEY as string,
     {
-      expiresIn: "10m",
+      expiresIn: "15m",
     }
   );
 

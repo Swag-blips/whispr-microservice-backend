@@ -72,7 +72,6 @@ export const sendMessage = async (req: Request, res: Response) => {
         chatId,
         content,
         receiverId,
-
         senderId: userId,
       });
 
@@ -103,7 +102,7 @@ export const getMessages = async (req: Request, res: Response) => {
 
     const messages = await Message.find({
       chatId,
-    });
+    }).limit(100);
 
     if (!messages.length) {
       res.status(200).json([]);
@@ -124,10 +123,101 @@ export const createGroup = async (req: Request, res: Response) => {
 
     const chat = await Chat.create({
       participants,
-      
+      groupName,
+      bio,
+      type: "group",
     });
+
+    res.status(201).json({ success: true, chat: chat });
+    logger.info("Group successfully created");
+    return;
   } catch (error) {
     logger.error(`error creating group ${error}`);
+    res.status(500).json({ error: error });
+  }
+};
+
+export const addMemberToGroup = async (req: Request, res: Response) => {
+  try {
+    const { chatId } = req.params;
+
+    const { participants } = req.body;
+    if (!chatId) {
+      res.status(400).json({ success: false, message: "ChatId is required" });
+      return;
+    }
+
+    const chat = await Chat.findByIdAndUpdate(chatId, {
+      $push: { participants: participants },
+    });
+
+    if (!chat) {
+      res.status(404).json({ success: false, message: "Chat not found" });
+      return;
+    }
+
+    res.status(201).json({ success: true, message: "User added to chat" });
+    return;
+  } catch (error) {
+    logger.error(`error adding member ${error}`);
+    res.status(500).json({ error: error });
+  }
+};
+
+export const removeMemberFromGroup = async (req: Request, res: Response) => {
+  try {
+    const { chatId, memberId } = req.params;
+
+    if (!chatId) {
+      res.status(400).json({ success: false, message: "ChatId is required" });
+      return;
+    }
+
+    const chat = await Chat.findByIdAndUpdate(chatId, {
+      $pull: { participants: memberId },
+    });
+
+    if (!chat) {
+      res.status(400).json({ success: false, message: "chat not found" });
+      return;
+    }
+    res.status(201).json({ success: true, message: "User removed from chat" });
+    return;
+  } catch (error) {
+    logger.error(`error removing member from group ${error}`);
+    res.status(500).json({ error: error });
+  }
+};
+
+export const updateGroupDetails = async (req: Request, res: Response) => {
+  try {
+    const { chatId } = req.params;
+    const { bio, groupName } = req.body;
+
+    if (!chatId) {
+      res.status(400).json({ success: false, message: "ChatId is required" });
+      return;
+    }
+
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) {
+      res.status(404).json({ success: false, message: "chat not found" });
+      return;
+    }
+
+    chat.bio = bio || chat.bio;
+    chat.groupName = groupName || chat.groupName;
+
+    await chat.save();
+
+    res
+      .status(201)
+      .json({ success: true, message: "group successfully updated" });
+
+    return;
+  } catch (error) {
+    logger.error(`error updating group details ${error}`);
     res.status(500).json({ error: error });
   }
 };

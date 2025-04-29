@@ -13,14 +13,12 @@ export interface MessageType {
 
 export interface ChatSchema {
   participants: Array<Types.ObjectId>;
-  type: ChatType;
+  type: "private" | "group";
   lastMessage: string;
+  groupName?: string;
+  bio?: string;
 }
 
-enum ChatType {
-  private = "private",
-  group = "group",
-}
 
 declare module "socket.io" {
   interface Socket {
