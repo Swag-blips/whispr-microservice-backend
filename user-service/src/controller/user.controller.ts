@@ -65,3 +65,18 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: error });
   }
 };
+
+export const updateUserInfo = async (req: Request, res: Response) => {
+  try {
+    const { username, bio, avatar } = req.body;
+    const userId = req.userId;
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      res.status(404).json({ success: false, message: "user not found" });
+      return;
+    }
+  } catch (error) {
+    logger.error("An error occured in the getCurrentUser controller", error);
+    res.status(500).json({ message: error });
+  }
+};

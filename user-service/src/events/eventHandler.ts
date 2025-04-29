@@ -13,7 +13,7 @@ export const handleCreateUser = async (user: IncomingUserMessage) => {
     });
 
     logger.info("User successfully created");
-  } catch (error) { 
+  } catch (error) {
     logger.error(error);
   }
 };
@@ -36,7 +36,7 @@ export const handleAddFriends = async (content: IncomingFriendsMessage) => {
       await User.findByIdAndUpdate(
         user2,
         {
-          $push: { friends: user1 }, 
+          $push: { friends: user1 },
         },
         { session }
       );
@@ -47,4 +47,3 @@ export const handleAddFriends = async (content: IncomingFriendsMessage) => {
     await session?.endSession();
   }
 };
-
