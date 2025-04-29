@@ -1,8 +1,8 @@
 import express from "express";
 import authenticateRequest from "../middleware/authenticateRequest";
-import { sendMessage } from "../controller/message.controller";
+import { createGroup, sendMessage } from "../controller/message.controller";
 import validateRequest from "../middleware/validateRequest";
-import { messageSchema } from "../utils/validate";
+import { createGroupSchema, messageSchema } from "../utils/validate";
 
 const router = express.Router();
 
@@ -12,3 +12,7 @@ router.post(
   validateRequest(messageSchema),
   sendMessage
 );
+
+router.post("/group", validateRequest(createGroupSchema), createGroup);
+
+export default router;

@@ -16,15 +16,27 @@ export const fetchPermissions = async (userId: Types.ObjectId) => {
 
       const permittedChats = chats.map((chat) => chat._id.toString());
 
-      await redisClient.sadd(`permittedChats${userId}`, permittedChats);
+      await redisClient.sadd(`permittedChats${userId}`, ...permittedChats);
 
       for (const chat of chats) {
-        await redisClient.sadd(`participants${chat._id}`, chat._id.toString());
+        await redisClient.sadd(
+          `permissions${chat._id}`,
+          ...chat.participants.map((user) => userId.toString())
+        );
       }
 
       logger.info(chats);
     } catch (error) {
-      logger.error(error);
+      logger.error(`an error occured fetching permissions ${error}`);
     }
+  }
+};
+
+export const invalidatePermissions = async (userId: Types.ObjectId) => {
+  try {
+    await redisClient.del(`permittedChats${userId}`);
+    logger.info("user permissions deleted successfully");
+  } catch (error) {
+    logger.error(`An error occured invalidating permissions ${error}`);
   }
 };

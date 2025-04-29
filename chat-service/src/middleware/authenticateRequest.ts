@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import logger from "../utils/logger";
 import { Types } from "mongoose";
 
-interface DecodedUser {
+export interface DecodedUser {
   userId: Types.ObjectId;
 }
 
@@ -28,6 +28,7 @@ const authenticateRequest = (
 
     if (decodedToken) {
       req.userId = decodedToken.userId;
+
       next();
     }
   } catch (error) {

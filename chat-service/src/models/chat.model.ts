@@ -11,6 +11,12 @@ const chatSchema = new mongoose.Schema(
         required: true,
       },
     ],
+    groupName: {
+      type: String,
+    },
+    bio: {
+      type: String,
+    },
     type: {
       type: String,
       enum: ["private", "group"],
