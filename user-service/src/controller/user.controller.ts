@@ -5,6 +5,8 @@ import redisClient from "../config/redis";
 import { queue } from "../utils/imageWorker";
 import { connection } from "../config/dbConnect";
 import mongoose from "mongoose";
+import { invalidatePermissions } from "../utils/fetchPermissions";
+import { publishEvent } from "../config/rabbitMq";
 
 export const getUser = async (req: Request, res: Response) => {
   logger.info("get user endpoint hit");
@@ -123,7 +125,7 @@ export const removeFriend = async (req: Request, res: Response) => {
 
     session = await connection?.startSession();
 
-    await session?.withTransaction(async () => {
+    const transaction = await session?.withTransaction(async () => {
       await User.findByIdAndUpdate(
         userId,
         {
@@ -140,6 +142,16 @@ export const removeFriend = async (req: Request, res: Response) => {
         { session }
       );
     });
+
+    if (transaction) {
+      await invalidatePermissions(userId);
+      await invalidatePermissions(friendId);
+
+      publishEvent("chat.deleted", {
+        user1: userId,
+        user2: friendId,
+      });
+    }
 
     res
       .status(200)

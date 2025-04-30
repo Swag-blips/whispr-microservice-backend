@@ -19,6 +19,10 @@ export interface ChatSchema {
   bio?: string;
 }
 
+export interface ChatDeletedEvent {
+  user1: Types.ObjectId;
+  user2: Types.ObjectId;
+}
 
 declare module "socket.io" {
   interface Socket {

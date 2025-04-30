@@ -33,6 +33,19 @@ export async function connectToRabbitMq() {
   }
 }
 
+export async function publishEvent(routingKey: string, message: object) {
+  if (!channel) {
+    await connectToRabbitMq();
+  }
+
+  channel?.publish(
+    EXCHANGE_NAME,
+    routingKey,
+    Buffer.from(JSON.stringify(message))
+  );
+  logger.info(`Event published: ${routingKey}`);
+}
+
 export async function consumeEvent<T>(
   routingKey: string,
   queueName: string,

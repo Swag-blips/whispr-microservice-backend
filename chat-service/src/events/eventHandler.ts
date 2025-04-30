@@ -1,5 +1,6 @@
+import mongoose from "mongoose";
 import Chat from "../models/chat.model";
-import { ChatCreatedEvent } from "../types/type";
+import { ChatCreatedEvent, ChatDeletedEvent } from "../types/type";
 import logger from "../utils/logger";
 
 export const handleCreateChat = async (content: ChatCreatedEvent) => {
@@ -16,3 +17,6 @@ export const handleCreateChat = async (content: ChatCreatedEvent) => {
     logger.error("error creating a chat", error);
   }
 };
+
+let session: mongoose.mongo.ClientSession | undefined;
+export const handleDeleteFriends = async (content: ChatDeletedEvent) => {};

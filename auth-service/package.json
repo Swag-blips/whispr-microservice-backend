@@ -15,6 +15,7 @@
     "argon2": "^0.41.1",
     "bullmq": "^5.51.1",
     "cloudinary": "^2.6.0",
+    "compression": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.7",
+    "@types/compression": "^1.7.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/jest": "^29.5.14",

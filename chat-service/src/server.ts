@@ -9,8 +9,8 @@ import cors from "cors";
 import errorHandler from "./middleware/errorHandler";
 import dotenv from "dotenv";
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
-import { ChatCreatedEvent } from "./types/type";
-import { handleCreateChat } from "./events/eventHandler";
+import { ChatCreatedEvent, ChatDeletedEvent } from "./types/type";
+import { handleCreateChat, handleDeleteFriends } from "./events/eventHandler";
 
 dotenv.config();
 
@@ -31,6 +31,11 @@ const startServer = async () => {
       "chat.created.queue",
       "chat.created",
       handleCreateChat
+    );
+    await consumeEvent<ChatDeletedEvent>(
+      "chat.deleted.queue",
+      "chat.deleted",
+      handleDeleteFriends
     );
 
     server.listen(PORT, () => {

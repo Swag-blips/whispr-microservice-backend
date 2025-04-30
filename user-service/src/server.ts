@@ -6,6 +6,7 @@ import logger from "./utils/logger";
 import errorHandler from "./middleware/errorHandler";
 import logRequests from "./middleware/logRequests";
 import connectToMongo from "./config/dbConnect";
+import compression from "compression";
 import { v2 as cloudinary } from "cloudinary";
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
 import userRoutes from "./routes/user.route";
@@ -37,6 +38,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3002;
 
 app.use(limiter);
+app.use(compression());
 app.use(errorHandler);
 app.use(logRequests);
 
