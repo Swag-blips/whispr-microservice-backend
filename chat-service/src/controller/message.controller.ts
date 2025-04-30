@@ -4,11 +4,12 @@ import redisClient from "../config/redis";
 import Message from "../models/message.model";
 import Chat from "../models/chat.model";
 import { io } from "../socket/socket";
+import { queue } from "../utils/fileWorker";
 
 export const sendMessage = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
-    const { content } = req.body;
+    const { content, file } = req.body;
     const userId = req.userId;
 
     const permittedChats = await redisClient.smembers(
@@ -33,12 +34,31 @@ export const sendMessage = async (req: Request, res: Response) => {
         (user) => user.toString() !== userId
       );
 
-      await Message.create({
+      const message = await Message.create({
         chatId,
         content,
         receiverId: receiverId,
         senderId: userId,
       });
+
+      if (file) {
+        queue.add(
+          "upload-message-image",
+          {
+            imagePath: file,
+            messageId: message._id,
+          },
+          {
+            attempts: 3,
+            backoff: {
+              type: "exponential",
+              delay: 3000,
+            },
+            removeOnComplete: true,
+            removeOnFail: true,
+          }
+        );
+      }
 
       await redisClient.sadd(`permittedChats${userId}`, chat._id.toString());
       await redisClient.sadd(

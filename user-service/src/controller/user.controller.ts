@@ -3,6 +3,7 @@ import logger from "../utils/logger";
 import User from "../models/user.model";
 import redisClient from "../config/redis";
 import { queue } from "../utils/imageWorker";
+import { connection } from "../config/dbConnect";
 
 export const getUser = async (req: Request, res: Response) => {
   logger.info("get user endpoint hit");
