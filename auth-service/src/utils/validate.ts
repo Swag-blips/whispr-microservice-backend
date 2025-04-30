@@ -21,3 +21,7 @@ export const otpSchema = Joi.object({
 export const validateRegistration = (data: AuthUser) => {
   return registrationSchema.validate(data);
 };
+
+export const resetPasswordSchema = Joi.object({
+  newPassword: Joi.string().min(6).required(),
+});

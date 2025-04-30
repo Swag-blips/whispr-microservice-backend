@@ -13,6 +13,7 @@ import { sendOtpMail, sendVerificationMail } from "../utils/sendMail";
 import redisClient from "../config/redis";
 import { publishEvent } from "../config/rabbitMq";
 import { queue } from "../utils/imageWorker";
+import argon2 from "argon2";
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint hit");
@@ -296,5 +297,40 @@ export const refreshToken = async (req: Request, res: Response) => {
         return;
       }
     }
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { newPassword } = req.body;
+
+    const userId = req.userId;
+
+    const user = await Auth.findById(userId);
+
+    if (!user) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return;
+    }
+
+    const verifyPassword = await user.comparePassword(newPassword);
+
+    if (verifyPassword) {
+      res.status(400).json({
+        success: false,
+        message: "Old password and new password are the same",
+      });
+
+      return;
+    }
+
+    user.password = newPassword;
+    await user.save();
+    res
+      .status(201)
+      .json({ success: true, message: "Password successfully updated" });
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ success: false, error: error });
   }
 };
