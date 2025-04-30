@@ -9,8 +9,8 @@ import connectToMongo from "./config/dbConnect";
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
 import userRoutes from "./routes/user.route";
 import limiter from "./config/rateLimit";
-import { handleAddFriends, handleCreateUser } from "./events/eventHandler";
-import { IncomingFriendsMessage, IncomingUserMessage } from "./types/types";
+import { handleAddFriends, handleCreateUser, handleSaveAvatar } from "./events/eventHandler";
+import { IncomingFriendsMessage, IncomingProfilePic, IncomingUserMessage } from "./types/types";
 
 dotenv.config();
 
@@ -32,7 +32,6 @@ const startServer = async () => {
     app.listen(PORT, () => {
       logger.info(`user service is running on port ${PORT}`);
     });
-    
 
     await connectToMongo();
     await connectToRabbitMq();
@@ -45,6 +44,11 @@ const startServer = async () => {
       "friends.accept.created",
       "friends.accept.create.queue",
       handleAddFriends
+    );
+    await consumeEvent<IncomingProfilePic>(
+      "avatar.uploaded",
+      "avatar.uploaded.queue",
+      handleSaveAvatar
     );
   } catch (error) {
     logger.error(error);

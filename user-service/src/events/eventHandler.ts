@@ -1,8 +1,13 @@
 import mongoose from "mongoose";
 import { connection } from "../config/dbConnect";
 import User from "../models/user.model";
-import { IncomingFriendsMessage, IncomingUserMessage } from "../types/types";
+import {
+  IncomingFriendsMessage,
+  IncomingProfilePic,
+  IncomingUserMessage,
+} from "../types/types";
 import logger from "../utils/logger";
+import { tryCatch } from "bullmq";
 
 export const handleCreateUser = async (user: IncomingUserMessage) => {
   try {
@@ -45,5 +50,18 @@ export const handleAddFriends = async (content: IncomingFriendsMessage) => {
     logger.error("Transaction failed", error);
   } finally {
     await session?.endSession();
+  }
+};
+
+export const handleSaveAvatar = async (content: IncomingProfilePic) => {
+  try {
+    const { userId, result } = content;
+
+    const user = await User.findByIdAndUpdate(userId, {
+      avatar: result,
+    });
+    logger.info("image saved successfully");
+  } catch (error) {
+    logger.error(error);
   }
 };

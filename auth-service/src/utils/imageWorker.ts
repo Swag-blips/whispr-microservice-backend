@@ -1,4 +1,3 @@
-import { cloudinaryConfig } from "../config/cloudinary";
 import { Queue, Worker } from "bullmq";
 import redisClient from "../config/redis";
 import { v2 as cloudinary } from "cloudinary";
@@ -35,6 +34,9 @@ const worker = new Worker(
   async (job: { data: { imagePath: string; userId: Types.ObjectId } }) => {
     const { imagePath, userId } = job.data;
     await uploadToCloudinary(imagePath, userId);
+  },
+  {
+    connection: redisClient,
   }
 );
 

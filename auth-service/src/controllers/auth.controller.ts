@@ -44,7 +44,7 @@ export const register = async (req: Request, res: Response) => {
     }
     await user.save();
 
-    await queue.add("avatar-upload", { imagePath: avatar, userId:user._id});
+    await queue.add("avatar-upload", { imagePath: avatar, userId: user._id });
 
     await publishEvent("user.created", {
       _id: user._id,

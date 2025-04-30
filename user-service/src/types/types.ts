@@ -14,3 +14,8 @@ export interface IncomingFriendsMessage {
 export interface User extends IncomingUserMessage {
   avatar: string;
 }
+
+export interface IncomingProfilePic {
+  userId: Types.ObjectId;
+  result: string;
+}

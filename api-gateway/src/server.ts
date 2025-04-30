@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 
 app.use(helmet());
-app.use(express.json());
+app.use(express.json({ limit: "5mb" }));
 
 app.use(errorHandler);
 app.use(limiter);
@@ -84,7 +84,6 @@ app.use(
     },
   })
 );
-
 
 app.use(
   "/v1/chat",
