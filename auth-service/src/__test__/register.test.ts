@@ -3,6 +3,7 @@ import { app, server } from "../server";
 import mongoose from "mongoose";
 import Auth from "../models/auth.model";
 import redisClient from "../config/redis";
+import { worker } from "../utils/imageWorker";
 
 jest.setTimeout(60000);
 
@@ -58,4 +59,5 @@ afterAll(async () => {
   await mongoose.connection.close();
   server.close();
   await redisClient.quit();
+  await worker.close();
 });

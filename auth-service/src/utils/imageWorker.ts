@@ -29,7 +29,7 @@ export const uploadToCloudinary = async (
   }
 };
 
-const worker = new Worker(
+export const worker = new Worker(
   "upload-avatar",
   async (job: { data: { imagePath: string; userId: Types.ObjectId } }) => {
     const { imagePath, userId } = job.data;

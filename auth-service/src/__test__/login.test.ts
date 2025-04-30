@@ -3,6 +3,7 @@ import { server } from "../server";
 import mongoose from "mongoose";
 import redisClient from "../config/redis";
 import Auth from "../models/auth.model";
+import { worker } from "../utils/imageWorker";
 
 jest.setTimeout(60000);
 
@@ -11,7 +12,7 @@ beforeAll(async () => {
 });
 
 const userDetails = {
-  email: "swag@test.com",
+  email: "coderblip@gmail.com",
   username: "JerrySpeinfield",
   password: "Test@test02",
 };
@@ -23,7 +24,7 @@ describe("Login route", () => {
       password: userDetails.password,
     });
     const res = await request(server).post("/api/auth/login").send({
-      username: userDetails.username,
+      email: userDetails.email,
       password: userDetails.password,
     });
 
@@ -50,6 +51,8 @@ describe("Login route", () => {
 
 afterAll(async () => {
   await Auth.deleteMany({});
+  await mongoose.connection.close();
   server.close();
   await redisClient.quit();
+  await worker.close();
 });
