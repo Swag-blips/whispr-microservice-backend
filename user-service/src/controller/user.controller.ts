@@ -4,6 +4,7 @@ import User from "../models/user.model";
 import redisClient from "../config/redis";
 import { queue } from "../utils/imageWorker";
 import { connection } from "../config/dbConnect";
+import mongoose from "mongoose";
 
 export const getUser = async (req: Request, res: Response) => {
   logger.info("get user endpoint hit");
@@ -113,24 +114,32 @@ export const updateUserInfo = async (req: Request, res: Response) => {
   }
 };
 
+let session: mongoose.mongo.ClientSession | undefined;
+
 export const removeFriend = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
-
     const { friendId } = req.body;
 
-    const user = await User.findByIdAndUpdate(userId, {
-      $pull: { friends: friendId },
-    });
+    session = await connection?.startSession();
 
-    const user2 = await User.findByIdAndUpdate(friendId, {
-      $pull: { friends: userId },
-    });
+    await session?.withTransaction(async () => {
+      await User.findByIdAndUpdate(
+        userId,
+        {
+          $pull: { friends: friendId },
+        },
+        { session }
+      );
 
-    if (!user || !user2) {
-      res.status(404).json({ success: false, message: "User does not exist" });
-      return;
-    }
+      await User.findByIdAndUpdate(
+        friendId,
+        {
+          $pull: { friends: userId },
+        },
+        { session }
+      );
+    });
 
     res
       .status(200)

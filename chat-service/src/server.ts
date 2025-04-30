@@ -12,7 +12,6 @@ import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
 import { ChatCreatedEvent } from "./types/type";
 import { handleCreateChat } from "./events/eventHandler";
 
-
 dotenv.config();
 
 app.use(cors());
