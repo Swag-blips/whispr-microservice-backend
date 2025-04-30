@@ -40,12 +40,6 @@ const worker = new Worker(
   }
 );
 
-(async () => {
-  if (await queue.count()) {
-    await worker.run();
-  }
-})();
-
 worker.on("failed", (job: any, err) => {
   logger.error(`Image upload job failed for job ${job.id}:`, err);
 });
