@@ -39,7 +39,13 @@ const otp = describe("verify otp route", () => {
 
   it("fails if no otp and email", async () => {
     const res = await request(server).post("/api/auth/verify-otp");
-
     expect(res.statusCode).toBe(400);
   });
+});
+
+afterAll(async () => {
+  await mongoose.connection.close();
+  server.close();
+  await redisClient.quit();
+  await worker.close();
 });
