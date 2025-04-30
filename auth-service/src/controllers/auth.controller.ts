@@ -165,6 +165,8 @@ export const verifyOtp = async (req: Request, res: Response) => {
   try {
     const { otp, email } = req.body;
 
+    console.log(otp, email);
+
     if (!otp || !email) {
       res
         .status(400)
@@ -173,7 +175,6 @@ export const verifyOtp = async (req: Request, res: Response) => {
     }
 
     const otpDoc = await redisClient.get(`otp:${email}`);
-    logger.info("otp document", otpDoc);
     if (!otpDoc) {
       res.status(400).json({ success: false, message: "Expired Otp" });
       return;

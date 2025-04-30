@@ -9,6 +9,7 @@ jest.setTimeout(60000);
 
 beforeAll(async () => {
   await mongoose.connect(process.env.MONGODB_URI as string);
+
 });
 
 describe("Test register endpoint", () => {
