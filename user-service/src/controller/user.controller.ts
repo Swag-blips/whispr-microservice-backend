@@ -125,6 +125,12 @@ export const removeFriend = async (req: Request, res: Response) => {
 
     session = await connection?.startSession();
 
+    if (userId === friendId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Cannot unfriend yourself" });
+    }
+
     const transaction = await session?.withTransaction(async () => {
       await User.findByIdAndUpdate(
         userId,
@@ -159,5 +165,8 @@ export const removeFriend = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     logger.error(error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  } finally {
+    await session?.endSession();
   }
 };
