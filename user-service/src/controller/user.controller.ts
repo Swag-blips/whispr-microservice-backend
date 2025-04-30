@@ -3,10 +3,14 @@ import logger from "../utils/logger";
 import User from "../models/user.model";
 import redisClient from "../config/redis";
 import { queue } from "../utils/imageWorker";
+
 export const getUser = async (req: Request, res: Response) => {
   logger.info("get user endpoint hit");
   try {
     const username = req.params.username;
+    if (req.body.length > 0) {
+      res.status(400).json({ success: false, message: "body not allowed" });
+    }
     const expiryTime = 5 * 60;
     if (!username) {
       res.status(400).json({ success: false, message: "Username required" });
@@ -105,5 +109,33 @@ export const updateUserInfo = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error("An error occured in the getCurrentUser controller", error);
     res.status(500).json({ message: error });
+  }
+};
+
+export const removeFriend = async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId;
+
+    const { friendId } = req.body;
+
+    const user = await User.findByIdAndUpdate(userId, {
+      $pull: { friends: friendId },
+    });
+
+    const user2 = await User.findByIdAndUpdate(friendId, {
+      $pull: { friends: userId },
+    });
+
+    if (!user || !user2) {
+      res.status(404).json({ success: false, message: "User does not exist" });
+      return;
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "friend removed sucessfully" });
+    return;
+  } catch (error) {
+    logger.error(error);
   }
 };

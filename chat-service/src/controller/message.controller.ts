@@ -94,7 +94,7 @@ export const getMessages = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
 
-    const userId = req.userId
+    const userId = req.userId;
 
     if (!chatId) {
       res.status(400).json({ success: false, message: "Chat Id is required" });
@@ -169,7 +169,7 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
     chat.participants.push(...participants);
 
     await chat.save();
-    
+
     res.status(201).json({ success: true, message: "User added to chat" });
     return;
   } catch (error) {
