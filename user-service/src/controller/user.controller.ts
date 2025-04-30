@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import logger from "../utils/logger";
 import User from "../models/user.model";
 import redisClient from "../config/redis";
+import { queue } from "../utils/imageWorker";
 export const getUser = async (req: Request, res: Response) => {
   logger.info("get user endpoint hit");
   try {
@@ -75,6 +76,32 @@ export const updateUserInfo = async (req: Request, res: Response) => {
       res.status(404).json({ success: false, message: "user not found" });
       return;
     }
+
+    if (avatar) {
+      queue.add(
+        "upload-avatar",
+        { imagePath: avatar, userId },
+        {
+          attempts: 3,
+          backoff: {
+            type: "exponential",
+            delay: 3000,
+          },
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      );
+    }
+
+    currentUser.username = username || currentUser.username;
+    currentUser.bio = bio || currentUser.bio;
+
+    await currentUser.save();
+
+    res
+      .status(201)
+      .json({ success: false, message: "Profile updated successfully" });
+    return;
   } catch (error) {
     logger.error("An error occured in the getCurrentUser controller", error);
     res.status(500).json({ message: error });

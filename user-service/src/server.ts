@@ -6,15 +6,30 @@ import logger from "./utils/logger";
 import errorHandler from "./middleware/errorHandler";
 import logRequests from "./middleware/logRequests";
 import connectToMongo from "./config/dbConnect";
+import { v2 as cloudinary } from "cloudinary";
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
 import userRoutes from "./routes/user.route";
 import limiter from "./config/rateLimit";
-import { handleAddFriends, handleCreateUser, handleSaveAvatar } from "./events/eventHandler";
-import { IncomingFriendsMessage, IncomingProfilePic, IncomingUserMessage } from "./types/types";
+import {
+  handleAddFriends,
+  handleCreateUser,
+  handleSaveAvatar,
+} from "./events/eventHandler";
+import {
+  IncomingFriendsMessage,
+  IncomingProfilePic,
+  IncomingUserMessage,
+} from "./types/types";
 
 dotenv.config();
 
 const app = express();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 app.use(cors());
 app.use(helmet());
