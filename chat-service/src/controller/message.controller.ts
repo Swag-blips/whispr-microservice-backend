@@ -61,6 +61,23 @@ export const sendMessage = async (req: Request, res: Response) => {
         );
       }
 
+      queue.add(
+        "update-last-message",
+        {
+          message: content,
+          chatId: chatId,
+        },
+        {
+          attempts: 3,
+          backoff: {
+            type: "exponential",
+            delay: 3000,
+          },
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      );
+
       await redisClient.sadd(`permittedChats${userId}`, chat._id.toString());
       await redisClient.sadd(
         `permissions${chatId}`,
@@ -97,6 +114,23 @@ export const sendMessage = async (req: Request, res: Response) => {
 
       const receiverId = chatParticipants.find(
         (user) => user.toString() !== userId
+      );
+
+      queue.add(
+        "update-last-message",
+        {
+          message: content,
+          chatId: chatId,
+        },
+        {
+          attempts: 3,
+          backoff: {
+            type: "exponential",
+            delay: 3000,
+          },
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
       );
 
       const message = await Message.create({
