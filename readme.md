@@ -18,7 +18,7 @@ This is the backend of a **Chat Application** built with a **microservices archi
 - **RabbitMQ / Event Bus** – For inter-service communication (optional for scaling)
 
 ---
-
+ 
 ## 📦 Microservices Overview
 
 Each service is deployed independently and communicates over HTTP or an event bus.

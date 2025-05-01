@@ -121,6 +121,13 @@ export const getMessages = async (req: Request, res: Response) => {
       return;
     }
 
+    const cachedMessages = await redisClient.get(`messages:${chatId}`);
+
+    if (cachedMessages) {
+      const parsedMessages = JSON.parse(cachedMessages);
+      res.status(200).json({ success: false, messages: parsedMessages });
+    }
+
     const messages = await Message.find({
       chatId,
     }).limit(100);
@@ -129,6 +136,15 @@ export const getMessages = async (req: Request, res: Response) => {
       res.status(200).json([]);
       return;
     }
+
+    const expiryTime = 5 * 60;
+
+    await redisClient.set(
+      `messages:${chatId}`,
+      JSON.stringify(messages),
+      "EX",
+      expiryTime
+    );
 
     res.status(200).json({ success: true, messages });
     return;
