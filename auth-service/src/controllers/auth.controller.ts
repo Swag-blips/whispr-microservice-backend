@@ -3,7 +3,6 @@ import logger from "../utils/logger";
 import Auth from "../models/auth.model";
 import {
   generateAccessToken,
-  generateMailToken,
   generateRefreshToken,
 } from "../utils/generateToken";
 import jwt from "jsonwebtoken";
@@ -11,8 +10,6 @@ import { decodeEmailToken } from "../utils/decodeToken";
 import crypto from "crypto";
 import { sendOtpMail, sendVerificationMail } from "../utils/sendMail";
 import redisClient from "../config/redis";
-import { publishEvent } from "../config/rabbitMq";
-import { queue } from "../utils/imageWorker";
 import { registerUser } from "../services/auth.service";
 
 export const register = async (req: Request, res: Response) => {

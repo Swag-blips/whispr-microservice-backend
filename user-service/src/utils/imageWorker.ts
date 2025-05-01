@@ -40,6 +40,6 @@ const worker = new Worker(
   }
 );
 
-worker.on("failed", (job: any, err) => {
-  logger.error(`Image upload job failed for job ${job.id}:`, err);
+worker.on("failed", (job, err) => {
+  logger.error(`Image upload job failed for job ${job}:`, err);
 });

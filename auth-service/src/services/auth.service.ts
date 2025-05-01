@@ -1,8 +1,7 @@
-import { Response } from "express";
 import Auth from "../models/auth.model";
-import { sendVerificationMail } from "../utils/sendMail";
 import { generateMailToken } from "../utils/generateToken";
 import { queue } from "../utils/imageWorker";
+import { queue as emailQueue } from "../utils/emailWorker";
 import { publishEvent } from "../config/rabbitMq";
 import logger from "../utils/logger";
 export const registerUser = async (
@@ -24,11 +23,21 @@ export const registerUser = async (
     });
 
     const token = generateMailToken(user._id, email);
-    const verificationEmail = sendVerificationMail(email, username, token);
 
-    if (!verificationEmail) {
-      throw new Error("Error sending verification mail");
-    }
+    await emailQueue.add(
+      "send-email",
+      {
+        email: email,
+        username: username,
+        token: token,
+      },
+      {
+        attempts: 3,
+        backoff: { type: "exponential", delay: 3000 },
+        removeOnComplete: true,
+        removeOnFail: true,
+      }
+    );
 
     await user.save();
 
