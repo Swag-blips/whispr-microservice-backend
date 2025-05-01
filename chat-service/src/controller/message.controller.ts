@@ -5,6 +5,7 @@ import Message from "../models/message.model";
 import Chat from "../models/chat.model";
 import { io } from "../socket/socket";
 import { queue } from "../utils/fileWorker";
+import { cacheMessages, getCachedMessages } from "../utils/cache";
 
 export const sendMessage = async (req: Request, res: Response) => {
   try {
@@ -66,6 +67,17 @@ export const sendMessage = async (req: Request, res: Response) => {
         ...chat.participants.map((particpant) => particpant.toString())
       );
 
+      const cached = await redisClient.get(`messages:${chatId}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        parsed.push(message);
+        await redisClient.set(
+          `messages:${chatId}`,
+          JSON.stringify(parsed),
+          "EX",
+          300
+        );
+      }
       res
         .status(201)
         .json({ success: false, message: "Message successfully sent" });
@@ -93,7 +105,17 @@ export const sendMessage = async (req: Request, res: Response) => {
         receiverId,
         senderId: userId,
       });
-
+      const cached = await redisClient.get(`messages:${chatId}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        parsed.push(message);
+        await redisClient.set(
+          `messages:${chatId}`,
+          JSON.stringify(parsed),
+          "EX",
+          300
+        );
+      }
       if (message && receiverId) {
         io.to(receiverId).emit("newMessage", message);
       }
@@ -121,33 +143,16 @@ export const getMessages = async (req: Request, res: Response) => {
       return;
     }
 
-    const cachedMessages = await redisClient.get(`messages:${chatId}`);
-
-    if (cachedMessages) {
-      const parsedMessages = JSON.parse(cachedMessages);
-      res.status(200).json({ success: false, messages: parsedMessages });
+    const cached = await getCachedMessages(chatId);
+    if (cached) {
+      return res.status(200).json({ success: true, messages: cached });
     }
 
-    const messages = await Message.find({
-      chatId,
-    }).limit(100);
+    const messages = await Message.find({ chatId }).limit(100);
+    if (!messages.length) return res.status(200).json([]);
 
-    if (!messages.length) {
-      res.status(200).json([]);
-      return;
-    }
-
-    const expiryTime = 5 * 60;
-
-    await redisClient.set(
-      `messages:${chatId}`,
-      JSON.stringify(messages),
-      "EX",
-      expiryTime
-    );
-
-    res.status(200).json({ success: true, messages });
-    return;
+    await cacheMessages(chatId, messages);
+    return res.status(200).json({ success: true, messages });
   } catch (error) {
     logger.error(`error getting messages ${error}`);
     res.status(500).json({ error: error });
