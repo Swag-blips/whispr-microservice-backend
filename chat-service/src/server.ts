@@ -3,6 +3,7 @@ import logger from "./utils/logger";
 import connectToMongo from "./config/dbConnect";
 import limiter from "./config/rateLimit";
 import logRequests from "./utils/logRequests";
+import cluster from "cluster";
 import { app, server } from "./socket/socket";
 import helmet from "helmet";
 import cors from "cors";
@@ -11,6 +12,7 @@ import dotenv from "dotenv";
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
 import { ChatCreatedEvent, ChatDeletedEvent } from "./types/type";
 import { handleCreateChat, handleDeleteFriends } from "./events/eventHandler";
+import { initSocket } from "./utils/initSocket";
 
 dotenv.config();
 
@@ -23,20 +25,9 @@ app.use(logRequests);
 app.use(errorHandler);
 const PORT = process.env.PORT || 3005;
 
-const startServer = async () => {
+export const startServer = async () => {
   try {
-    await connectToMongo();
-    await connectToRabbitMq();
-    await consumeEvent<ChatCreatedEvent>(
-      "chat.created.queue",
-      "chat.created",
-      handleCreateChat
-    );
-    await consumeEvent<ChatDeletedEvent>(
-      "chat.deleted.queue",
-      "chat.deleted",
-      handleDeleteFriends
-    );
+    await Promise.all([connectToMongo(), initSocket()]);
 
     server.listen(PORT, () => {
       logger.info("chat service is listening on port", PORT);
@@ -45,5 +36,3 @@ const startServer = async () => {
     logger.error(error);
   }
 };
-
-startServer();

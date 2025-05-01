@@ -9,7 +9,6 @@ import {
   fetchPermissions,
   invalidatePermissions,
 } from "../utils/fetchPermissions";
-
 export const app = express();
 
 export const server = http.createServer(app);
