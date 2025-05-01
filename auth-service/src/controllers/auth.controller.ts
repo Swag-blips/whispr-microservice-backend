@@ -13,57 +13,14 @@ import { sendOtpMail, sendVerificationMail } from "../utils/sendMail";
 import redisClient from "../config/redis";
 import { publishEvent } from "../config/rabbitMq";
 import { queue } from "../utils/imageWorker";
-import argon2 from "argon2";
+import { registerUser } from "../services/auth.service";
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint hit");
   try {
     const { username, email, password, avatar } = req.body;
 
-    const exisitingUser = await Auth.findOne({ email });
-
-    if (exisitingUser) {
-      res.status(401).json({ success: false, message: "User already exists" });
-      return;
-    }
-
-    const user = new Auth({
-      password,
-      email,
-      isVerified: false,
-    });
-
-    const token = generateMailToken(user._id, email);
-
-    const verificationEmail = sendVerificationMail(email, username, token);
-
-    if (!verificationEmail) {
-      res
-        .status(400)
-        .json({ success: false, message: "Error sending verfification mail" });
-      return;
-    }
-    await user.save();
-
-    await queue.add(
-      "avatar-upload",
-      { imagePath: avatar, userId: user._id },
-      {
-        attempts: 3,
-        backoff: {
-          type: "exponential",
-          delay: 3000,
-        },
-        removeOnComplete: true,
-        removeOnFail: true,
-      }
-    );
-
-    await publishEvent("user.created", {
-      _id: user._id,
-      username,
-      email,
-    });
+    const user = await registerUser(email, password, username, avatar);
 
     res.status(201).json({
       success: true,
@@ -73,11 +30,16 @@ export const register = async (req: Request, res: Response) => {
         isVerified: user.isVerified,
       },
     });
-
-    return;
   } catch (error) {
-    logger.error(error);
-    res.status(500).json({ message: error });
+    if (error instanceof Error) {
+      if (error.message === "User already exists") {
+        res.status(400).json({ success: false, message: error.message });
+      } else if (error.message === "Error sending verification mail") {
+        res.status(400).json({ success: false, message: error.message });
+      } else {
+        res.status(500).json({ message: "An error occurred" });
+      }
+    }
   }
 };
 
