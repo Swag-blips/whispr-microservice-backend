@@ -125,3 +125,38 @@ export const LoginService = async (email: string, password: string) => {
     throw error;
   }
 };
+
+export const resendOtpService = async (email: string) => {
+  try {
+    const exisitingOtp = await redisClient.get(`otp:${email}`);
+
+    if (exisitingOtp) {
+      const ttl = await redisClient.ttl(`otp:${email}`);
+      // res.status(429).json({
+      //   success: false,
+      //   message: `An OTP was recently sent. Please wait ${ttl} seconds before retrying.`,
+      // });
+
+      throw new Error(
+        `An OTP was recently sent. Please wait ${ttl} seconds before retrying.`
+      );
+    }
+    const generatedOtp = crypto.randomInt(100000, 999999);
+    const expiryTime = 5 * 60;
+
+    const otp = await redisClient.set(
+      `otp:${email}`,
+      generatedOtp,
+      "EX",
+      expiryTime
+    );
+
+    if (otp === "OK") {
+      await sendOtpMail(email, generatedOtp);
+    }
+    return;
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+};

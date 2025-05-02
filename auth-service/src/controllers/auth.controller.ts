@@ -13,6 +13,7 @@ import redisClient from "../config/redis";
 import {
   LoginService,
   registerUser,
+  resendOtpService,
   verifyEmailService,
 } from "../services/auth.service";
 
@@ -157,29 +158,7 @@ export const resendOtp = async (req: Request, res: Response) => {
       return;
     }
 
-    const exisitingOtp = await redisClient.get(`otp:${email}`);
-
-    if (exisitingOtp) {
-      const ttl = await redisClient.ttl(`otp:${email}`);
-      res.status(429).json({
-        success: false,
-        message: `An OTP was recently sent. Please wait ${ttl} seconds before retrying.`,
-      });
-      return;
-    }
-    const generatedOtp = crypto.randomInt(100000, 999999);
-    const expiryTime = 5 * 60;
-
-    const otp = await redisClient.set(
-      `otp:${email}`,
-      generatedOtp,
-      "EX",
-      expiryTime
-    );
-
-    if (otp === "OK") {
-      await sendOtpMail(email, generatedOtp);
-    }
+    await resendOtpService(email);
 
     res.status(200).json({ success: true, message: "otp sent to your mail" });
     return;
