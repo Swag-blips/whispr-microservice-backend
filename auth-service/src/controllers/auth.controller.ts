@@ -10,7 +10,11 @@ import { decodeEmailToken } from "../utils/decodeToken";
 import crypto from "crypto";
 import { sendOtpMail, sendVerificationMail } from "../utils/sendMail";
 import redisClient from "../config/redis";
-import { registerUser, verifyEmailService } from "../services/auth.service";
+import {
+  LoginService,
+  registerUser,
+  verifyEmailService,
+} from "../services/auth.service";
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint hit");
@@ -77,35 +81,19 @@ export const Login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    const user = await Auth.findOne({ email });
+    await LoginService(email, password);
+    res.status(200).json({
+      success: true,
+      message: "Login successful please verify OTP",
+    });
 
-    if (!user) {
-      res.status(400).json({ success: false, message: "invalid credentials" });
-      return;
-    }
-
-    const isValid = await user.comparePassword(password);
-    const generatedOtp = crypto.randomInt(100000, 999999);
-    const expiryTime = 5 * 60;
-
-    if (isValid) {
-      await redisClient.set(
-        `otp:${user.email}`,
-        generatedOtp,
-        "EX",
-        expiryTime
-      );
-
-      await sendOtpMail(user.email, generatedOtp);
-      res.status(200).json({
-        success: true,
-        message: "Login successful please verify OTP",
-      });
-    } else {
-      res.status(400).json({ success: false, message: "invalid credentials" });
-      return;
-    }
+    return;
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "invalid credentials") {
+        res.status(400).json({ success: false, message: error.message });
+      }
+    }
     logger.error(error);
     res.status(500).json({ message: error });
   }

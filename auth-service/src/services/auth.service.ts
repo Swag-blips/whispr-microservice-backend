@@ -5,6 +5,9 @@ import { queue as emailQueue } from "../utils/emailWorker";
 import { publishEvent } from "../config/rabbitMq";
 import logger from "../utils/logger";
 import { decodeEmailToken } from "../utils/decodeToken";
+import crypto from "crypto";
+import redisClient from "../config/redis";
+import { sendOtpMail } from "../utils/sendMail";
 export const registerUser = async (
   email: string,
   password: string,
@@ -83,6 +86,38 @@ export const verifyEmailService = async (token: string) => {
       },
       { new: true }
     );
+
+    return;
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+};
+
+export const LoginService = async (email: string, password: string) => {
+  try {
+    const user = await Auth.findOne({ email });
+
+    if (!user) {
+      throw new Error("invalid credentials");
+    }
+
+    const isValid = await user.comparePassword(password);
+    const generatedOtp = crypto.randomInt(100000, 999999);
+    const expiryTime = 5 * 60;
+
+    if (isValid) {
+      await redisClient.set(
+        `otp:${user.email}`,
+        generatedOtp,
+        "EX",
+        expiryTime
+      );
+
+      await sendOtpMail(user.email, generatedOtp);
+    } else {
+      throw new Error("invalid credentials");
+    }
 
     return;
   } catch (error) {
