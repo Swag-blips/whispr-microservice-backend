@@ -4,6 +4,7 @@ import { queue } from "../utils/imageWorker";
 import { queue as emailQueue } from "../utils/emailWorker";
 import { publishEvent } from "../config/rabbitMq";
 import logger from "../utils/logger";
+import { decodeEmailToken } from "../utils/decodeToken";
 export const registerUser = async (
   email: string,
   password: string,
@@ -60,5 +61,32 @@ export const registerUser = async (
   } catch (error) {
     logger.error(error);
     throw error; // Propagate error for controller to handle
+  }
+};
+
+export const verifyEmailService = async (token: string) => {
+  try {
+    const decodedToken = decodeEmailToken(token);
+    if (!decodedToken) {
+      throw new Error("invalid token");
+    }
+
+    const { userId, exp, email } = decodedToken;
+
+    if (Date.now() >= exp * 1000) {
+      throw new Error("Verification link has expired");
+    }
+    await Auth.findByIdAndUpdate(
+      userId,
+      {
+        isVerified: true,
+      },
+      { new: true }
+    );
+
+    return;
+  } catch (error) {
+    logger.error(error);
+    throw error;
   }
 };

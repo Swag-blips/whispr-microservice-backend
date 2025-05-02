@@ -10,7 +10,7 @@ import { decodeEmailToken } from "../utils/decodeToken";
 import crypto from "crypto";
 import { sendOtpMail, sendVerificationMail } from "../utils/sendMail";
 import redisClient from "../config/redis";
-import { registerUser } from "../services/auth.service";
+import { registerUser, verifyEmailService } from "../services/auth.service";
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint hit");
@@ -51,23 +51,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
       return;
     }
 
-    const decodedToken = decodeEmailToken(token);
-    if (!decodedToken) {
-      res.status(400).json({ success: false, message: "Invalid token" });
-      return;
-    }
-
-    const { userId, exp, email } = decodedToken;
-
-    if (Date.now() >= exp * 1000) {
-      res
-        .status(410)
-        .json({ success: false, message: "Verification link has expired" });
-      return;
-    }
-    await Auth.findByIdAndUpdate(userId, {
-      isVerified: true,
-    });
+    await verifyEmailService(token);
 
     res.status(200).json({
       success: true,
@@ -76,6 +60,13 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
     return;
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "Invalid token") {
+        res.status(400).json({ success: false, message: error.message });
+      } else if (error.message === "Verification link has expired") {
+        res.status(410).json({ success: false, message: error.message });
+      }
+    }
     logger.error(error);
     res.status(500).json({ message: error });
   }
