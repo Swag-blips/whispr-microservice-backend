@@ -163,6 +163,11 @@ export const resendOtp = async (req: Request, res: Response) => {
     res.status(200).json({ success: true, message: "otp sent to your mail" });
     return;
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.startsWith("An OTP was recently")) {
+        res.status(429).json({ success: false, message: error.message });
+      } 
+    }
     logger.error(error);
     res.status(500).json({ message: error });
   }

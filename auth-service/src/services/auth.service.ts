@@ -132,10 +132,6 @@ export const resendOtpService = async (email: string) => {
 
     if (exisitingOtp) {
       const ttl = await redisClient.ttl(`otp:${email}`);
-      // res.status(429).json({
-      //   success: false,
-      //   message: `An OTP was recently sent. Please wait ${ttl} seconds before retrying.`,
-      // });
 
       throw new Error(
         `An OTP was recently sent. Please wait ${ttl} seconds before retrying.`
