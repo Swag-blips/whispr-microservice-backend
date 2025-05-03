@@ -49,7 +49,6 @@ app.use(
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
       if (proxyReqOpts.headers) {
         proxyReqOpts.headers["Content-Type"] = "application/json";
-        proxyReqOpts.headers["Bearer-Token"] = srcReq.headers.authorization;
       }
 
       return proxyReqOpts;

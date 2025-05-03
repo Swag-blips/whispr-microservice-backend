@@ -3,6 +3,7 @@ import authenticateRequest from "../middleware/authenticateRequest";
 import {
   getCurrentUser,
   getUser,
+  removeFriend,
   updateUserInfo,
 } from "../controller/user.controller";
 import validateRequest from "../middleware/validateRequest";
@@ -16,7 +17,8 @@ router.put("/currentUser", authenticateRequest, updateUserInfo);
 router.post(
   "/friends/remove",
   authenticateRequest,
-  validateRequest(removeFriendSchema)
+  validateRequest(removeFriendSchema),
+  removeFriend
 );
 
 export default router;

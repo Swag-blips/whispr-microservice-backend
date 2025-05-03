@@ -126,9 +126,10 @@ export const removeFriend = async (req: Request, res: Response) => {
     session = await connection?.startSession();
 
     if (userId === friendId) {
-      return res
+      res
         .status(400)
         .json({ success: false, message: "Cannot unfriend yourself" });
+      return;
     }
 
     const transaction = await session?.withTransaction(async () => {
