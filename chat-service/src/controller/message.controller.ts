@@ -5,6 +5,7 @@ import Message from "../models/message.model";
 import Chat from "../models/chat.model";
 import { io } from "../socket/socket";
 import { queue } from "../utils/fileWorker";
+import { queue as lastMessageQueue } from "../utils/lastMessageWorker";
 import { cacheMessages, getCachedMessages } from "../utils/cache";
 
 export const sendMessage = async (req: Request, res: Response) => {
@@ -61,7 +62,7 @@ export const sendMessage = async (req: Request, res: Response) => {
         );
       }
 
-      queue.add(
+      lastMessageQueue.add(
         "update-last-message",
         {
           message: content,
@@ -150,9 +151,9 @@ export const sendMessage = async (req: Request, res: Response) => {
           300
         );
       }
-      if (message && receiverId) {
-        io.to(receiverId).emit("newMessage", message);
-      }
+      // if (message && receiverId) {
+      //   io.to(receiverId).emit("newMessage", message);
+      // }
 
       res
         .status(201)
