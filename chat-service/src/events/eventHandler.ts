@@ -4,11 +4,15 @@ import { ChatCreatedEvent, ChatDeletedEvent } from "../types/type";
 import logger from "../utils/logger";
 import { connection } from "../config/dbConnect";
 import Message from "../models/message.model";
+import redisClient from "../config/redis";
 
 export const handleCreateChat = async (content: ChatCreatedEvent) => {
   logger.info("handle create chat event");
   try {
     const { participants } = content;
+
+    await redisClient.del(`userChats${participants[0]}`);
+    await redisClient.del(`userChats${participants[1]}`);
 
     await Chat.create({
       participants,

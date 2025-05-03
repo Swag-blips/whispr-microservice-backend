@@ -7,6 +7,7 @@ import { io } from "../socket/socket";
 import { queue } from "../utils/fileWorker";
 import { queue as lastMessageQueue } from "../utils/lastMessageWorker";
 import { cacheMessages, getCachedMessages } from "../utils/cache";
+import { Types } from "mongoose";
 
 export const sendMessage = async (req: Request, res: Response) => {
   try {
@@ -211,6 +212,12 @@ export const createGroup = async (req: Request, res: Response) => {
       type: "group",
     });
 
+    await Promise.all(
+      participants.map((userId: Types.ObjectId) =>
+        redisClient.del(`userChats:${userId}`)
+      )
+    );
+
     res.status(201).json({ success: true, chat: chat });
     logger.info("Group successfully created");
     return;
@@ -252,6 +259,12 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
 
     await chat.save();
 
+    await Promise.all(
+      participants.map((userId: Types.ObjectId) =>
+        redisClient.del(`userChats:${userId}`)
+      )
+    );
+
     res.status(201).json({ success: true, message: "User added to chat" });
     return;
   } catch (error) {
@@ -289,6 +302,7 @@ export const removeMemberFromGroup = async (req: Request, res: Response) => {
 
     chat.participants.filter((participant) => participant !== memberId);
     await chat.save();
+    await redisClient.del(`userChats:${memberId}`);
     res.status(201).json({ success: true, message: "User removed from chat" });
     return;
   } catch (error) {
@@ -336,6 +350,35 @@ export const updateGroupDetails = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     logger.error(`error updating group details ${error}`);
+    res.status(500).json({ error: error });
+  }
+};
+
+export const getUserChats = async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId;
+
+    const cachedUserChats = await redisClient.get(`userChats:${userId}`);
+
+    if (cachedUserChats) {
+      res.status(200).json({ success: false, chats: cachedUserChats });
+      return;
+    }
+
+    const chats = await Chat.find({
+      participants: userId,
+    });
+
+    if (!chats.length) {
+      res.status(404).json({ success: false, message: "no chats found" });
+      return;
+    }
+
+    await redisClient.set(`userChats:${userId}`, JSON.stringify(chats));
+    res.status(200).json({ sucess: true, chats });
+    return;
+  } catch (error) {
+    logger.error(error);
     res.status(500).json({ error: error });
   }
 };

@@ -26,6 +26,7 @@ router.post(
 );
 
 router.get("/message/:chatId", authenticateRequest, getMessages);
+router.get("/user-chats", authenticateRequest, )
 
 router.post(
   "/group",
