@@ -22,11 +22,11 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { username, email, password, avatar } = req.body;
 
-    const user = await registerUser(email, password, username, avatar); 
+    const user = await registerUser(email, password, username, avatar);
 
     res.status(201).json({
       success: true,
-      user: {   
+      user: {
         username: username,
         email: user.email,
         isVerified: user.isVerified,

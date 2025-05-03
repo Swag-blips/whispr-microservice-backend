@@ -5,7 +5,7 @@ export const registrationSchema = Joi.object({
   username: Joi.string().min(6).max(30).required(),
   email: Joi.string().email().required().max(300),
   password: Joi.string().min(6).required(),
-  bio: Joi.string(),
+  bio: Joi.string(), 
   avatar: Joi.string().base64(),
 });
 

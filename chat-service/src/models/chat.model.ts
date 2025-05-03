@@ -35,4 +35,4 @@ chatSchema.index({ participants: 1 });
 
 const Chat = mongoose.model<ChatSchema>("Chat", chatSchema);
 
-export default Chat;
+export default Chat; 

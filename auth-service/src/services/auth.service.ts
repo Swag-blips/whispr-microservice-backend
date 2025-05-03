@@ -156,4 +156,3 @@ export const resendOtpService = async (email: string) => {
     throw error;
   }
 };
- 

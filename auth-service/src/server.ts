@@ -10,7 +10,7 @@ import helmet from "helmet";
 import { connectToRabbitMq } from "./config/rabbitMq";
 import limiter from "./config/rateLimit";
 import { v2 as cloudinary } from "cloudinary";
-import compression = require("compression");
+import compression from "compression";
 dotenv.config();
 
 export const app = express();
