@@ -9,6 +9,7 @@ export const queue = new Queue("update-last-message", {
 });
 
 const updateLastMessage = async (message: string, chatId: Types.ObjectId) => {
+  console.log(`update last message ${message} ${chatId}`);
   try {
     await Chat.findByIdAndUpdate(chatId, {
       lastMessage: message,

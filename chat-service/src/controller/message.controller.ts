@@ -44,6 +44,7 @@ export const sendMessage = async (req: Request, res: Response) => {
       });
 
       if (file) {
+        console.log("We got a file!");
         queue.add(
           "upload-message-image",
           {
@@ -117,7 +118,7 @@ export const sendMessage = async (req: Request, res: Response) => {
         (user) => user.toString() !== userId
       );
 
-      queue.add(
+      lastMessageQueue.add(
         "update-last-message",
         {
           message: content,

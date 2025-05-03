@@ -13,6 +13,7 @@ const uploadToCloudinary = async (
   imagePath: string,
   messageId: Types.ObjectId
 ) => {
+
   try {
     const result = await cloudinary.uploader.upload(imagePath, {
       folder: "messages_images",
