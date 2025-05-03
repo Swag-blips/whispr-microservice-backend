@@ -4,6 +4,7 @@ import {
   addMemberToGroup,
   createGroup,
   getMessages,
+  getUserChats,
   removeMemberFromGroup,
   sendMessage,
   updateGroupDetails,
@@ -26,7 +27,7 @@ router.post(
 );
 
 router.get("/message/:chatId", authenticateRequest, getMessages);
-router.get("/user-chats", authenticateRequest, )
+router.get("/user-chats", authenticateRequest, getUserChats);
 
 router.post(
   "/group",
@@ -42,7 +43,7 @@ router.post(
 );
 
 router.post(
-  "/group/remove/:chatId",
+  "/group/remove/:chatId", 
   authenticateRequest,
   validateRequest(removeFromGroupSchema),
   removeMemberFromGroup

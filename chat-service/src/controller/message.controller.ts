@@ -12,7 +12,7 @@ import { Types } from "mongoose";
 export const sendMessage = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
-    const { content, file } = req.body; 
+    const { content, file } = req.body;
     const userId = req.userId;
 
     const permittedChats = await redisClient.smembers(
@@ -361,7 +361,9 @@ export const getUserChats = async (req: Request, res: Response) => {
     const cachedUserChats = await redisClient.get(`userChats:${userId}`);
 
     if (cachedUserChats) {
-      res.status(200).json({ success: false, chats: cachedUserChats });
+      res
+        .status(200)
+        .json({ success: false, chats: JSON.parse(cachedUserChats) });
       return;
     }
 
