@@ -200,7 +200,7 @@ export const createGroup = async (req: Request, res: Response) => {
     const chat = await Chat.create({
       participants,
       groupName,
-      bio,
+      bio: bio || "Not much yet, but this group is fireee",
       type: "group",
     });
 
