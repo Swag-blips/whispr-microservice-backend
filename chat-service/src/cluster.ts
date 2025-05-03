@@ -27,7 +27,7 @@ if (cluster.isPrimary) {
       consumeEvent<ChatCreatedEvent>(
         "chat.created.queue",
         "chat.created",
-        handleCreateChat
+        handleCreateChat 
       ),
       consumeEvent<ChatDeletedEvent>(
         "chat.deleted.queue",

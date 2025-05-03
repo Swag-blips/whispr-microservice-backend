@@ -150,7 +150,8 @@ export const removeFriend = async (req: Request, res: Response) => {
       );
     });
 
-    if (transaction) {
+
+      logger.info("TRANSACTION COMPLETE");
       await invalidatePermissions(userId);
       await invalidatePermissions(friendId);
 
@@ -158,7 +159,7 @@ export const removeFriend = async (req: Request, res: Response) => {
         user1: userId,
         user2: friendId,
       });
-    }
+    
 
     res
       .status(200)
