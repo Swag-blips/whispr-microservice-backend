@@ -181,14 +181,19 @@ export const getMessages = async (req: Request, res: Response) => {
 
     const cached = await getCachedMessages(chatId);
     if (cached) {
-      return res.status(200).json({ success: true, messages: cached });
+      res.status(200).json({ success: true, messages: cached });
+      return;
     }
 
     const messages = await Message.find({ chatId }).limit(100);
-    if (!messages.length) return res.status(200).json([]);
+    if (!messages.length) {
+      res.status(200).json([]);
+      return;
+    }
 
     await cacheMessages(chatId, messages);
-    return res.status(200).json({ success: true, messages });
+    res.status(200).json({ success: true, messages });
+    return;
   } catch (error) {
     logger.error(`error getting messages ${error}`);
     res.status(500).json({ error: error });

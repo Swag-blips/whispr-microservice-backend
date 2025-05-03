@@ -3,6 +3,7 @@ import authenticateRequest from "../middleware/authenticateRequest";
 import {
   addMemberToGroup,
   createGroup,
+  getMessages,
   removeMemberFromGroup,
   sendMessage,
   updateGroupDetails,
@@ -23,6 +24,8 @@ router.post(
   validateRequest(messageSchema),
   sendMessage
 );
+
+router.get("/message/:chatId", authenticateRequest, getMessages);
 
 router.post(
   "/group",
