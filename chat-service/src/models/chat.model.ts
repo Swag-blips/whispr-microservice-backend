@@ -7,7 +7,7 @@ const chatSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        index: true,
+
         required: true,
       },
     ],
@@ -30,6 +30,8 @@ const chatSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+chatSchema.index({ participants: 1 });
 
 const Chat = mongoose.model<ChatSchema>("Chat", chatSchema);
 

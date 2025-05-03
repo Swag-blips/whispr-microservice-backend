@@ -6,13 +6,11 @@ const friendRequestSchema = new mongoose.Schema(
     from: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      index: true,
       required: true,
     },
     to: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      index: true,
       required: true,
     },
     status: {

@@ -6,13 +6,11 @@ const notificationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     to: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     type: {
       type: String,
@@ -22,6 +20,8 @@ const notificationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+notificationSchema.index({ from: 1 });
+notificationSchema.index({ to: 1 });
 const Notification = mongoose.model("Notification", notificationSchema);
 
 export default Notification;
