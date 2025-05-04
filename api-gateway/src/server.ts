@@ -63,6 +63,7 @@ app.use(
   })
 );
 
+
 app.use(
   "/v1/friend",
   proxy(process.env.FRIEND_SERVICE_PORT as string, {

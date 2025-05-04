@@ -3,12 +3,21 @@ import { server } from "../server";
 import mongoose from "mongoose";
 import redisClient from "../config/redis";
 import Auth from "../models/auth.model";
-import { worker } from "../utils/imageWorker";
+import { initalizeImageWorker, queue } from "../utils/imageWorker";
+import {
+  queue as imageQueue,
+  initalizeEmailWorker,
+} from "../utils/emailWorker";
 import crypto from "crypto";
+import { Worker } from "bullmq";
 
 jest.setTimeout(60000);
 
+let imageWorker: Worker;
+let emailWorker: Worker;
 beforeAll(async () => {
+  imageWorker = initalizeImageWorker();
+  emailWorker = initalizeEmailWorker();
   await mongoose.connect(process.env.MONGODB_URI as string);
 });
 const generatedOtp = crypto.randomInt(100000, 999999);
@@ -53,5 +62,8 @@ afterAll(async () => {
   server.close();
   await redisClient.quit();
   await Auth.deleteMany({});
-  await worker.close();
+  emailWorker.close();
+  await queue.close();
+  await imageQueue.close();
+  imageWorker.close();
 });

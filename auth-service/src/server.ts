@@ -11,6 +11,8 @@ import { connectToRabbitMq } from "./config/rabbitMq";
 import limiter from "./config/rateLimit";
 import { v2 as cloudinary } from "cloudinary";
 import compression from "compression";
+import { initalizeImageWorker } from "./utils/imageWorker";
+import { initalizeEmailWorker } from "./utils/emailWorker";
 dotenv.config();
 
 export const app = express();
@@ -38,6 +40,8 @@ export const server = app.listen(PORT, async () => {
   logger.info(`auth service is running on port ${PORT}`);
   await connectToMongo();
   await connectToRabbitMq();
+  initalizeImageWorker();
+  initalizeEmailWorker();
 });
 
 process.on("unhandledRejection", (error) => {

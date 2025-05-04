@@ -29,17 +29,21 @@ export const uploadToCloudinary = async (
   }
 };
 
-export const worker = new Worker(
-  "upload-avatar",
-  async (job: { data: { imagePath: string; userId: Types.ObjectId } }) => {
-    const { imagePath, userId } = job.data;
-    await uploadToCloudinary(imagePath, userId);
-  },
-  {
-    connection: redisClient,
-  }
-);
+export const initalizeImageWorker = () => {
+  const worker = new Worker(
+    "upload-avatar",
+    async (job: { data: { imagePath: string; userId: Types.ObjectId } }) => {
+      const { imagePath, userId } = job.data;
+      await uploadToCloudinary(imagePath, userId);
+    },
+    {
+      connection: redisClient,
+    }
+  );
 
-worker.on("failed", (job: any, err) => {
-  logger.error(`Image upload job failed for job ${job.id}:`, err);
-});
+  worker.on("failed", (job: any, err) => {
+    logger.error(`Image upload job failed for job ${job.id}:`, err);
+  });
+
+  return worker;
+};

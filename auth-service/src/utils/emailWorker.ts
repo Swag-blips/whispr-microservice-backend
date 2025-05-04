@@ -19,17 +19,23 @@ const sendEmail = async (email: string, username: string, token: string) => {
   }
 };
 
-export const worker = new Worker(
-  "send-email",
-  async (job: { data: { email: string; username: string; token: string } }) => {
-    const { email, username, token } = job.data;
-    await sendEmail(email, username, token);
-  },
-  {
-    connection: redisClient,
-  }
-);
+export const initalizeEmailWorker = () => {
+  const worker = new Worker(
+    "send-email",
+    async (job: {
+      data: { email: string; username: string; token: string };
+    }) => {
+      const { email, username, token } = job.data;
+      await sendEmail(email, username, token);
+    },
+    {
+      connection: redisClient,
+    }
+  );
 
-worker.on("failed", (job, err) => {
-  logger.error(`Image upload job failed for job ${job}:`, err);
-});
+  worker.on("failed", (job, err) => {
+    logger.error(`Image upload job failed for job ${job}:`, err);
+  });
+
+  return worker;
+};

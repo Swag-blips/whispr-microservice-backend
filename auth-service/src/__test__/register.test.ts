@@ -3,13 +3,21 @@ import { app, server } from "../server";
 import mongoose from "mongoose";
 import Auth from "../models/auth.model";
 import redisClient from "../config/redis";
-import { worker } from "../utils/imageWorker";
+import { initalizeImageWorker, queue } from "../utils/imageWorker";
+import {
+  queue as imageQueue,
+  initalizeEmailWorker,
+} from "../utils/emailWorker";
+import { Worker } from "bullmq";
 
 jest.setTimeout(60000);
 
+let imageWorker: Worker;
+let emailWorker: Worker;
 beforeAll(async () => {
+  imageWorker = initalizeImageWorker();
+  emailWorker = initalizeEmailWorker();
   await mongoose.connect(process.env.MONGODB_URI as string);
-
 });
 
 describe("Test register endpoint", () => {
@@ -60,5 +68,8 @@ afterAll(async () => {
   await mongoose.connection.close();
   server.close();
   await redisClient.quit();
-  await worker.close();
+  imageWorker.close();
+  await queue.close();
+  emailWorker.close();
+  await imageQueue.close();
 });
