@@ -41,5 +41,5 @@ export const server = app.listen(PORT, async () => {
 });
 
 process.on("unhandledRejection", (error) => {
-  logger.error("unhandledRejection", error);
+  console.error(`unhandled rejection ${error}`);
 });

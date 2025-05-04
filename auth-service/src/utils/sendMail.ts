@@ -34,7 +34,7 @@ export const sendVerificationMail = async (
       We’re thrilled to have you on board. To get started, please verify your email address by clicking the button below:
     </p>
 
-    <div style="text-align: center; margin: 30px 0;">
+    <div style="text-align: center; margin: 30px 0;"> 
       <a href="http://localhost:3000/verify-email?token=${token}" 
          style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-size: 16px;">
          Verify Email
