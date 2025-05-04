@@ -82,7 +82,7 @@ export const Login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    await LoginService(email, password);
+    await LoginService(email, password, redisClient);
     res.status(200).json({
       success: true,
       message: "Login successful please verify OTP",
@@ -158,7 +158,7 @@ export const resendOtp = async (req: Request, res: Response) => {
       return;
     }
 
-    await resendOtpService(email);
+    await resendOtpService(email, redisClient);
 
     res.status(200).json({ success: true, message: "otp sent to your mail" });
     return;

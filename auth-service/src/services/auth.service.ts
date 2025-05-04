@@ -6,8 +6,9 @@ import { publishEvent } from "../config/rabbitMq";
 import logger from "../utils/logger";
 import { decodeEmailToken } from "../utils/decodeToken";
 import crypto from "crypto";
-import redisClient from "../config/redis";
 import { sendOtpMail } from "../utils/sendMail";
+import Redis from "ioredis";
+
 export const registerUser = async (
   email: string,
   password: string,
@@ -94,7 +95,11 @@ export const verifyEmailService = async (token: string) => {
   }
 };
 
-export const LoginService = async (email: string, password: string) => {
+export const LoginService = async (
+  email: string,
+  password: string,
+  redisClient: Redis
+) => {
   try {
     const user = await Auth.findOne({ email });
 
@@ -126,7 +131,7 @@ export const LoginService = async (email: string, password: string) => {
   }
 };
 
-export const resendOtpService = async (email: string) => {
+export const resendOtpService = async (email: string, redisClient: Redis) => {
   try {
     const exisitingOtp = await redisClient.get(`otp:${email}`);
 
