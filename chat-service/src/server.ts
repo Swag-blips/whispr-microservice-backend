@@ -42,3 +42,8 @@ export const startServer = async () => {
     logger.error(error);
   }
 };
+
+process.on("unhandledRejection", (error) => {
+  console.error(`unhandled rejection ${error}`);
+  process.exit(1);
+});

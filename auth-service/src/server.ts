@@ -46,4 +46,5 @@ export const server = app.listen(PORT, async () => {
 
 process.on("unhandledRejection", (error) => {
   console.error(`unhandled rejection ${error}`);
+  process.exit(1);
 });

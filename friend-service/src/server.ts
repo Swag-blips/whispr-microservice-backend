@@ -38,6 +38,8 @@ const startServer = async () => {
 };
 
 startServer();
+
 process.on("unhandledRejection", (error) => {
-  logger.error("unhandledRejection", error);
+  console.error(`unhandled rejection ${error}`);
+  process.exit(1);
 });
