@@ -31,6 +31,7 @@ export const register = async (req: Request, res: Response) => {
         email: user.email,
         isVerified: user.isVerified,
       },
+      message: "Account created successfully",
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -42,6 +43,7 @@ export const register = async (req: Request, res: Response) => {
         res.status(500).json({ message: "An error occurred" });
       }
     }
+    logger.error(error);
   }
 };
 
