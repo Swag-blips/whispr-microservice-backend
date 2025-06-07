@@ -92,6 +92,8 @@ export const verifyEmailService = async (token: string) => {
       throw new Error("User already verified");
     }
 
+    user.isVerified = true;
+
     await user.save();
 
     return;

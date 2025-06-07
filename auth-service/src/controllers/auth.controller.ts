@@ -72,6 +72,8 @@ export const verifyEmail = async (req: Request, res: Response) => {
         res.status(400).json({ success: false, message: error.message });
       } else if (error.message === "Verification link has expired") {
         res.status(410).json({ success: false, message: error.message });
+      } else if (error.message === "User already verified") {
+        res.status(400).json({ success: false, message: error.message });
       }
     }
     logger.error(error);
