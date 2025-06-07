@@ -19,7 +19,7 @@ import {
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint hit");
-  try {
+  try { 
     const { username, email, password, avatar } = req.body;
 
     const user = await registerUser(email, password, username, avatar);

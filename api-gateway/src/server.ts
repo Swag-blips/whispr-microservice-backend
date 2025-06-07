@@ -63,7 +63,6 @@ app.use(
   })
 );
 
-
 app.use(
   "/v1/friend",
   proxy(process.env.FRIEND_SERVICE_PORT as string, {
@@ -110,7 +109,6 @@ app.listen(PORT, () => {
   logger.info(`api gateway is running on port ${PORT}`);
 });
 
-// The unhandledRejection listener
 process.on("unhandledRejection", (error) => {
   logger.error("unhandledRejection", error);
 });
