@@ -9,14 +9,26 @@ export interface JwtPayload {
 }
 export const decodeEmailToken = (token: string) => {
   try {
-    const decodedToken = jwt.decode(token) as JwtPayload;
+    const decodedToken = jwt.verify(
+      token,
+      process.env.JWT_SECRET_KEY as string
+    ) as JwtPayload;
 
     if (!decodedToken) {
       return;
     }
 
     return decodedToken;
-  } catch (error) {
-    logger.error(error);
+  } catch (error: any) {
+    if (error.name === "TokenExpiredError") {
+      logger.error("JWT token has expired");
+    } else if (error.name === "JsonWebTokenError") {
+      logger.error("Invalid JWT token");
+    } else if (error.name === "NotBeforeError") {
+      logger.error("JWT token not active yet");
+    } else {
+      logger.error("Unexpected error decoding JWT token:", error);
+    }
+    return undefined;
   }
 };
