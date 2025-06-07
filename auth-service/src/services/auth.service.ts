@@ -13,6 +13,7 @@ export const registerUser = async (
   email: string,
   password: string,
   username: string,
+  redisClient: Redis,
   avatar?: string
 ) => {
   try {
@@ -64,7 +65,7 @@ export const registerUser = async (
     return user;
   } catch (error) {
     logger.error(error);
-    throw error; // Propagate error for controller to handle
+    throw error;
   }
 };
 
@@ -80,13 +81,18 @@ export const verifyEmailService = async (token: string) => {
     if (Date.now() >= exp * 1000) {
       throw new Error("Verification link has expired");
     }
-    await Auth.findByIdAndUpdate(
-      userId,
-      {
-        isVerified: true,
-      },
-      { new: true }
-    );
+
+    const user = await Auth.findById(userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.isVerified) {
+      throw new Error("User already verified");
+    }
+
+    await user.save();
 
     return;
   } catch (error) {
