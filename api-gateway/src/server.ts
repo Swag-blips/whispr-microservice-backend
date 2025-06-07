@@ -5,8 +5,10 @@ import logger from "./utils/logger";
 import helmet from "helmet";
 import errorHandler from "./middleware/errorHandler";
 import proxyOptions from "./config/proxyOptions";
+import cors from "cors";
 import logRequests from "./middleware/logRequests";
 import limiter from "./config/rateLimit";
+import { corsOptions } from "./config/corsOptions";
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
@@ -14,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 
 app.use(helmet());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: "5mb" }));
 
 app.use(errorHandler);

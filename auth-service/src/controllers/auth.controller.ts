@@ -141,12 +141,19 @@ export const verifyOtp = async (req: Request, res: Response) => {
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 15 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
       success: true,
       message: "Otp successfully verified",
       accessToken,
-      refreshToken,
     });
+
     return;
   } catch (error) {
     logger.error(error);

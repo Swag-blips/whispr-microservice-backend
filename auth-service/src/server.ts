@@ -23,7 +23,12 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-app.use(cors());
+app.use(
+  cors({
+    credentials: true,
+    origin: "http://localhost:3003",
+  })
+);
 app.use(helmet());
 app.use(compression());
 app.use(express.json({ limit: "5mb" }));
