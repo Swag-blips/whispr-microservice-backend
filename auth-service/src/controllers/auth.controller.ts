@@ -20,9 +20,9 @@ import {
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint hit");
   try {
-    const { username, email, password, avatar } = req.body;
+    const { username, email, password, avatar , bio} = req.body;
 
-    const user = await registerUser(email, password, username, avatar);
+    const user = await registerUser(email, password, username, avatar, bio);
 
     res.status(201).json({
       success: true,
@@ -85,7 +85,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
 };
 
 export const Login = async (req: Request, res: Response) => {
-  logger.info("Login endpoint hit");
+  logger.info("Login endpoint hit"); 
   try {
     const { email, password } = req.body;
 

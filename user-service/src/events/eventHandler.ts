@@ -7,7 +7,6 @@ import {
   IncomingUserMessage,
 } from "../types/types";
 import logger from "../utils/logger";
-import { tryCatch } from "bullmq";
 
 export const handleCreateUser = async (user: IncomingUserMessage) => {
   try {
@@ -15,6 +14,7 @@ export const handleCreateUser = async (user: IncomingUserMessage) => {
       _id: user._id,
       email: user.email,
       username: user.username,
+      ...(user.bio && { bio: user.bio }),
     });
 
     logger.info("User successfully created");

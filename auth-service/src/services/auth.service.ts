@@ -13,8 +13,9 @@ export const registerUser = async (
   email: string,
   password: string,
   username: string,
-  redisClient: Redis,
-  avatar?: string
+
+  avatar?: string,
+  bio?: string
 ) => {
   try {
     const existingUser = await Auth.findOne({ email });
@@ -60,7 +61,12 @@ export const registerUser = async (
       );
     }
 
-    await publishEvent("user.created", { _id: user._id, username, email });
+    await publishEvent("user.created", {
+      _id: user._id,
+      username,
+      email,
+      ...(bio && { bio }),
+    });
 
     return user;
   } catch (error) {
