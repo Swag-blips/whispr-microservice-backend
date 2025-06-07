@@ -36,7 +36,7 @@ export const generateMailToken = (userId: Types.ObjectId, email: string) => {
       email,
     },
     process.env.JWT_SECRET_KEY as string,
-    {
+    { 
       expiresIn: "5m",
     }
   );

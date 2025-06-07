@@ -73,14 +73,10 @@ export const verifyEmailService = async (token: string) => {
   try {
     const decodedToken = decodeEmailToken(token);
     if (!decodedToken) {
-      throw new Error("invalid token");
+      throw new Error("Invalid or expired verification link");
     }
 
-    const { userId, exp, email } = decodedToken;
-
-    if (Date.now() >= exp * 1000) {
-      throw new Error("Verification link has expired");
-    }
+    const { userId } = decodedToken;
 
     const user = await Auth.findById(userId);
 
@@ -98,7 +94,6 @@ export const verifyEmailService = async (token: string) => {
 
     return;
   } catch (error) {
-    logger.error(error);
     throw error;
   }
 };

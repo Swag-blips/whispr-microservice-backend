@@ -68,16 +68,19 @@ export const verifyEmail = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message === "Invalid token") {
+      if (error.message === "Invalid or expired verification link") {
         res.status(400).json({ success: false, message: error.message });
+        return;
       } else if (error.message === "Verification link has expired") {
         res.status(410).json({ success: false, message: error.message });
+        return;
       } else if (error.message === "User already verified") {
         res.status(400).json({ success: false, message: error.message });
+        return;
       }
     }
-    logger.error(error);
-    res.status(500).json({ message: error });
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
