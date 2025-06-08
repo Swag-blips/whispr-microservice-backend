@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  redis:
+    image: "redis:7-alpine"
+    ports:
+      - "6379:6379"
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+       RABBITMQ_DEFAULT_USER: guest
+       RABBITMQ_DEFAULT_PASS: guest
+
+  chat-service:
+    build: ./chat-service
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+      - rabbitmq
+    environment:
+       REDIS_URL: redis://redis:6379
+       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
