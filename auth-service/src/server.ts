@@ -27,9 +27,9 @@ app.use(
   cors({
     credentials: true,
     origin: "http://localhost:3003",
-  })
-);
-app.use(helmet());
+  })  
+); 
+app.use(helmet()); 
 app.use(compression());
 app.use(express.json({ limit: "5mb" }));
 const PORT = process.env.PORT || 3001;
