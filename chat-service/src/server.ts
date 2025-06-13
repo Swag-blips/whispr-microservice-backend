@@ -29,13 +29,16 @@ app.use(logRequests);
 app.use(errorHandler);
 
 app.use("/api/chat", chatRoutes);
+app.get("/health", (req, res) => {
+  res.status(200).send("Chat service is healthy");
+});
 const PORT = process.env.PORT || 3005;
-
+  
 export const startServer = async () => {
   try {
     await Promise.all([connectToMongo(), initSocket()]);
 
-    server.listen(PORT, () => {
+    server.listen(Number(PORT), "0.0.0.0", () => {
       logger.info("chat service is listening on port", PORT);
     });
   } catch (error) {

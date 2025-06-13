@@ -6,9 +6,6 @@ import {
   generateRefreshToken,
 } from "../utils/generateToken";
 import jwt from "jsonwebtoken";
-import { decodeEmailToken } from "../utils/decodeToken";
-import crypto from "crypto";
-import { sendOtpMail, sendVerificationMail } from "../utils/sendMail";
 import redisClient from "../config/redis";
 import {
   LoginService,
@@ -20,7 +17,7 @@ import {
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint hit");
   try {
-    const { username, email, password, avatar , bio} = req.body;
+    const { username, email, password, avatar, bio } = req.body;
 
     const user = await registerUser(email, password, username, avatar, bio);
 
@@ -85,7 +82,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
 };
 
 export const Login = async (req: Request, res: Response) => {
-  logger.info("Login endpoint hit"); 
+  logger.info("Login endpoint hit");
   try {
     const { email, password } = req.body;
 
