@@ -58,6 +58,8 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
 
+    console.log("USERID", userId);
+
     const cachedUser = await redisClient.get(`user:${userId}`);
 
     if (cachedUser) {
@@ -76,7 +78,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
 
     await redisClient.set(`user:${userId}`, JSON.stringify(currentUser));
 
-    res.status(200).json({ success: false, currentUser });
+    res.status(200).json({ success: true, currentUser });
     return;
   } catch (error) {
     logger.error("An error occured in the getCurrentUser controller", error);
