@@ -149,7 +149,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
     });
 
     res.cookie("accessToken", accessToken, {
-      httpOnly: true,
+      httpOnly: false,
       secure: false,
       sameSite: "lax",
       maxAge: 15 * 24 * 60 * 60 * 1000,
