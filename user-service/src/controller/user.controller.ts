@@ -58,7 +58,14 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
 
-    logger.info(userId);
+    const cachedUser = await redisClient.get(`user:${userId}`);
+
+    if (cachedUser) {
+      res
+        .status(200)
+        .json({ success: false, currentUser: JSON.parse(cachedUser) });
+      return;
+    }
 
     const currentUser = await User.findById(userId);
 
@@ -66,6 +73,8 @@ export const getCurrentUser = async (req: Request, res: Response) => {
       res.status(404).json({ success: false, message: "user not found" });
       return;
     }
+
+    await redisClient.set(`user:${userId}`, JSON.stringify(currentUser));
 
     res.status(200).json({ success: false, currentUser });
     return;
@@ -150,16 +159,14 @@ export const removeFriend = async (req: Request, res: Response) => {
       );
     });
 
+    logger.info("TRANSACTION COMPLETE");
+    await invalidatePermissions(userId);
+    await invalidatePermissions(friendId);
 
-      logger.info("TRANSACTION COMPLETE");
-      await invalidatePermissions(userId);
-      await invalidatePermissions(friendId);
-
-      publishEvent("chat.deleted", {
-        user1: userId,
-        user2: friendId,
-      });
-    
+    publishEvent("chat.deleted", {
+      user1: userId,
+      user2: friendId,
+    });
 
     res
       .status(200)

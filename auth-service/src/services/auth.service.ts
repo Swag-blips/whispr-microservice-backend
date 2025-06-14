@@ -133,9 +133,8 @@ export const LoginService = async (
       throw new Error("invalid credentials");
     }
 
-    return;
+    return true;
   } catch (error) {
-    logger.error(error);
     throw error;
   }
 };

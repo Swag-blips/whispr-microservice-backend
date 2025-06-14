@@ -86,21 +86,24 @@ export const Login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    await LoginService(email, password, redisClient);
-    res.status(200).json({
-      success: true,
-      message: "Login successful please verify OTP",
-    });
+    const login = await LoginService(email, password, redisClient);
+
+    if (login) {
+      res.status(200).json({
+        success: true,
+        message: "Login successful please verify OTP",
+      });
+    }
 
     return;
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === "invalid credentials") {
         res.status(400).json({ success: false, message: error.message });
+      } else {
+        res.status(500).json({ message: error });
       }
     }
-    logger.error(error);
-    res.status(500).json({ message: error });
   }
 };
 
@@ -145,10 +148,16 @@ export const verifyOtp = async (req: Request, res: Response) => {
       maxAge: 15 * 24 * 60 * 60 * 1000,
     });
 
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 15 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
       success: true,
       message: "Otp successfully verified",
-      accessToken,
     });
 
     return;
