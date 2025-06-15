@@ -16,6 +16,7 @@ import {
 } from "../utils/validate";
 import validateRequest from "../middleware/validateRequest";
 import authenticateRequest from "../middleware/authenticateRequest";
+import { refreshMiddleware } from "../middleware/refreshMiddleware";
 
 const router = Router();
 
@@ -24,7 +25,7 @@ router.post("/login", validateRequest(loginSchema), Login);
 router.get("/verify-email", verifyEmail);
 router.post("/verify-otp", validateRequest(otpSchema), verifyOtp);
 router.post("/resend-otp", resendOtp);
-router.post("/refresh-token", refreshToken);
+router.post("/refresh-token", refreshMiddleware, refreshToken);
 router.post(
   "/reset-password",
   authenticateRequest,

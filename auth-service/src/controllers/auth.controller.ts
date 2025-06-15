@@ -152,7 +152,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
       httpOnly: false,
       secure: false,
       sameSite: "lax",
-      maxAge: 15 * 24 * 60 * 60 * 1000,
+      maxAge: 15 * 60 * 1000,
     });
 
     res.status(200).json({
@@ -194,41 +194,17 @@ export const resendOtp = async (req: Request, res: Response) => {
 };
 
 export const refreshToken = async (req: Request, res: Response) => {
-  const { refreshToken, email } = req.body;
-
-  if (!refreshToken || !email) {
-    res.status(400).json({
-      success: false,
-      message: "refresh token and email is required",
-    });
-    return;
-  }
+  const userId = req.userId;
   try {
-    const verifiedRefreshToken = jwt.verify(
-      refreshToken,
-      process.env.JWT_SECRET_KEY as string
-    );
+    const accessToken = generateAccessToken(userId);
 
-    const user = await Auth.findOne({
-      email,
+    res.cookie("accessToken", accessToken, {
+      httpOnly: false,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 15 * 60 * 1000,
     });
-
-    if (!user) {
-      res.status(400).json({ success: false, message: "User does not exist" });
-      return;
-    }
-
-    if (!verifiedRefreshToken) {
-      res
-        .status(400)
-        .json({ success: false, message: "Invalid refresh token" });
-      return;
-    }
-
-    const accessToken = generateAccessToken(user._id);
-
-    res.status(200).json({ success: true, accessToken });
-    return;
+    res.status(200).json({ success: true });
   } catch (error) {
     if (error instanceof Error) {
       if (error.name === "TokenExpiredError") {

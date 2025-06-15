@@ -13,6 +13,7 @@ import { v2 as cloudinary } from "cloudinary";
 import compression from "compression";
 import { initalizeImageWorker } from "./utils/imageWorker";
 import { initalizeEmailWorker } from "./utils/emailWorker";
+import cookieParser from "cookie-parser";
 dotenv.config();
 
 export const app = express();
@@ -25,12 +26,13 @@ cloudinary.config({
 
 app.use(
   cors({
-    credentials: true, 
+    credentials: true,
     origin: "http://localhost:3003",
-  })  
-); 
-app.use(helmet()); 
+  })
+);
+app.use(helmet());
 app.use(compression());
+// app.use(cookieParser());
 app.use(express.json({ limit: "5mb" }));
 const PORT = process.env.PORT || 3001;
 
