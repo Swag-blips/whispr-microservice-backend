@@ -7,13 +7,18 @@ import { connection } from "../config/dbConnect";
 import mongoose from "mongoose";
 import { invalidatePermissions } from "../utils/fetchPermissions";
 import { publishEvent } from "../config/rabbitMq";
+import { User as UserType } from "../types/types";
 
 export const getUser = async (req: Request, res: Response) => {
   logger.info("get user endpoint hit");
   try {
     const username = req.params.username;
-    if (req.body.length > 0) {
+
+    const userId = req.userId;
+
+    if (req.body.length < 0) {
       res.status(400).json({ success: false, message: "body not allowed" });
+      return;
     }
     const expiryTime = 5 * 60;
     if (!username) {
@@ -24,9 +29,13 @@ export const getUser = async (req: Request, res: Response) => {
     const cachedResult = await redisClient.get(`search:${username}`);
 
     if (cachedResult) {
+      // const filteredCachedResult = JSON.parse(cachedResult).filter(
+      //   (user: UserType) => user._id !== userId
+      // );
+      console.log("CACHE HIT");
       res
         .status(200)
-        .json({ success: true, cachedResult: JSON.parse(cachedResult) });
+        .json({ success: true, results: JSON.parse(cachedResult) });
       return;
     }
 
@@ -39,13 +48,23 @@ export const getUser = async (req: Request, res: Response) => {
       .lean()
       .select("-email");
 
-    res.status(200).json({ success: true, results });
-    await redisClient.set(
-      `search:${username}`,
-      JSON.stringify(results),
-      "EX",
-      expiryTime
+    const filteredResults = results.filter(
+      (user) => user._id.toString() !== userId.toString()
     );
+
+    console.log("FILTERED RESULTS", filteredResults);
+
+    res.status(200).json({ success: true, results: filteredResults });
+
+    if (filteredResults.length > 0) {
+      await redisClient.set(
+        `search:${username}`,
+        JSON.stringify(filteredResults),
+        "EX",
+        expiryTime
+      );
+    }
+
     return;
   } catch (error) {
     logger.error("An error occured in the getUser controller", error);
@@ -58,14 +77,12 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
 
-    console.log("USERID", userId);
-
     const cachedUser = await redisClient.get(`user:${userId}`);
 
     if (cachedUser) {
       res
         .status(200)
-        .json({ success: false, currentUser: JSON.parse(cachedUser) });
+        .json({ success: true, currentUser: JSON.parse(cachedUser) });
       return;
     }
 

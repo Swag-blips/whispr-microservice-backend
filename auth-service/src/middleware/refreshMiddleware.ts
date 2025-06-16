@@ -8,6 +8,7 @@ interface DecodedUser {
   userId: Types.ObjectId;
 }
 
+
 export const refreshMiddleware = (
   req: Request,
   res: Response,
@@ -15,7 +16,7 @@ export const refreshMiddleware = (
 ) => {
   const refreshToken = getCookie(req)
     ?.find((cookie) => cookie.startsWith("refreshToken"))
-    ?.slice(13);
+    ?.slice(13); 
 
   if (!refreshToken) {
     res.status(401).json({ success: false, message: "refresh token Missing" });
@@ -39,7 +40,9 @@ export const refreshMiddleware = (
       if (error.name === "TokenExpiredError") {
         res.status(401).json({ success: false, message: "Token has expired" });
         return;
-      } else if (error.name === "") {
+      } else if (error.message === "jwt malformed") {
+        res.status(401).json({ success: false, message: "malformed jwt" });
+        return;
       } else {
         res.status(500).json({ message: error });
         logger.error(error);
