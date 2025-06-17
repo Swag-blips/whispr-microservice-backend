@@ -18,7 +18,7 @@ const notificationSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
-);
+); 
 
 notificationSchema.index({ from: 1 });
 notificationSchema.index({ to: 1 });

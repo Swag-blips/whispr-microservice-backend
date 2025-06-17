@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
@@ -7,16 +7,21 @@ import logRequests from "./middleware/logRequests";
 import logger from "./utils/logger";
 import connectToMongo from "./config/dbConnect";
 import limiter from "./config/rateLimit";
+import User from "./models/user.model";
+
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
 import { handleFriendRequestNotification } from "./events/eventHandler";
+import notificationRoutes from "../src/routes/notification.route";
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: "http://localhost:3006", credentials: true }));
 app.use(helmet());
 app.use(express.json());
+
+app.use("/api/notifications", notificationRoutes);
 const PORT = process.env.PORT || 3004;
 
 app.use(limiter);
@@ -25,12 +30,12 @@ app.use(logRequests);
 
 const startServer = async () => {
   try {
-    await connectToRabbitMq();
-    await connectToMongo();
-    await consumeEvent(
-      "friendRequest.created",
-      handleFriendRequestNotification
-    );
+    await Promise.all([
+      connectToMongo(),
+      connectToRabbitMq(),
+
+      consumeEvent("friendRequest.created", handleFriendRequestNotification),
+    ]);
 
     app.listen(PORT, async () => {
       logger.info(`notification service is running on port ${PORT}`);

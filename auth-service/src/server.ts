@@ -27,12 +27,12 @@ cloudinary.config({
 app.use(
   cors({
     credentials: true,
-    origin: "http://localhost:3003",
+    origin: "http://localhost:3006",
   })
 );
 app.use(helmet());
 app.use(compression());
-// app.use(cookieParser());
+
 app.use(express.json({ limit: "5mb" }));
 const PORT = process.env.PORT || 3001;
 

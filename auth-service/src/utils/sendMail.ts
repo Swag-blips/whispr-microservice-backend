@@ -36,7 +36,7 @@ export const sendVerificationMail = async (
     </p>
 
     <div style="text-align: center; margin: 30px 0;"> 
-      <a href="http://localhost:3003/auth/callback/verify-email?token=${token}" 
+      <a href="http://localhost:3006/auth/callback/verify-email?token=${token}" 
          style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-size: 16px;">
          Verify Email
       </a>
@@ -45,7 +45,7 @@ export const sendVerificationMail = async (
     <p style="font-size: 14px; color: #999;">
       If the button doesn’t work, copy and paste the following link into your browser:
       <br/>
-      <a href="http://localhost:3003/auth/callback/verify-email?token=${token}" style="color: #4CAF50;">http://localhost:3003/callback/verify-email?token=${token}</a>
+      <a href="http://localhost:3006/auth/callback/verify-email?token=${token}" style="color: #4CAF50;">http://localhost:3006/callback/verify-email?token=${token}</a>
     </p>
 
     <hr style="margin: 40px 0; border: none; border-top: 1px solid #ddd;" />

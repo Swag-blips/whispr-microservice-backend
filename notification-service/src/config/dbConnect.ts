@@ -10,6 +10,7 @@ const connectToMongo = async () => {
     logger.info(`connected to mongo db ${connection.connection.host}`);
   } catch (error) {
     logger.error(error);
+    process.exit(1);
   }
 };
 

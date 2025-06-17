@@ -7,6 +7,7 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
   logger.info("send friend request endpoint hit");
   try {
     const { receiverId } = req.body;
+    console.log("REQUEST BODY", receiverId);
     const senderId = req.userId;
 
     if (!receiverId) {
@@ -114,5 +115,40 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: error });
+  }
+};
+
+export const declineFriendRequest = async (req: Request, res: Response) => {
+  try {
+    const friendRequestId = req.params.id;
+
+    if (!friendRequestId) {
+      res
+        .status(400)
+        .json({ success: false, message: "Friend request id required" });
+
+      return;
+    }
+
+    const friendRequest = await FriendRequest.findById(friendRequestId);
+
+    if (!friendRequest) {
+      res
+        .status(400)
+
+        .json({ success: false, message: "Friend request not found" });
+
+      return;
+    }
+
+    friendRequest.status = "Declined";
+    await friendRequest.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: "Friend request declined " });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -88,6 +88,27 @@ app.use(
 );
 
 app.use(
+  "/v1/notifications",
+  proxy(process.env.NOTIFICATION_SRVICE_PORT as string, {
+    ...proxyOptions,
+    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      if (proxyReqOpts.headers) {
+        proxyReqOpts.headers["Content-Type"] = "application/json";
+      }
+
+      return proxyReqOpts;
+    },
+    userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
+      logger.info(
+        `response gotten from notification service ${proxyRes.statusCode} ${proxyResData}`
+      );
+
+      return proxyResData;
+    },
+  })
+);
+
+app.use(
   "/v1/chat",
   proxy(process.env.CHAT_SERVICE_PORT as string, {
     ...proxyOptions,

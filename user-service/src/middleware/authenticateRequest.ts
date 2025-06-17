@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-
 import jwt from "jsonwebtoken";
 import logger from "../utils/logger";
 import { Types } from "mongoose";
+import { getCookie } from "../utils/getCookie";
 
 interface DecodedUser {
   userId: Types.ObjectId;
@@ -14,8 +14,12 @@ const authenticateRequest = (
   next: NextFunction
 ) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
+    const token = getCookie(req)
+      ?.find((cookie) => cookie.startsWith("accessToken"))
+      ?.slice(12);
 
+
+      console.log("Token:", token);
     if (!token) {
       res.status(401).json({ success: false, message: "Access token Missing" });
       return;

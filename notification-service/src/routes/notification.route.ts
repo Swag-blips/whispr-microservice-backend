@@ -4,4 +4,7 @@ import { getNotification } from "../controller/notification.controller";
 
 const router = express.Router();
 
-router.get("/notifications", authenticateRequest, getNotification);
+router.get("/", authenticateRequest, getNotification);
+
+
+export default router

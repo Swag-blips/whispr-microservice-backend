@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import logger from "../utils/logger";
 import Notification from "../models/notification.model";
+import User from "../models/user.model";
 
 export const getNotification = async (req: Request, res: Response) => {
   try {
@@ -8,8 +9,9 @@ export const getNotification = async (req: Request, res: Response) => {
 
     const notifications = await Notification.find({
       to: userId,
-    });
+    }).populate("from", "username avatar bio", User);
 
+    console.log("Notifications", notifications);
     if (!notifications.length) {
       res.status(200).json({ sucess: false, notifications: [] });
       return;

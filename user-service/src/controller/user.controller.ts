@@ -7,7 +7,7 @@ import { connection } from "../config/dbConnect";
 import mongoose from "mongoose";
 import { invalidatePermissions } from "../utils/fetchPermissions";
 import { publishEvent } from "../config/rabbitMq";
-import { User as UserType } from "../types/types";
+
 
 export const getUser = async (req: Request, res: Response) => {
   logger.info("get user endpoint hit");

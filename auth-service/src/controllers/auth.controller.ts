@@ -30,6 +30,10 @@ export const register = async (req: Request, res: Response) => {
       },
       message: "Account created successfully",
     });
+
+    await redisClient.del(`search:${username}`);
+
+    return
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === "User already exists") {
