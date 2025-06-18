@@ -15,7 +15,8 @@ const limiter = rateLimit({
         ...(args as [string, ...string[]])
       ) as Promise<RedisReply>;
     },
-  }),
+  }),  
 });
 
 export default limiter;
+ 

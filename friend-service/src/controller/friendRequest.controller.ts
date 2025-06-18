@@ -110,8 +110,8 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
     });
 
     await publishEvent("friendRequest.accepted", {
-      user1: senderId,
-      user2: receiverId,
+      from: senderId,
+      to: receiverId,
     });
 
     existingRequest.status = "Accepted";

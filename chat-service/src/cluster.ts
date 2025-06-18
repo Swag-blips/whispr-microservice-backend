@@ -33,8 +33,9 @@ if (cluster.isPrimary) {
         "chat.deleted.queue",
         "chat.deleted",
         handleDeleteFriends
-      );
+      ); 
   }
 
   startServer();
 }
+   

@@ -30,7 +30,7 @@ io.use((socket, next) => {
 
   try {
     const decodedToken = jwt.verify(
-      token,
+      token, 
       process.env.JWT_SECRET_KEY as string
     ) as DecodedUser;
 

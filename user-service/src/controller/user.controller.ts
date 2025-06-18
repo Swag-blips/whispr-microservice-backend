@@ -85,7 +85,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
         .json({ success: true, currentUser: JSON.parse(cachedUser) });
       return;
     }
-
+ 
     const currentUser = await User.findById(userId);
 
     if (!currentUser) {

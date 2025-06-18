@@ -38,15 +38,15 @@ export const handleFriendRequestDecline = async (event: NotificationEvent) => {
 };
 
 export const handleFriendRequestAccept = async (event: NotificationEvent) => {
-  console.log(event);
+  console.log("EVENT", event);
   try {
     const notification = await Notification.findOne({
       from: event.from,
       to: event.to,
-    });
+    });  
 
     console.log("NOTIFICATION", notification);
-
+ 
     if (!notification) {
       return;
     }
