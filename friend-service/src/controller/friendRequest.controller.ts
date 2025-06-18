@@ -109,6 +109,11 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
       participants: [senderId, receiverId],
     });
 
+    await publishEvent("friendRequest.accepted", {
+      user1: senderId,
+      user2: receiverId,
+    });
+
     existingRequest.status = "Accepted";
     await existingRequest.save();
     res.status(201).json({ success: true, message: "Friend request accepted" });
@@ -135,7 +140,6 @@ export const declineFriendRequest = async (req: Request, res: Response) => {
     if (!friendRequest) {
       res
         .status(400)
-
         .json({ success: false, message: "Friend request not found" });
 
       return;
@@ -144,9 +148,16 @@ export const declineFriendRequest = async (req: Request, res: Response) => {
     friendRequest.status = "Declined";
     await friendRequest.save();
 
+    await publishEvent("friendRequest.declined", {
+      from: friendRequest.from,
+      to: friendRequest.to,
+    });
+
     res
       .status(200)
       .json({ success: true, message: "Friend request declined " });
+
+    return;
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });

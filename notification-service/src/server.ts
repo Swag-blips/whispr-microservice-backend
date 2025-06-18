@@ -10,7 +10,11 @@ import limiter from "./config/rateLimit";
 import User from "./models/user.model";
 
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
-import { handleFriendRequestNotification } from "./events/eventHandler";
+import {
+  handleFriendRequestAccept,
+  handleFriendRequestDecline,
+  handleFriendRequestNotification,
+} from "./events/eventHandler";
 import notificationRoutes from "../src/routes/notification.route";
 
 dotenv.config();
@@ -34,7 +38,21 @@ const startServer = async () => {
       connectToMongo(),
       connectToRabbitMq(),
 
-      consumeEvent("friendRequest.created", handleFriendRequestNotification),
+      consumeEvent(
+        "friendRequest.created",
+        "notification.friendRequest.created.queue",
+        handleFriendRequestNotification
+      ),
+      consumeEvent(
+        "friendRequest.accepted",
+        "notification.friendRequest.accepted.queue",
+        handleFriendRequestAccept
+      ),
+      consumeEvent(
+        "friendRequest.declined",
+        "notification.friendRequest.declined.queue",
+        handleFriendRequestDecline
+      ),
     ]);
 
     app.listen(PORT, async () => {

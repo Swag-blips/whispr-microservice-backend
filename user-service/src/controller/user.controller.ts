@@ -8,7 +8,6 @@ import mongoose from "mongoose";
 import { invalidatePermissions } from "../utils/fetchPermissions";
 import { publishEvent } from "../config/rabbitMq";
 
-
 export const getUser = async (req: Request, res: Response) => {
   logger.info("get user endpoint hit");
   try {
@@ -67,6 +66,7 @@ export const getUser = async (req: Request, res: Response) => {
 
     return;
   } catch (error) {
+    console.error(error);
     logger.error("An error occured in the getUser controller", error);
     res.status(500).json({ message: error });
   }

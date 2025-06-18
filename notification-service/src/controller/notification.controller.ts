@@ -11,7 +11,6 @@ export const getNotification = async (req: Request, res: Response) => {
       to: userId,
     }).populate("from", "username avatar bio", User);
 
-    console.log("Notifications", notifications);
     if (!notifications.length) {
       res.status(200).json({ sucess: false, notifications: [] });
       return;

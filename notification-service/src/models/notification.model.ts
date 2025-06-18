@@ -14,11 +14,11 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enums: ["Accepted", "Pending", "Message"],
+      enums: ["Accepted", "Pending", "Message", "Declined"],
     },
   },
   { timestamps: true }
-); 
+);
 
 notificationSchema.index({ from: 1 });
 notificationSchema.index({ to: 1 });

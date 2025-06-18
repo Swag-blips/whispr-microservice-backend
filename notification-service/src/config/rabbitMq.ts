@@ -6,7 +6,6 @@ let connection: amq.ChannelModel | null = null;
 let channel: amq.Channel | null = null;
 
 const EXCHANGE_NAME = "whispr_event";
-const QUEUE_NAME = "notification.create.queue";
 const RETRY_QUEUE = "notification.create.retry.queue";
 const RETRY_DELAY = 10000;
 const MAX_RETRIES = 5;
@@ -31,9 +30,9 @@ export const connectToRabbitMq = async () => {
     logger.error(error);
   }
 };
-
 export const consumeEvent = async (
   routingKey: string,
+  queueName: string,
   callback: (content: Notification) => void
 ) => {
   if (!channel) {
@@ -41,25 +40,25 @@ export const consumeEvent = async (
   }
 
   try {
-    const q = await channel?.assertQueue(QUEUE_NAME, { durable: true });
-    await channel?.bindQueue(QUEUE_NAME, EXCHANGE_NAME, routingKey);
-    channel?.consume(QUEUE_NAME, (msg) => {
+    await channel!.assertQueue(queueName, { durable: true });
+    await channel!.bindQueue(queueName, EXCHANGE_NAME, routingKey);
+
+    channel!.consume(queueName, (msg) => {
       if (msg !== null) {
         const content = JSON.parse(msg.content.toString());
 
         try {
           callback(content);
-          channel?.ack(msg);
+          channel!.ack(msg);
         } catch (err) {
           logger.error("Error processing message", err);
 
           const retries = (msg.properties.headers?.["x-retries"] ||
             0) as number;
-
           const newRetries = retries + 1;
 
           if (newRetries <= MAX_RETRIES) {
-            channel?.publish("", RETRY_QUEUE, msg.content, {
+            channel!.publish("", RETRY_QUEUE, msg.content, {
               headers: {
                 "x-retries": newRetries,
               },
@@ -69,7 +68,7 @@ export const consumeEvent = async (
             logger.error(
               `Message failed after ${MAX_RETRIES} retries. Discarding.`
             );
-            channel?.ack(msg);
+            channel!.ack(msg);
           }
         }
       }
