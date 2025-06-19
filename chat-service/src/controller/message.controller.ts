@@ -8,6 +8,7 @@ import { queue } from "../utils/fileWorker";
 import { queue as lastMessageQueue } from "../utils/lastMessageWorker";
 import { cacheMessages, getCachedMessages } from "../utils/cache";
 import { Types } from "mongoose";
+import User from "../models/user.model";
 
 export const sendMessage = async (req: Request, res: Response) => {
   try {
@@ -19,6 +20,8 @@ export const sendMessage = async (req: Request, res: Response) => {
       `permittedChats${userId}`
     );
     const chatParticipants = await redisClient.smembers(`permissions${chatId}`);
+
+    let participants: string[] = [];
 
     if (!permittedChats.length || !chatParticipants.length) {
       const chat = await Chat.findById(chatId);
@@ -40,12 +43,11 @@ export const sendMessage = async (req: Request, res: Response) => {
       const message = await Message.create({
         chatId,
         content,
-        receiverId: receiverId,
+        receiverId,
         senderId: userId,
       });
 
       if (file) {
-        console.log("We got a file!");
         queue.add(
           "upload-message-image",
           {
@@ -54,10 +56,7 @@ export const sendMessage = async (req: Request, res: Response) => {
           },
           {
             attempts: 3,
-            backoff: {
-              type: "exponential",
-              delay: 3000,
-            },
+            backoff: { type: "exponential", delay: 3000 },
             removeOnComplete: true,
             removeOnFail: true,
           }
@@ -66,16 +65,10 @@ export const sendMessage = async (req: Request, res: Response) => {
 
       lastMessageQueue.add(
         "update-last-message",
-        {
-          message: content,
-          chatId: chatId,
-        },
+        { message: content, chatId },
         {
           attempts: 3,
-          backoff: {
-            type: "exponential",
-            delay: 3000,
-          },
+          backoff: { type: "exponential", delay: 3000 },
           removeOnComplete: true,
           removeOnFail: true,
         }
@@ -84,25 +77,25 @@ export const sendMessage = async (req: Request, res: Response) => {
       await redisClient.sadd(`permittedChats${userId}`, chat._id.toString());
       await redisClient.sadd(
         `permissions${chatId}`,
-        ...chat.participants.map((particpant) => particpant.toString())
+        ...chat.participants.map((id) => id.toString())
       );
 
-      const cached = await redisClient.get(`messages:${chatId}`);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        parsed.push(message);
-        await redisClient.set(
-          `messages:${chatId}`,
-          JSON.stringify(parsed),
-          "EX",
-          300
-        );
-      }
+      // ✅ Invalidate per-user cache
+      const participantIds = chat.participants.map((id) => id.toString());
+      const keysToDelete = participantIds.map(
+        (id) => `messages:${chatId}:${id}`
+      );
+      await redisClient.del(...keysToDelete);
+
       res
         .status(201)
-        .json({ success: false, message: "Message successfully sent" });
+        .json({ success: true, message: "Message successfully sent" });
 
-      // TODO brodcast message to room(chatId) or to user specifcally
+      const receiverStringId = receiverId?.toString();
+      await Promise.all([
+        redisClient.del(`userChats:${userId}`),
+        redisClient.del(`userChats:${receiverStringId}`),
+      ]);
       return;
     } else {
       if (!permittedChats.includes(chatId.toString())) {
@@ -121,16 +114,10 @@ export const sendMessage = async (req: Request, res: Response) => {
 
       lastMessageQueue.add(
         "update-last-message",
-        {
-          message: content,
-          chatId: chatId,
-        },
+        { message: content, chatId },
         {
           attempts: 3,
-          backoff: {
-            type: "exponential",
-            delay: 3000,
-          },
+          backoff: { type: "exponential", delay: 3000 },
           removeOnComplete: true,
           removeOnFail: true,
         }
@@ -142,37 +129,33 @@ export const sendMessage = async (req: Request, res: Response) => {
         receiverId,
         senderId: userId,
       });
-      const cached = await redisClient.get(`messages:${chatId}`);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        parsed.push(message);
-        await redisClient.set(
-          `messages:${chatId}`,
-          JSON.stringify(parsed),
-          "EX",
-          300
-        );
-      }
-      // if (message && receiverId) {
-      //   io.to(receiverId).emit("newMessage", message);
-      // }
+
+      // ✅ Invalidate per-user cache
+      const participantIds = chatParticipants.map((id) => id.toString());
+      const keysToDelete = participantIds.map(
+        (id) => `messages:${chatId}:${id}`
+      );
+      await redisClient.del(...keysToDelete);
 
       res
         .status(201)
         .json({ success: true, message: "Message successfully sent" });
 
+      const receiverStringId = receiverId?.toString();
+      await Promise.all([
+        redisClient.del(`userChats:${userId}`),
+        redisClient.del(`userChats:${receiverStringId}`),
+      ]);
       return;
     }
   } catch (error) {
-    logger.error(`An error occured while sending message ${error}`);
+    logger.error(`An error occurred while sending message ${error}`);
     res.status(500).json({ error: error });
   }
 };
-
 export const getMessages = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
-
     const userId = req.userId;
 
     if (!chatId) {
@@ -180,27 +163,43 @@ export const getMessages = async (req: Request, res: Response) => {
       return;
     }
 
-    const cached = await getCachedMessages(chatId);
+    const cached = await getCachedMessages(chatId, userId);
     if (cached) {
       res.status(200).json({ success: true, messages: cached });
       return;
     }
 
-    const messages = await Message.find({ chatId }).limit(100);
+    const messages = await Message.find({ chatId }).lean().limit(100);
     if (!messages.length) {
       res.status(200).json([]);
       return;
     }
 
-    await cacheMessages(chatId, messages);
-    res.status(200).json({ success: true, messages });
+    const transformedMessages = await Promise.all(
+      messages.map(async (message) => {
+        const participants = [message.senderId, message.receiverId];
+        const otherUserId = participants.find(
+          (id) => id.toString() !== userId.toString()
+        );
+
+        const otherUserDetails = await User.findById(otherUserId)
+          .select("username avatar")
+          .lean();
+
+        return { ...message, otherUserDetails };
+      })
+    );
+
+    await cacheMessages(chatId, userId, transformedMessages);
+
+    res.status(200).json({ success: true, messages: transformedMessages });
     return;
   } catch (error) {
-    logger.error(`error getting messages ${error}`);
+    logger.error(`Error getting messages: ${error}`);
     res.status(500).json({ error: error });
+    return;
   }
 };
-
 export const createGroup = async (req: Request, res: Response) => {
   try {
     const { participants, groupName, bio } = req.body;
@@ -355,6 +354,7 @@ export const updateGroupDetails = async (req: Request, res: Response) => {
 };
 
 export const getUserChats = async (req: Request, res: Response) => {
+  logger.info("USER CHATS ENDPOINT HIT");
   try {
     const userId = req.userId;
 
@@ -363,21 +363,40 @@ export const getUserChats = async (req: Request, res: Response) => {
     if (cachedUserChats) {
       res
         .status(200)
-        .json({ success: false, chats: JSON.parse(cachedUserChats) });
+        .json({ success: true, chats: JSON.parse(cachedUserChats) });
       return;
     }
 
     const chats = await Chat.find({
       participants: userId,
-    });
+      type: "private",
+    }).lean();
 
     if (!chats.length) {
-      res.status(404).json({ success: false, message: "no chats found" });
+      res.status(200).json({ success: true, chats: [] });
       return;
     }
+    const transformedChats = await Promise.all(
+      chats.map(async (chat) => {
+        const otherUserId = chat.participants.find(
+          (id) => id.toString() !== userId.toString()
+        );
+        const otherUser = await User.findById(otherUserId)
+          .select("username avatar bio")
+          .lean();
 
-    await redisClient.set(`userChats:${userId}`, JSON.stringify(chats));
-    res.status(200).json({ sucess: true, chats });
+        return {
+          ...chat,
+          otherUser,
+        };
+      })
+    );
+
+    await redisClient.set(
+      `userChats:${userId}`,
+      JSON.stringify(transformedChats)
+    );
+    res.status(200).json({ success: true, chats: transformedChats });
     return;
   } catch (error) {
     logger.error(error);

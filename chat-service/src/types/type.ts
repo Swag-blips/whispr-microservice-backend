@@ -17,6 +17,7 @@ export interface ChatSchema {
   lastMessage: string;
   groupName?: string;
   bio?: string;
+  otherUser: any;
 }
 
 export interface ChatDeletedEvent {

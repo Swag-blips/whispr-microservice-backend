@@ -20,7 +20,12 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3006",
+    credentials: true,
+  })
+);
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
 app.use(limiter);
@@ -33,13 +38,13 @@ app.get("/health", (req, res) => {
   res.status(200).send("Chat service is healthy");
 });
 const PORT = process.env.PORT || 3005;
-  
+
 export const startServer = async () => {
   try {
     await Promise.all([connectToMongo(), initSocket()]);
 
     server.listen(Number(PORT), "0.0.0.0", () => {
-      logger.info("chat service is listening on port", PORT);
+      logger.info(`chat service is listening on port ${PORT}`);
     });
   } catch (error) {
     logger.error(error);

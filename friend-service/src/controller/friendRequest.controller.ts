@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import logger from "../utils/logger";
 import FriendRequest from "../models/friendRequest.model";
 import { publishEvent } from "../config/rabbitMq";
+import redisClient from "../config/redis";
 
 export const sendFriendRequest = async (req: Request, res: Response) => {
   logger.info("send friend request endpoint hit");
@@ -117,6 +118,11 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
     existingRequest.status = "Accepted";
     await existingRequest.save();
     res.status(201).json({ success: true, message: "Friend request accepted" });
+    await redisClient.del(`userChats:${senderId}`);
+    await redisClient.del(`userChats:${receiverId}`);
+
+    return;
+    
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: error });

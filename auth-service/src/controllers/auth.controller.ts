@@ -13,7 +13,7 @@ import {
   resendOtpService,
   verifyEmailService,
 } from "../services/auth.service";
-
+ 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint hit");
   try {
@@ -113,7 +113,7 @@ export const Login = async (req: Request, res: Response) => {
 
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    const { otp, email } = req.body;
+    const { otp, email } = req.body; 
 
     console.log(otp, email);
 
