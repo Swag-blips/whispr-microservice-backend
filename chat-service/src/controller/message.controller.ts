@@ -121,7 +121,14 @@ export const sendMessage = async (req: Request, res: Response) => {
       );
 
       if (receiverSocket) {
-        io.to(chatId).emit("newMessage", content);
+        io.to(chatId).emit("newMessage", {
+          
+          content: content,
+          senderId: userId,
+          receiverId: receiverId,
+          chatId: chatId,
+          createdAt: new Date()
+        });
       }
 
       addMessageQueue.add(
@@ -266,10 +273,10 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
       return;
     }
 
-    if (!chat.participants.includes(userId)) {
+    if (chat.participants.includes(userId)) {
       res.status(401).json({
         success: false,
-        message: "Unauthorized access, you must be a member to update details",
+        message: "one user is already a member",
       });
       return;
     }
@@ -284,7 +291,7 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
       )
     );
 
-    res.status(201).json({ success: true, message: "User added to chat" });
+    res.status(201).json({ success: true, message: "Users added to chat" });
     return;
   } catch (error) {
     logger.error(`error adding member ${error}`);

@@ -29,6 +29,7 @@ const addMessage = async (
     return;
   } catch (error) {
     logger.error(error);
+    throw error;
   }
 };
 
