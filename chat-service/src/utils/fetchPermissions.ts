@@ -22,10 +22,8 @@ export const fetchPermissions = async (userId: Types.ObjectId) => {
         await redisClient.sadd(
           `permissions${chat._id}`,
           ...chat.participants.map((user) => userId.toString())
-        );
+        ); 
       }
-
-      logger.info(chats);
     } catch (error) {
       logger.error(`an error occured fetching permissions ${error}`);
     }

@@ -9,7 +9,6 @@ import { v2 as cloudinary } from "cloudinary";
 import cors from "cors";
 import errorHandler from "./middleware/errorHandler";
 import dotenv from "dotenv";
-import { initSocket } from "./utils/initSocket";
 import chatRoutes from "./routes/message.route";
 
 dotenv.config();
@@ -41,7 +40,7 @@ const PORT = process.env.PORT || 3005;
 
 export const startServer = async () => {
   try {
-    await Promise.all([connectToMongo(), initSocket()]);
+    await Promise.all([connectToMongo()]);
 
     server.listen(Number(PORT), "0.0.0.0", () => {
       logger.info(`chat service is listening on port ${PORT}`);
