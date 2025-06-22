@@ -3,9 +3,10 @@ import logger from "../utils/logger";
 import redisClient from "../config/redis";
 import Message from "../models/message.model";
 import Chat from "../models/chat.model";
-import { io } from "../socket/socket";
+import { getReceiverSocketId, io } from "../socket/socket";
 import { queue } from "../utils/fileWorker";
 import { queue as lastMessageQueue } from "../utils/lastMessageWorker";
+import { queue as addMessageQueue } from "../utils/addMessageWorker";
 import { cacheMessages, getCachedMessages } from "../utils/cache";
 import { Types } from "mongoose";
 import User from "../models/user.model";
@@ -80,7 +81,6 @@ export const sendMessage = async (req: Request, res: Response) => {
         ...chat.participants.map((id) => id.toString())
       );
 
-      // ✅ Invalidate per-user cache
       const participantIds = chat.participants.map((id) => id.toString());
       const keysToDelete = participantIds.map(
         (id) => `messages:${chatId}:${id}`
@@ -112,6 +112,34 @@ export const sendMessage = async (req: Request, res: Response) => {
         (user) => user.toString() !== userId
       );
 
+      if (!receiverId) {
+        res.status(400).json({ success: false, message: "No receivers" });
+        return;
+      }
+      const receiverSocket = getReceiverSocketId(
+        receiverId as unknown as Types.ObjectId
+      );
+
+      if (receiverSocket) {
+        io.to(chatId).emit("newMessage", content);
+      }
+
+      addMessageQueue.add(
+        "add-message",
+        {
+          content: content,
+          chatId: chatId,
+          receiverId: receiverId,
+          userId: userId,
+        },
+        {
+          attempts: 3,
+          backoff: { type: "exponential", delay: 3000 },
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      );
+
       lastMessageQueue.add(
         "update-last-message",
         { message: content, chatId },
@@ -123,14 +151,6 @@ export const sendMessage = async (req: Request, res: Response) => {
         }
       );
 
-      const message = await Message.create({
-        chatId,
-        content,
-        receiverId,
-        senderId: userId,
-      });
-
-      // ✅ Invalidate per-user cache
       const participantIds = chatParticipants.map((id) => id.toString());
       const keysToDelete = participantIds.map(
         (id) => `messages:${chatId}:${id}`

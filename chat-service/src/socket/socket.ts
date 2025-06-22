@@ -15,8 +15,12 @@ export const app = express();
 
 export const server = http.createServer(app);
 
-const activeUsers = new Map<string, Types.ObjectId>();
+const activeUsers = new Map<Types.ObjectId, string>();
 const subClient = pubClient.duplicate();
+
+export const getReceiverSocketId = (userId: Types.ObjectId) => {
+  return activeUsers.get(userId);
+};
 
 export const io = new Server(server, {
   cors: {
@@ -30,10 +34,10 @@ io.on("connection", async (socket) => {
   const userId = socket.handshake.query.userId as unknown as Types.ObjectId;
 
   if (userId) {
-    activeUsers.set(socket.id, userId);
+    activeUsers.set(userId, socket.id);
   }
 
-  io.emit("getOnlineUsers", [...activeUsers.values()]);
+  io.emit("getOnlineUsers", [...activeUsers.keys()]);
 
   socket.on("joinRoom", (chatId) => {
     socket.join(chatId);
@@ -49,7 +53,7 @@ io.on("connection", async (socket) => {
 
   socket.on("disconnect", async () => {
     logger.info(`user disconnected from socket ${socket.id}`);
-    activeUsers.delete(socket.id);
+    activeUsers.delete(userId);
     await invalidatePermissions(userId);
   });
 });
