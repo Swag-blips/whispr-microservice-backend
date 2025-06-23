@@ -4,8 +4,6 @@ import redisClient from "../config/redis";
 import Message from "../models/message.model";
 import Chat from "../models/chat.model";
 import { getReceiverSocketId, io } from "../socket/socket";
-import { queue } from "../utils/fileWorker";
-import { queue as lastMessageQueue } from "../utils/lastMessageWorker";
 import { queue as addMessageQueue } from "../utils/addMessageWorker";
 import {
   cacheMessages,
@@ -45,32 +43,27 @@ export const sendMessage = async (req: Request, res: Response) => {
         (user) => user.toString() !== userId
       );
 
-      const message = await Message.create({
-        chatId,
-        content,
-        receiverId,
+      io.to(chatId).emit("newMessage", {
+        content: content,
         senderId: userId,
+        receiverId: receiverId,
+        chatId: chatId,
+        createdAt: new Date(),
       });
 
-      if (file) {
-        queue.add(
-          "upload-message-image",
-          {
-            imagePath: file,
-            messageId: message._id,
-          },
-          {
-            attempts: 3,
-            backoff: { type: "exponential", delay: 3000 },
-            removeOnComplete: true,
-            removeOnFail: true,
-          }
-        );
-      }
+      res
+        .status(201)
+        .json({ success: true, message: "Message successfully sent" });
 
-      lastMessageQueue.add(
-        "update-last-message",
-        { message: content, chatId },
+      await addMessageQueue.add(
+        "add-message",
+        {
+          content: content,
+          chatId: chatId,
+          receiverId: receiverId,
+          userId: userId,
+          imagePath: file,
+        },
         {
           attempts: 3,
           backoff: { type: "exponential", delay: 3000 },
@@ -86,10 +79,6 @@ export const sendMessage = async (req: Request, res: Response) => {
       );
 
       await invalidateChatMessagesCache(chatId);
-
-      res
-        .status(201)
-        .json({ success: true, message: "Message successfully sent" });
 
       const receiverStringId = receiverId?.toString();
       await Promise.all([
@@ -125,13 +114,14 @@ export const sendMessage = async (req: Request, res: Response) => {
         createdAt: new Date(),
       });
 
-      addMessageQueue.add(
+      await addMessageQueue.add(
         "add-message",
         {
           content: content,
           chatId: chatId,
           receiverId: receiverId,
           userId: userId,
+          imagePath: file,
         },
         {
           attempts: 3,
@@ -141,16 +131,6 @@ export const sendMessage = async (req: Request, res: Response) => {
         }
       );
 
-      lastMessageQueue.add(
-        "update-last-message",
-        { message: content, chatId },
-        {
-          attempts: 3,
-          backoff: { type: "exponential", delay: 3000 },
-          removeOnComplete: true,
-          removeOnFail: true,
-        }
-      ); 
       await invalidateChatMessagesCache(chatId);
 
       res
