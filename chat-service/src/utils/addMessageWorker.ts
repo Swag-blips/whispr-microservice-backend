@@ -11,7 +11,6 @@ export const queue = new Queue("add-message", {
   connection: redisClient,
 });
 
-let session: mongoose.mongo.ClientSession | undefined;
 const addMessage = async (
   content: string,
   chatId: Types.ObjectId,
@@ -19,7 +18,9 @@ const addMessage = async (
   userId: Types.ObjectId,
   imagePath?: string
 ) => {
-  let result: UploadApiResponse | null;
+  let result: UploadApiResponse | null = null;
+  let session: mongoose.mongo.ClientSession | null | undefined = null;
+
   try {
     if (!connection) {
       await mongoose.connect(process.env.MONGODB_URI as string);
@@ -28,47 +29,52 @@ const addMessage = async (
     if (imagePath) {
       result = await cloudinary.uploader.upload(imagePath, {
         folder: "messages_images",
-        public_id: `message_${chatId}`,
+        public_id: `message_${chatId}_${Date.now()}`,
       });
-
-      logger.info("image uploaded successfully");
+      logger.info("📸 Image uploaded successfully to Cloudinary");
     }
 
     session = await connection?.startSession();
 
     await session?.withTransaction(async () => {
-      await Message.create(
-        {
-          chatId,
-          content,
-          receiverId,
-          senderId: userId,
-          ...(result?.secure_url && {
-            file: result.secure_url,
-          }),
-        },
+      const [message] = await Message.create(
+        [
+          {
+            chatId,
+            content,
+            receiverId,
+            senderId: userId,
+            ...(result?.secure_url && { file: result.secure_url }),
+          },
+        ],
         { session }
       );
+
+      console.log("MESSAGE", message)
+
+      if (!message) {
+        throw new Error("Failed to create message");
+      }
 
       await Chat.findByIdAndUpdate(
         chatId,
         {
-          lastMessage: content,
+          lastMessage: message.content,
         },
         { session }
       );
     });
 
-    logger.info("Message added and updated successfully");
-    return;
+    logger.info("✅ Message created and lastMessage updated successfully");
   } catch (error) {
-    logger.error(error);
+    logger.error("❌ Failed to add message in transaction:", error);
     throw error;
   } finally {
     await session?.endSession();
   }
 };
 
+// Worker that listens for jobs on the "add-message" queue
 const worker = new Worker(
   "add-message",
   async (job: {
@@ -89,5 +95,5 @@ const worker = new Worker(
 );
 
 worker.on("failed", (job, err) => {
-  logger.error(`add message job failed for ${job?.id}:`, err);
+  logger.error(`🚨 Job ${job?.id} failed in add-message queue:`, err);
 });

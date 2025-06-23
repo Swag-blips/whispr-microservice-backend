@@ -30,7 +30,7 @@ export const io = new Server(server, {
 });
 
 io.on("connection", async (socket) => {
-  logger.info(`user connected to server ${socket.id} ${process.pid}`);
+  console.log(`user connected to socket server ${socket.id}`);
   const userId = socket.handshake.query.userId as unknown as Types.ObjectId;
 
   if (userId) {
@@ -40,14 +40,13 @@ io.on("connection", async (socket) => {
   io.emit("getOnlineUsers", [...activeUsers.keys()]);
 
   socket.on("joinRoom", (chatId) => {
-
-    console.log("SOCKET JOINS ROOM")
+    console.log("SOCKET JOINS ROOM");
     socket.join(chatId);
   });
 
   socket.on("startTyping", (data) => {
     const { chatId } = data;
- 
+
     socket.to(chatId).emit("userTyping", "User is typing");
   });
   socket.on("stopTyping", (data) => {

@@ -165,10 +165,10 @@ export const getMessages = async (req: Request, res: Response) => {
       return;
     }
 
-    const messages = await Message.find({ chatId }).lean().limit(100);
+    const messages = await Message.find({ chatId }).lean();
     if (!messages.length) {
       res.status(200).json([]);
-      return;
+      return; 
     }
 
     await cacheMessages(chatId, messages);
@@ -180,7 +180,7 @@ export const getMessages = async (req: Request, res: Response) => {
     res.status(500).json({ error: error });
     return;
   }
-};
+}; 
 export const createGroup = async (req: Request, res: Response) => {
   try {
     const { participants, groupName, bio } = req.body;
