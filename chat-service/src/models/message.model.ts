@@ -25,6 +25,12 @@ const messageSchema = new mongoose.Schema(
       ref: "Chat",
       required: true,
     },
+    status: {
+      type: String,
+      required: true,
+      enum: ["sent", "delivered", "seen"],
+      default: "sent",
+    },
   },
   { timestamps: true }
 );

@@ -19,6 +19,7 @@ const activeUsers = new Map<Types.ObjectId, string>();
 const subClient = pubClient.duplicate();
 
 export const getReceiverSocketId = (userId: Types.ObjectId) => {
+  console.log("ACTIVE USERS", activeUsers)
   return activeUsers.get(userId);
 };
 

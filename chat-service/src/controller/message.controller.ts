@@ -43,12 +43,18 @@ export const sendMessage = async (req: Request, res: Response) => {
         (user) => user.toString() !== userId
       );
 
+      let status = "sent";
+      const receiver = getReceiverSocketId(receiverId!);
+
       io.to(chatId).emit("newMessage", {
         content: content,
         senderId: userId,
         receiverId: receiverId,
         chatId: chatId,
         createdAt: new Date(),
+        ...(receiver && {
+          status: "delivered",
+        }),
       });
 
       res
@@ -63,6 +69,9 @@ export const sendMessage = async (req: Request, res: Response) => {
           receiverId: receiverId,
           userId: userId,
           imagePath: file,
+          ...(receiver && {
+            status: "delivered",
+          }),
         },
         {
           attempts: 3,
@@ -96,7 +105,7 @@ export const sendMessage = async (req: Request, res: Response) => {
         res.status(401).json({ success: false, message: "Not permitted" });
         return;
       }
-
+ 
       const receiverId = chatParticipants.find(
         (user) => user.toString() !== userId
       );
@@ -106,12 +115,19 @@ export const sendMessage = async (req: Request, res: Response) => {
         return;
       }
 
+      const receiver = getReceiverSocketId(
+        receiverId as unknown as Types.ObjectId
+      );
+
       io.to(chatId).emit("newMessage", {
         content: content,
         senderId: userId,
         receiverId: receiverId,
         chatId: chatId,
         createdAt: new Date(),
+        ...(receiver && {
+          status: "delivered",
+        }),
       });
 
       await addMessageQueue.add(
@@ -122,6 +138,9 @@ export const sendMessage = async (req: Request, res: Response) => {
           receiverId: receiverId,
           userId: userId,
           imagePath: file,
+          ...(receiver && {
+            status: "delivered",
+          }),
         },
         {
           attempts: 3,
@@ -168,7 +187,7 @@ export const getMessages = async (req: Request, res: Response) => {
     const messages = await Message.find({ chatId }).lean();
     if (!messages.length) {
       res.status(200).json([]);
-      return; 
+      return;
     }
 
     await cacheMessages(chatId, messages);
@@ -180,7 +199,7 @@ export const getMessages = async (req: Request, res: Response) => {
     res.status(500).json({ error: error });
     return;
   }
-}; 
+};
 export const createGroup = async (req: Request, res: Response) => {
   try {
     const { participants, groupName, bio } = req.body;

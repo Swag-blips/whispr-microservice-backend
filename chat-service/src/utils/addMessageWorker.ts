@@ -16,7 +16,8 @@ const addMessage = async (
   chatId: Types.ObjectId,
   receiverId: Types.ObjectId,
   userId: Types.ObjectId,
-  imagePath?: string
+  imagePath?: string,
+  status?: string
 ) => {
   let result: UploadApiResponse | null = null;
   let session: mongoose.mongo.ClientSession | null | undefined = null;
@@ -45,12 +46,13 @@ const addMessage = async (
             receiverId,
             senderId: userId,
             ...(result?.secure_url && { file: result.secure_url }),
+            ...(status && { status: "delivered" }),
           },
         ],
         { session }
       );
 
-      console.log("MESSAGE", message)
+      console.log("MESSAGE", message);
 
       if (!message) {
         throw new Error("Failed to create message");
@@ -74,7 +76,6 @@ const addMessage = async (
   }
 };
 
-// Worker that listens for jobs on the "add-message" queue
 const worker = new Worker(
   "add-message",
   async (job: {
@@ -83,11 +84,12 @@ const worker = new Worker(
       chatId: Types.ObjectId;
       receiverId: Types.ObjectId;
       userId: Types.ObjectId;
-      imagePath?: string;
+      imagePath?: string; 
+      status?: string;
     };
   }) => {
-    const { content, chatId, receiverId, userId, imagePath } = job.data;
-    await addMessage(content, chatId, receiverId, userId, imagePath);
+    const { content, chatId, receiverId, userId, imagePath, status } = job.data;
+    await addMessage(content, chatId, receiverId, userId, imagePath, status);
   },
   {
     connection: redisClient,
