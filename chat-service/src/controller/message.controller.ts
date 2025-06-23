@@ -118,7 +118,7 @@ export const sendMessage = async (req: Request, res: Response) => {
       const receiver = getReceiverSocketId(
         receiverId as unknown as Types.ObjectId
       );
-
+  
       io.to(chatId).emit("newMessage", {
         content: content,
         senderId: userId,

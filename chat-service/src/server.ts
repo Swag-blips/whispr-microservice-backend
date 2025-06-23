@@ -10,7 +10,7 @@ import cors from "cors";
 import errorHandler from "./middleware/errorHandler";
 import dotenv from "dotenv";
 import chatRoutes from "./routes/message.route";
-
+ 
 dotenv.config();
 
 cloudinary.config({

@@ -11,7 +11,7 @@ import {
 } from "../utils/fetchPermissions";
 import { createAdapter } from "@socket.io/redis-adapter";
 import pubClient from "../config/redis";
-export const app = express();
+export const app = express(); 
 
 export const server = http.createServer(app);
 
