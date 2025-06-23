@@ -7,7 +7,11 @@ import { getReceiverSocketId, io } from "../socket/socket";
 import { queue } from "../utils/fileWorker";
 import { queue as lastMessageQueue } from "../utils/lastMessageWorker";
 import { queue as addMessageQueue } from "../utils/addMessageWorker";
-import { cacheMessages, getCachedMessages } from "../utils/cache";
+import {
+  cacheMessages,
+  getCachedMessages,
+  invalidateChatMessagesCache,
+} from "../utils/cache";
 import { Types } from "mongoose";
 import User from "../models/user.model";
 
@@ -81,11 +85,7 @@ export const sendMessage = async (req: Request, res: Response) => {
         ...chat.participants.map((id) => id.toString())
       );
 
-      const participantIds = chat.participants.map((id) => id.toString());
-      const keysToDelete = participantIds.map(
-        (id) => `messages:${chatId}:${id}`
-      );
-      await redisClient.del(...keysToDelete);
+      await invalidateChatMessagesCache(chatId);
 
       res
         .status(201)
@@ -116,20 +116,14 @@ export const sendMessage = async (req: Request, res: Response) => {
         res.status(400).json({ success: false, message: "No receivers" });
         return;
       }
-      const receiverSocket = getReceiverSocketId(
-        receiverId as unknown as Types.ObjectId
-      );
 
-      if (receiverSocket) {
-        io.to(chatId).emit("newMessage", {
-          
-          content: content,
-          senderId: userId,
-          receiverId: receiverId,
-          chatId: chatId,
-          createdAt: new Date()
-        });
-      }
+      io.to(chatId).emit("newMessage", {
+        content: content,
+        senderId: userId,
+        receiverId: receiverId,
+        chatId: chatId,
+        createdAt: new Date(),
+      });
 
       addMessageQueue.add(
         "add-message",
@@ -157,12 +151,7 @@ export const sendMessage = async (req: Request, res: Response) => {
           removeOnFail: true,
         }
       );
-
-      const participantIds = chatParticipants.map((id) => id.toString());
-      const keysToDelete = participantIds.map(
-        (id) => `messages:${chatId}:${id}`
-      );
-      await redisClient.del(...keysToDelete);
+      await invalidateChatMessagesCache(chatId);
 
       res
         .status(201)
@@ -190,7 +179,7 @@ export const getMessages = async (req: Request, res: Response) => {
       return;
     }
 
-    const cached = await getCachedMessages(chatId, userId);
+    const cached = await getCachedMessages(chatId);
     if (cached) {
       res.status(200).json({ success: true, messages: cached });
       return;
@@ -202,24 +191,9 @@ export const getMessages = async (req: Request, res: Response) => {
       return;
     }
 
-    const transformedMessages = await Promise.all(
-      messages.map(async (message) => {
-        const participants = [message.senderId, message.receiverId];
-        const otherUserId = participants.find(
-          (id) => id.toString() !== userId.toString()
-        );
+    await cacheMessages(chatId, messages);
 
-        const otherUserDetails = await User.findById(otherUserId)
-          .select("username avatar")
-          .lean();
-
-        return { ...message, otherUserDetails };
-      })
-    );
-
-    await cacheMessages(chatId, userId, transformedMessages);
-
-    res.status(200).json({ success: true, messages: transformedMessages });
+    res.status(200).json({ success: true, messages });
     return;
   } catch (error) {
     logger.error(`Error getting messages: ${error}`);

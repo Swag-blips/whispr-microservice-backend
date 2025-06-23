@@ -3,7 +3,8 @@ import redisClient from "../config/redis";
 import Message from "../models/message.model";
 
 import logger from "./logger";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
+import { connection } from "../config/dbConnect";
 
 export const queue = new Queue("add-message", {
   connection: redisClient,
@@ -16,6 +17,9 @@ const addMessage = async (
   userId: Types.ObjectId
 ) => {
   try {
+    if (!connection) {
+      await mongoose.connect(process.env.MONGODB_URI as string);
+    }
     const message = await Message.create({
       chatId,
       content,
@@ -52,5 +56,5 @@ const worker = new Worker(
 );
 
 worker.on("failed", (job, err) => {
-  logger.error(`Image upload job failed for job ${job?.id}:`, err);
+  logger.error(`add message job failed for ${job?.id}:`, err);
 });

@@ -1,8 +1,12 @@
 import { Queue, Worker } from "bullmq";
 import logger from "./logger";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import redisClient from "../config/redis";
 import Chat from "../models/chat.model";
+import dotenv from "dotenv";
+
+dotenv.config();
+import { connection } from "../config/dbConnect";
 
 export const queue = new Queue("update-last-message", {
   connection: redisClient,
@@ -10,7 +14,11 @@ export const queue = new Queue("update-last-message", {
 
 const updateLastMessage = async (message: string, chatId: Types.ObjectId) => {
   console.log(`update last message ${message} ${chatId}`);
+
   try {
+    if (!connection) { 
+      await mongoose.connect(process.env.MONGODB_URI as string);
+    }
     await Chat.findByIdAndUpdate(chatId, {
       lastMessage: message,
     });
@@ -33,5 +41,5 @@ const worker = new Worker(
 );
 
 worker.on("failed", (job, err) => {
-  logger.error(`Image upload job failed for job ${job?.id}:`, err);
+  logger.error(`last message job failed for job ${job?.id}:`, err);
 });
