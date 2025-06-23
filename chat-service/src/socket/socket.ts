@@ -40,12 +40,14 @@ io.on("connection", async (socket) => {
   io.emit("getOnlineUsers", [...activeUsers.keys()]);
 
   socket.on("joinRoom", (chatId) => {
+
+    console.log("SOCKET JOINS ROOM")
     socket.join(chatId);
   });
 
   socket.on("startTyping", (data) => {
     const { chatId } = data;
-
+ 
     socket.to(chatId).emit("userTyping", "User is typing");
   });
   socket.on("stopTyping", (data) => {

@@ -38,3 +38,4 @@ export const invalidatePermissions = async (userId: Types.ObjectId) => {
     logger.error(`An error occured invalidating permissions ${error}`);
   }
 };
+ 

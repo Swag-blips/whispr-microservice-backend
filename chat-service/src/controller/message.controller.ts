@@ -150,7 +150,7 @@ export const sendMessage = async (req: Request, res: Response) => {
           removeOnComplete: true,
           removeOnFail: true,
         }
-      );
+      ); 
       await invalidateChatMessagesCache(chatId);
 
       res
