@@ -43,6 +43,17 @@ io.on("connection", async (socket) => {
     socket.join(chatId);
   });
 
+  socket.on("startTyping", (data) => {
+    const { chatId } = data;
+
+    socket.to(chatId).emit("userTyping", "User is typing");
+  });
+  socket.on("stopTyping", (data) => {
+    const { chatId } = data;
+
+    socket.to(chatId).emit("stopTyping");
+  });
+
   socket.on("leaveRoom", (chatId) => {
     socket.leave(chatId);
   });
