@@ -2,8 +2,6 @@ import { Server } from "socket.io";
 import express from "express";
 import http from "http";
 import logger from "../utils/logger";
-
-import { DecodedUser } from "../middleware/authenticateRequest";
 import { Types } from "mongoose";
 import {
   fetchPermissions,
@@ -11,7 +9,8 @@ import {
 } from "../utils/fetchPermissions";
 import { createAdapter } from "@socket.io/redis-adapter";
 import pubClient from "../config/redis";
-export const app = express(); 
+import redisClient from "../config/redis";
+export const app = express();
 
 export const server = http.createServer(app);
 
@@ -19,7 +18,7 @@ const activeUsers = new Map<Types.ObjectId, string>();
 const subClient = pubClient.duplicate();
 
 export const getReceiverSocketId = (userId: Types.ObjectId) => {
-  console.log("ACTIVE USERS", activeUsers)
+  console.log("ACTIVE USERS", activeUsers);
   return activeUsers.get(userId);
 };
 
@@ -33,12 +32,14 @@ export const io = new Server(server, {
 io.on("connection", async (socket) => {
   console.log(`user connected to socket server ${socket.id}`);
   const userId = socket.handshake.query.userId as unknown as Types.ObjectId;
-
+  let socketId = socket.id;
   if (userId) {
-    activeUsers.set(userId, socket.id);
+    await redisClient.hset("onlineUsers", {
+      [userId as unknown as string]: userId,
+    });
   }
 
-  io.emit("getOnlineUsers", [...activeUsers.keys()]);
+  // io.emit("getOnlineUsers", await redisClient.smembers("onlineUsers"));
 
   socket.on("joinRoom", (chatId) => {
     console.log("SOCKET JOINS ROOM");
@@ -66,7 +67,7 @@ io.on("connection", async (socket) => {
 
   socket.on("disconnect", async () => {
     logger.info(`user disconnected from socket ${socket.id}`);
-    activeUsers.delete(userId);
+    await redisClient.hdel("onlineUsers", userId as unknown as string);
     await invalidatePermissions(userId);
   });
 });

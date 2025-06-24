@@ -15,7 +15,8 @@ export const cacheMessages = async (chatId: string, messages: any) => {
 
 export const invalidateChatMessagesCache = async (chatId: string) => {
   const cacheKey = `messages:${chatId}`;
-  await redisClient.del(cacheKey);
-  return
+  const invalidate = await redisClient.del(cacheKey);
+
+  console.log("INVALIDATED MESSAGES ", invalidate);
+  return;
 };
-   

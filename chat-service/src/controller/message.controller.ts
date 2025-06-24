@@ -3,7 +3,7 @@ import logger from "../utils/logger";
 import redisClient from "../config/redis";
 import Message from "../models/message.model";
 import Chat from "../models/chat.model";
-import { getReceiverSocketId, io } from "../socket/socket";
+import { io } from "../socket/socket";
 import { queue as addMessageQueue } from "../utils/addMessageWorker";
 import {
   cacheMessages,
@@ -44,7 +44,10 @@ export const sendMessage = async (req: Request, res: Response) => {
       );
 
       let status = "sent";
-      const receiver = getReceiverSocketId(receiverId!);
+      const receiver = await redisClient.hget(
+        "onlineUsers",
+        receiverId as unknown as string
+      );
 
       io.to(chatId).emit("newMessage", {
         content: content,
@@ -90,10 +93,12 @@ export const sendMessage = async (req: Request, res: Response) => {
       await invalidateChatMessagesCache(chatId);
 
       const receiverStringId = receiverId?.toString();
-      await Promise.all([
+      const deleted = await Promise.all([
         redisClient.del(`userChats:${userId}`),
         redisClient.del(`userChats:${receiverStringId}`),
       ]);
+
+      console.log("deleted userchats", deleted);
       return;
     } else {
       if (!permittedChats.includes(chatId.toString())) {
@@ -105,7 +110,7 @@ export const sendMessage = async (req: Request, res: Response) => {
         res.status(401).json({ success: false, message: "Not permitted" });
         return;
       }
- 
+
       const receiverId = chatParticipants.find(
         (user) => user.toString() !== userId
       );
@@ -115,10 +120,11 @@ export const sendMessage = async (req: Request, res: Response) => {
         return;
       }
 
-      const receiver = getReceiverSocketId(
-        receiverId as unknown as Types.ObjectId
+      const receiver = await redisClient.hget(
+        "onlineUsers",
+        receiverId as unknown as string
       );
-  
+
       io.to(chatId).emit("newMessage", {
         content: content,
         senderId: userId,
@@ -157,12 +163,16 @@ export const sendMessage = async (req: Request, res: Response) => {
         .json({ success: true, message: "Message successfully sent" });
 
       const receiverStringId = receiverId?.toString();
-      await Promise.all([
+      const deleted = await Promise.all([
         redisClient.del(`userChats:${userId}`),
         redisClient.del(`userChats:${receiverStringId}`),
       ]);
+
+      console.log("deleted userchats", deleted);
       return;
     }
+
+    return;
   } catch (error) {
     logger.error(`An error occurred while sending message ${error}`);
     res.status(500).json({ error: error });

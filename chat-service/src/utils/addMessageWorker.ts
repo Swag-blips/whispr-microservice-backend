@@ -21,15 +21,13 @@ const addMessage = async (
 ) => {
   let result: UploadApiResponse | null = null;
   let session: mongoose.mongo.ClientSession | null | undefined = null;
-  console.log("JOB STARTED");
-  try {
-    let tempConnection: typeof mongoose | null = null;
 
+  let tempConnection: typeof mongoose | null = null;
+  try {
     if (!connection) {
       tempConnection = await mongoose.connect(
         process.env.MONGODB_URI as string
       );
-      console.log("CONNECTED TO MONGOOSE");
     }
 
     if (imagePath) {
@@ -40,14 +38,11 @@ const addMessage = async (
       logger.info("📸 Image uploaded successfully to Cloudinary");
     }
 
-    console.log("ABOUT TO start TO SESSION");
     session = connection
       ? await connection.startSession()
       : await tempConnection?.startSession();
 
-    console.log("SESSION STARTED", session);
     await session?.withTransaction(async () => {
-      console.log("TRANSACTION STARTED");
       const [message] = await Message.create(
         [
           {
@@ -61,8 +56,6 @@ const addMessage = async (
         ],
         { session }
       );
-
-      console.log("MESSAGE", message);
 
       if (!message) {
         throw new Error("Failed to create message");
@@ -83,6 +76,7 @@ const addMessage = async (
     throw error;
   } finally {
     await session?.endSession();
+    tempConnection && (await tempConnection.disconnect());
   }
 };
 
