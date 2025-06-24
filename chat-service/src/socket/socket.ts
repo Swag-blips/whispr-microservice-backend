@@ -10,6 +10,7 @@ import {
 import { createAdapter } from "@socket.io/redis-adapter";
 import pubClient from "../config/redis";
 import redisClient from "../config/redis";
+import { updateMessagesToDelivered } from "../utils/receipts";
 export const app = express();
 
 export const server = http.createServer(app);
@@ -32,13 +33,14 @@ export const io = new Server(server, {
 io.on("connection", async (socket) => {
   console.log(`user connected to socket server ${socket.id}`);
   const userId = socket.handshake.query.userId as unknown as Types.ObjectId;
-  let socketId = socket.id;
+
+  await updateMessagesToDelivered(userId);
   if (userId) {
     await redisClient.hset("onlineUsers", {
       [userId as unknown as string]: userId,
     });
   }
-
+ 
   // io.emit("getOnlineUsers", await redisClient.smembers("onlineUsers"));
 
   socket.on("joinRoom", (chatId) => {

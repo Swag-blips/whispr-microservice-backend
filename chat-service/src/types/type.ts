@@ -9,6 +9,7 @@ export interface MessageType {
   receiverId: Types.ObjectId;
   content: string;
   chatId: Types.ObjectId;
+  status: "delivered" | "sent" | "seen";
 }
 
 export interface ChatSchema {

@@ -55,9 +55,8 @@ export const sendMessage = async (req: Request, res: Response) => {
         receiverId: receiverId,
         chatId: chatId,
         createdAt: new Date(),
-        ...(receiver && {
-          status: "delivered",
-        }),
+
+        status: receiver ? "delivered" : "sent",
       });
 
       res
@@ -131,9 +130,8 @@ export const sendMessage = async (req: Request, res: Response) => {
         receiverId: receiverId,
         chatId: chatId,
         createdAt: new Date(),
-        ...(receiver && {
-          status: "delivered",
-        }),
+
+        status: receiver ? "delivered" : "sent",
       });
 
       await addMessageQueue.add(

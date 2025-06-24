@@ -36,6 +36,7 @@ const messageSchema = new mongoose.Schema(
 );
 
 messageSchema.index({ chatId: 1 });
+messageSchema.index({ receiverId: 1 });
 const Message = mongoose.model<MessageType>("Message", messageSchema);
 
 export default Message;
