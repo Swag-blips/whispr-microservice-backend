@@ -43,10 +43,12 @@ export const sendMessage = async (req: Request, res: Response) => {
         (user) => user.toString() !== userId
       );
 
-      let status = "sent";
-      const receiver = await redisClient.hget(
+      const receiver = await redisClient.sismember(
         "onlineUsers",
         receiverId as unknown as string
+      );
+      const receiverCurrentChat = await redisClient.get(
+        `currentChat:${receiverId}`
       );
 
       io.to(chatId).emit("newMessage", {
@@ -56,7 +58,12 @@ export const sendMessage = async (req: Request, res: Response) => {
         chatId: chatId,
         createdAt: new Date(),
 
-        status: receiver ? "delivered" : "sent",
+        status:
+          receiverCurrentChat === chatId
+            ? "seen"
+            : receiverCurrentChat !== chatId && receiver
+            ? "delivered"
+            : "sent",
       });
 
       res
@@ -71,9 +78,12 @@ export const sendMessage = async (req: Request, res: Response) => {
           receiverId: receiverId,
           userId: userId,
           imagePath: file,
-          ...(receiver && {
-            status: "delivered",
-          }),
+          status:
+            receiverCurrentChat === chatId
+              ? "seen"
+              : receiverCurrentChat !== chatId && receiver
+              ? "delivered"
+              : "sent",
         },
         {
           attempts: 3,
@@ -91,13 +101,6 @@ export const sendMessage = async (req: Request, res: Response) => {
 
       await invalidateChatMessagesCache(chatId);
 
-      const receiverStringId = receiverId?.toString();
-      const deleted = await Promise.all([
-        redisClient.del(`userChats:${userId}`),
-        redisClient.del(`userChats:${receiverStringId}`),
-      ]);
-
-      console.log("deleted userchats", deleted);
       return;
     } else {
       if (!permittedChats.includes(chatId.toString())) {
@@ -119,11 +122,16 @@ export const sendMessage = async (req: Request, res: Response) => {
         return;
       }
 
-      const receiver = await redisClient.hget(
+      const receiver = await redisClient.sismember(
         "onlineUsers",
         receiverId as unknown as string
       );
+      const receiverCurrentChat = await redisClient.get(
+        `currentChat:${receiverId}`
+      );
 
+      console.log("RECEIVER CURRENT CHAT", receiverCurrentChat);
+      console.log("CHAT ID", chatId);
       io.to(chatId).emit("newMessage", {
         content: content,
         senderId: userId,
@@ -131,7 +139,12 @@ export const sendMessage = async (req: Request, res: Response) => {
         chatId: chatId,
         createdAt: new Date(),
 
-        status: receiver ? "delivered" : "sent",
+        status:
+          receiverCurrentChat === chatId
+            ? "seen"
+            : receiverCurrentChat !== chatId && receiver
+            ? "delivered"
+            : "sent",
       });
 
       await addMessageQueue.add(
@@ -142,9 +155,12 @@ export const sendMessage = async (req: Request, res: Response) => {
           receiverId: receiverId,
           userId: userId,
           imagePath: file,
-          ...(receiver && {
-            status: "delivered",
-          }),
+          status:
+            receiverCurrentChat === chatId
+              ? "seen"
+              : receiverCurrentChat !== chatId && receiver
+              ? "delivered"
+              : "sent",
         },
         {
           attempts: 3,
@@ -160,17 +176,10 @@ export const sendMessage = async (req: Request, res: Response) => {
         .status(201)
         .json({ success: true, message: "Message successfully sent" });
 
-      const receiverStringId = receiverId?.toString();
-      const deleted = await Promise.all([
-        redisClient.del(`userChats:${userId}`),
-        redisClient.del(`userChats:${receiverStringId}`),
-      ]);
-
-      console.log("deleted userchats", deleted);
       return;
     }
 
-    return;
+  
   } catch (error) {
     logger.error(`An error occurred while sending message ${error}`);
     res.status(500).json({ error: error });
@@ -384,6 +393,7 @@ export const getUserChats = async (req: Request, res: Response) => {
       res.status(200).json({ success: true, chats: [] });
       return;
     }
+
     const transformedChats = await Promise.all(
       chats.map(async (chat) => {
         const otherUserId = chat.participants.find(
@@ -393,9 +403,16 @@ export const getUserChats = async (req: Request, res: Response) => {
           .select("username avatar bio")
           .lean();
 
+        const unreadMessages = await Message.find({
+          chatId: chat._id,
+          receiverId: userId,
+          status: { $ne: "seen" },
+        }).countDocuments();
+
         return {
           ...chat,
           otherUser,
+          unreadMessages: unreadMessages,
         };
       })
     );

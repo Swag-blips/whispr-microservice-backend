@@ -10,7 +10,10 @@ import {
 import { createAdapter } from "@socket.io/redis-adapter";
 import pubClient from "../config/redis";
 import redisClient from "../config/redis";
-import { updateMessagesToDelivered } from "../utils/receipts";
+import {
+  markMessagesAsSeen,
+  updateMessagesToDelivered,
+} from "../utils/receipts";
 export const app = express();
 
 export const server = http.createServer(app);
@@ -36,16 +39,16 @@ io.on("connection", async (socket) => {
 
   await updateMessagesToDelivered(userId);
   if (userId) {
-    await redisClient.hset("onlineUsers", {
-      [userId as unknown as string]: userId,
-    });
+    await redisClient.sadd("onlineUsers", userId as unknown as string);
   }
- 
+
   // io.emit("getOnlineUsers", await redisClient.smembers("onlineUsers"));
 
-  socket.on("joinRoom", (chatId) => {
+  socket.on("joinRoom", async (chatId) => {
     console.log("SOCKET JOINS ROOM");
     socket.join(chatId);
+    await redisClient.set(`currentChat:${userId}`, chatId);
+    await markMessagesAsSeen(chatId, userId as unknown as string);
   });
 
   socket.on("startTyping", (data) => {
@@ -59,8 +62,9 @@ io.on("connection", async (socket) => {
     socket.to(chatId).emit("stopTyping");
   });
 
-  socket.on("leaveRoom", (chatId) => {
+  socket.on("leaveRoom", async (chatId) => {
     socket.leave(chatId);
+    await redisClient.del(`currentChat:${userId}`, chatId);
   });
 
   if (userId) {
@@ -69,7 +73,12 @@ io.on("connection", async (socket) => {
 
   socket.on("disconnect", async () => {
     logger.info(`user disconnected from socket ${socket.id}`);
-    await redisClient.hdel("onlineUsers", userId as unknown as string);
-    await invalidatePermissions(userId);
+
+    await Promise.all([
+      redisClient.srem("onlineUsers", userId as unknown as string),
+      invalidatePermissions(userId),
+      redisClient.del(`userChats:${userId}`),
+      redisClient.del(`currentChat:${userId}`),
+    ]);
   });
 });

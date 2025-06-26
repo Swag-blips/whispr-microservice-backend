@@ -22,6 +22,8 @@ const addMessage = async (
   let result: UploadApiResponse | null = null;
   let session: mongoose.mongo.ClientSession | null | undefined = null;
 
+  console.log("MESSAGE", content);
+  console.log("STATUS", status);
   let tempConnection: typeof mongoose | null = null;
   try {
     if (!connection) {
@@ -51,7 +53,7 @@ const addMessage = async (
             receiverId,
             senderId: userId,
             ...(result?.secure_url && { file: result.secure_url }),
-            ...(status && { status: "delivered" }),
+            status: status,
           },
         ],
         { session }
@@ -69,6 +71,12 @@ const addMessage = async (
         { session }
       );
     });
+
+    const deleted = await Promise.all([
+      redisClient.del(`userChats:${userId}`),
+      redisClient.del(`userChats:${receiverId}`),
+    ]);
+    console.log("DELETED", deleted);
 
     logger.info("✅ Message created and lastMessage updated successfully");
   } catch (error) {

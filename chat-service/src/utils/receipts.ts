@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import Message from "../models/message.model";
 import { io } from "../socket/socket";
+import redisClient from "../config/redis";
 
 export const updateMessagesToDelivered = async (userId: Types.ObjectId) => {
   try {
@@ -39,5 +40,27 @@ export const updateMessagesToDelivered = async (userId: Types.ObjectId) => {
     });
   } catch (error) {
     console.error("Failed to update messages to delivered:", error);
+  }
+};
+
+export const markMessagesAsSeen = async (chatId: string, userId: string) => {
+  try {
+    await Message.updateMany(
+      {
+        chatId: chatId,
+        receiverId: userId,
+        status: { $ne: "seen" },
+      },
+      {
+        $set: { status: "seen" },
+      }
+    );
+
+    io.to(chatId).emit("messagesSeen", { receiverId: userId, chatId });
+    await redisClient.del(`userChats:${userId}`);
+    await redisClient.del(`messages:${chatId}`);
+    return;
+  } catch (error) {
+    console.error(error);
   }
 };
