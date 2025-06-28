@@ -10,6 +10,7 @@ export interface MessageType {
   content: string;
   chatId: Types.ObjectId;
   status: "delivered" | "sent" | "seen";
+  updatedAt: Date;
 }
 
 export interface ChatSchema {
@@ -19,6 +20,7 @@ export interface ChatSchema {
   groupName?: string;
   bio?: string;
   otherUser: any;
+  updatedAt: Date;
 }
 
 export interface ChatDeletedEvent {

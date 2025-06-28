@@ -13,6 +13,7 @@ export interface IncomingFriendsMessage {
 }
 export interface User extends IncomingUserMessage {
   avatar: string;
+  friends: Array<Types.ObjectId>;
 }
 
 export interface IncomingProfilePic {

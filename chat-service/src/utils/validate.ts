@@ -12,6 +12,7 @@ export const createGroupSchema = Joi.object({
 
 export const addToGroupSchema = Joi.object({
   participants: Joi.array().required(),
+  
 });
 
 export const removeFromGroupSchema = Joi.object({

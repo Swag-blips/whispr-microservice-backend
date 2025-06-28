@@ -178,8 +178,6 @@ export const sendMessage = async (req: Request, res: Response) => {
 
       return;
     }
-
-  
   } catch (error) {
     logger.error(`An error occurred while sending message ${error}`);
     res.status(500).json({ error: error });
@@ -220,9 +218,10 @@ export const getMessages = async (req: Request, res: Response) => {
 export const createGroup = async (req: Request, res: Response) => {
   try {
     const { participants, groupName, bio } = req.body;
+    const userId = req.userId;
 
     const chat = await Chat.create({
-      participants,
+      participants: [...participants, userId],
       groupName,
       bio: bio || "Not much yet, but this group is fireee",
       type: "group",
@@ -399,6 +398,8 @@ export const getUserChats = async (req: Request, res: Response) => {
         const otherUserId = chat.participants.find(
           (id) => id.toString() !== userId.toString()
         );
+        const time = chat.updatedAt;
+        const transformedTime = time.getTime();
         const otherUser = await User.findById(otherUserId)
           .select("username avatar bio")
           .lean();
@@ -411,6 +412,7 @@ export const getUserChats = async (req: Request, res: Response) => {
 
         return {
           ...chat,
+          updatedAt: transformedTime,
           otherUser,
           unreadMessages: unreadMessages,
         };

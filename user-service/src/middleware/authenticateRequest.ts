@@ -18,8 +18,6 @@ const authenticateRequest = (
       ?.find((cookie) => cookie.startsWith("accessToken"))
       ?.slice(12);
 
-
-      console.log("Token:", token);
     if (!token) {
       res.status(401).json({ success: false, message: "Access token Missing" });
       return;

@@ -2,6 +2,7 @@ import express from "express";
 import authenticateRequest from "../middleware/authenticateRequest";
 import {
   getCurrentUser,
+  getFriends,
   getUser,
   removeFriend,
   updateUserInfo,
@@ -11,6 +12,7 @@ import { removeFriendSchema } from "../utils/validate";
 
 const router = express.Router();
 
+router.get("/friends", authenticateRequest, getFriends);
 router.get("/currentUser", authenticateRequest, getCurrentUser);
 router.get("/:username", authenticateRequest, getUser);
 router.put("/currentUser", authenticateRequest, updateUserInfo);
@@ -20,5 +22,6 @@ router.post(
   validateRequest(removeFriendSchema),
   removeFriend
 );
+
 
 export default router;

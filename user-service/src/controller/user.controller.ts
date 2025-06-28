@@ -9,7 +9,7 @@ import { invalidatePermissions } from "../utils/fetchPermissions";
 import { publishEvent } from "../config/rabbitMq";
 
 export const getUser = async (req: Request, res: Response) => {
-  logger.info("get user endpoint hit");
+  console.log("GET USER ENDPOINT HIT");
   try {
     const username = req.params.username;
 
@@ -51,8 +51,6 @@ export const getUser = async (req: Request, res: Response) => {
       (user) => user._id.toString() !== userId.toString()
     );
 
-    console.log("FILTERED RESULTS", filteredResults);
-
     res.status(200).json({ success: true, results: filteredResults });
 
     if (filteredResults.length > 0) {
@@ -85,7 +83,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
         .json({ success: true, currentUser: JSON.parse(cachedUser) });
       return;
     }
- 
+
     const currentUser = await User.findById(userId);
 
     if (!currentUser) {
@@ -196,5 +194,41 @@ export const removeFriend = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   } finally {
     await session?.endSession();
+  }
+};
+
+export const getFriends = async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId;
+
+    const user = await User.findById(userId).lean();
+
+    if (!user) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return;
+    }
+
+    if (!user.friends.length) {
+      res.status(200).json({ success: true, friends: [] });
+      return;
+    }
+
+    const friends = await Promise.all(
+      user.friends.map(async (friend) => {
+        const friendDetails = await User.findById(friend)
+          .lean()
+          .select("username avatar _id bio");
+
+        return {
+          ...friendDetails,
+        };
+      })
+    );
+
+    res.status(200).json({ success: true, friends });
+    return;
+  } catch (error) {
+    res.status(500).json({ success: false, error: error });
+    logger.error(error);
   }
 };
