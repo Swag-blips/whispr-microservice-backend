@@ -10,6 +10,7 @@ export const updateMessagesToDelivered = async (userId: Types.ObjectId) => {
       status: "sent",
     }).select("_id chatId");
 
+    console.log("io", io)
     if (!messages.length) return;
 
     const groupedByChat: Record<string, string[]> = {};
@@ -22,6 +23,14 @@ export const updateMessagesToDelivered = async (userId: Types.ObjectId) => {
       }
       groupedByChat[chatId].push(msg._id.toString());
     }
+    Object.entries(groupedByChat).forEach(([chatId, messageIds]) => {
+      console.log("emiting");
+      io.to(chatId).emit("messagesDelivered", {
+        chatId,
+        messageIds,
+      });
+      console.log("emitted");
+    });
 
     await Message.updateMany(
       {
@@ -32,12 +41,7 @@ export const updateMessagesToDelivered = async (userId: Types.ObjectId) => {
         $set: { status: "delivered" },
       }
     );
-    Object.entries(groupedByChat).forEach(([chatId, messageIds]) => {
-      io.to(chatId).emit("messagesDelivered", {
-        chatId,
-        messageIds,
-      });
-    });
+    return;
   } catch (error) {
     console.error("Failed to update messages to delivered:", error);
   }
@@ -45,7 +49,7 @@ export const updateMessagesToDelivered = async (userId: Types.ObjectId) => {
 
 export const markMessagesAsSeen = async (chatId: string, userId: string) => {
   try {
-    await Message.updateMany(
+    const messages = await Message.updateMany(
       {
         chatId: chatId,
         receiverId: userId,
@@ -55,6 +59,7 @@ export const markMessagesAsSeen = async (chatId: string, userId: string) => {
         $set: { status: "seen" },
       }
     );
+    console.log("marked messages", messages);
 
     io.to(chatId).emit("messagesSeen", { receiverId: userId, chatId });
     await redisClient.del(`userChats:${userId}`);

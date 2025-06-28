@@ -14,8 +14,13 @@ const messageSchema = new mongoose.Schema(
     receiverId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
+    receivers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     content: {
       type: String,
       required: true,
@@ -27,16 +32,15 @@ const messageSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      required: true,
+
       enum: ["sent", "delivered", "seen"],
-      default: "sent",
     },
-  }, 
+  },
   { timestamps: true }
 );
- 
+
 messageSchema.index({ chatId: 1 });
-messageSchema.index({ receiverId: 1 }); 
+messageSchema.index({ receiverId: 1 });
 const Message = mongoose.model<MessageType>("Message", messageSchema);
 
-export default Message; 
+export default Message;

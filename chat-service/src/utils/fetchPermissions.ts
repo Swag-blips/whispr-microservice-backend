@@ -19,10 +19,11 @@ export const fetchPermissions = async (userId: Types.ObjectId) => {
       await redisClient.sadd(`permittedChats${userId}`, ...permittedChats);
 
       for (const chat of chats) {
+
         await redisClient.sadd(
           `permissions${chat._id}`,
-          ...chat.participants.map((user) => userId.toString())
-        ); 
+          ...chat.participants.map((user) => user.toString())
+        );
       }
     } catch (error) {
       logger.error(`an error occured fetching permissions ${error}`);
@@ -38,4 +39,3 @@ export const invalidatePermissions = async (userId: Types.ObjectId) => {
     logger.error(`An error occured invalidating permissions ${error}`);
   }
 };
- 

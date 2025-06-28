@@ -14,17 +14,17 @@ export const queue = new Queue("add-message", {
 const addMessage = async (
   content: string,
   chatId: Types.ObjectId,
-  receiverId: Types.ObjectId,
   userId: Types.ObjectId,
+  receiverId?: Types.ObjectId,
+  receivers?: Array<Types.ObjectId>,
   imagePath?: string,
   status?: string
 ) => {
   let result: UploadApiResponse | null = null;
   let session: mongoose.mongo.ClientSession | null | undefined = null;
-
-  console.log("MESSAGE", content);
-  console.log("STATUS", status);
   let tempConnection: typeof mongoose | null = null;
+
+  console.log("USERID", userId, "RECEIVERID", receiverId);
   try {
     if (!connection) {
       tempConnection = await mongoose.connect(
@@ -50,10 +50,11 @@ const addMessage = async (
           {
             chatId,
             content,
-            receiverId,
+            ...(receiverId && { receiverId }),
+            ...(receivers?.length && { receivers }),
             senderId: userId,
             ...(result?.secure_url && { file: result.secure_url }),
-            status: status,
+            ...(status && { status: status }),
           },
         ],
         { session }
@@ -95,15 +96,31 @@ const worker = new Worker(
       content: string;
       chatId: Types.ObjectId;
       receiverId: Types.ObjectId;
+      receivers: Array<Types.ObjectId>;
       userId: Types.ObjectId;
       imagePath?: string;
       status?: string;
     };
   }) => {
     try {
-      const { content, chatId, receiverId, userId, imagePath, status } =
-        job.data;
-      await addMessage(content, chatId, receiverId, userId, imagePath, status);
+      const {
+        content,
+        chatId,
+        receiverId,
+        userId,
+        imagePath,
+        receivers,
+        status,
+      } = job.data;
+      await addMessage(
+        content,
+        chatId,
+        userId,
+        receiverId,
+        receivers,
+        imagePath,
+        status
+      );
     } catch (error) {
       console.log(error);
       throw error;

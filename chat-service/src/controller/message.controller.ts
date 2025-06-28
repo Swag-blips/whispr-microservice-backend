@@ -24,8 +24,6 @@ export const sendMessage = async (req: Request, res: Response) => {
     );
     const chatParticipants = await redisClient.smembers(`permissions${chatId}`);
 
-    let participants: string[] = [];
-
     if (!permittedChats.length || !chatParticipants.length) {
       const chat = await Chat.findById(chatId);
 
@@ -75,8 +73,9 @@ export const sendMessage = async (req: Request, res: Response) => {
         {
           content: content,
           chatId: chatId,
-          receiverId: receiverId,
           userId: userId,
+          receiverId: receiverId,
+
           imagePath: file,
           status:
             receiverCurrentChat === chatId
@@ -114,7 +113,7 @@ export const sendMessage = async (req: Request, res: Response) => {
       }
 
       const receiverId = chatParticipants.find(
-        (user) => user.toString() !== userId
+        (user) => user.toString() !== userId.toString()
       );
 
       if (!receiverId) {
@@ -130,8 +129,6 @@ export const sendMessage = async (req: Request, res: Response) => {
         `currentChat:${receiverId}`
       );
 
-      console.log("RECEIVER CURRENT CHAT", receiverCurrentChat);
-      console.log("CHAT ID", chatId);
       io.to(chatId).emit("newMessage", {
         content: content,
         senderId: userId,
@@ -152,8 +149,8 @@ export const sendMessage = async (req: Request, res: Response) => {
         {
           content: content,
           chatId: chatId,
-          receiverId: receiverId,
           userId: userId,
+          receiverId: receiverId,
           imagePath: file,
           status:
             receiverCurrentChat === chatId
@@ -201,7 +198,7 @@ export const getMessages = async (req: Request, res: Response) => {
 
     const messages = await Message.find({ chatId }).lean();
     if (!messages.length) {
-      res.status(200).json([]);
+      res.status(200).json({ success: true, messages: [] });
       return;
     }
 
@@ -385,7 +382,6 @@ export const getUserChats = async (req: Request, res: Response) => {
 
     const chats = await Chat.find({
       participants: userId,
-      type: "private",
     }).lean();
 
     if (!chats.length) {
@@ -395,25 +391,36 @@ export const getUserChats = async (req: Request, res: Response) => {
 
     const transformedChats = await Promise.all(
       chats.map(async (chat) => {
-        const otherUserId = chat.participants.find(
-          (id) => id.toString() !== userId.toString()
+        const otherUsers = chat.participants.filter(
+          (participant) => participant.toString() !== userId.toString()
         );
+
         const time = chat.updatedAt;
         const transformedTime = time.getTime();
-        const otherUser = await User.findById(otherUserId)
-          .select("username avatar bio")
-          .lean();
 
-        const unreadMessages = await Message.find({
-          chatId: chat._id,
-          receiverId: userId,
-          status: { $ne: "seen" },
-        }).countDocuments();
+        const otherUsersDetails = await Promise.all(
+          otherUsers.map(
+            async (user) =>
+              await User.findById(user._id).select("username avatar bio").lean()
+          )
+        );
+
+        let unreadMessages: number | null = null;
+        if (chat.type === "private") {
+          unreadMessages = await Message.find({
+            chatId: chat._id,
+            receiverId: userId,
+            status: { $ne: "seen" },
+          }).countDocuments();
+        }
 
         return {
           ...chat,
           updatedAt: transformedTime,
-          otherUser,
+          otherUsers:
+            otherUsersDetails.length > 1
+              ? otherUsersDetails
+              : otherUsersDetails[0],
           unreadMessages: unreadMessages,
         };
       })
@@ -427,6 +434,132 @@ export const getUserChats = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     logger.error(error);
+    res.status(500).json({ error: error });
+  }
+};
+
+export const sendGroupMessage = async (req: Request, res: Response) => {
+  try {
+    const { chatId } = req.params;
+    const { content, file } = req.body;
+    const userId = req.userId;
+
+    console.log("GROUP MESSAGE");
+
+    const permittedChats = await redisClient.smembers(
+      `permittedChats${userId}`
+    );
+    const chatParticipants = await redisClient.smembers(`permissions${chatId}`);
+
+    if (!permittedChats.length || !chatParticipants.length) {
+      const chat = await Chat.findById(chatId);
+
+      if (!chat) {
+        res.status(404).json({ success: false, message: "Chat not found" });
+        return;
+      }
+
+      if (!chat.participants.includes(userId)) {
+        res.status(401).json({ success: false, message: "Not permitted" });
+        return;
+      }
+
+      const receivers = chat.participants.filter(
+        (user) => user.toString() !== userId
+      );
+
+      io.to(chatId).emit("newMessage", {
+        content: content,
+        senderId: userId,
+        receivers: receivers,
+        chatId: chatId,
+        createdAt: new Date(),
+      });
+
+      res
+        .status(201)
+        .json({ success: true, message: "Message successfully sent" });
+
+      await addMessageQueue.add(
+        "add-message",
+        {
+          content: content,
+          chatId: chatId,
+          receivers: receivers,
+          userId: userId,
+          imagePath: file,
+        },
+        {
+          attempts: 3,
+          backoff: { type: "exponential", delay: 3000 },
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      );
+
+      await redisClient.sadd(`permittedChats${userId}`, chat._id.toString());
+      await redisClient.sadd(
+        `permissions${chatId}`,
+        ...chat.participants.map((id) => id.toString())
+      );
+
+      await invalidateChatMessagesCache(chatId);
+
+      return;
+    } else {
+      if (!permittedChats.includes(chatId.toString())) {
+        res.status(401).json({ success: false, message: "Not permitted" });
+        return;
+      }
+
+      if (!chatParticipants.includes(userId)) {
+        res.status(401).json({ success: false, message: "Not permitted" });
+        return;
+      }
+
+      const receivers = chatParticipants.filter(
+        (user) => user.toString() !== userId
+      );
+      if (!receivers.length) {
+        res.status(400).json({ success: false, message: "No receivers" });
+        return;
+      }
+
+      io.to(chatId).emit("newMessage", {
+        content: content,
+        senderId: userId,
+        receivers: receivers,
+        chatId: chatId,
+        createdAt: new Date(),
+      });
+
+      await addMessageQueue.add(
+        "add-message",
+        {
+          content: content,
+          chatId: chatId,
+          receivers: receivers,
+          userId: userId,
+          imagePath: file,
+        },
+        {
+          attempts: 3,
+          backoff: { type: "exponential", delay: 3000 },
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      );
+
+      await invalidateChatMessagesCache(chatId);
+
+      res
+        .status(201)
+        .json({ success: true, message: "Message successfully sent" });
+
+      return;
+    }
+  } catch (error) {
+    console.log(error);
     res.status(500).json({ error: error });
   }
 };

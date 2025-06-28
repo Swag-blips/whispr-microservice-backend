@@ -6,6 +6,7 @@ import {
   getMessages,
   getUserChats,
   removeMemberFromGroup,
+  sendGroupMessage,
   sendMessage,
   updateGroupDetails,
 } from "../controller/message.controller";
@@ -18,6 +19,7 @@ import {
 } from "../utils/validate";
 
 const router = express.Router();
+
 
 router.post(
   "/message/:chatId",
@@ -43,12 +45,20 @@ router.post(
 );
 
 router.post(
-  "/group/remove/:chatId", 
+  "/group/remove/:chatId",
   authenticateRequest,
   validateRequest(removeFromGroupSchema),
   removeMemberFromGroup
 );
 
 router.put("/group/:chatId", authenticateRequest, updateGroupDetails);
+router.post(
+  "/group/:chatId",
+  authenticateRequest,
+  validateRequest(messageSchema),
+  sendGroupMessage
+);
+
+
 
 export default router;
