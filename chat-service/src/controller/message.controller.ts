@@ -12,6 +12,7 @@ import {
 } from "../utils/cache";
 import { Types } from "mongoose";
 import User from "../models/user.model";
+import mongoose from "mongoose";
 
 export const sendMessage = async (req: Request, res: Response) => {
   try {
@@ -224,12 +225,14 @@ export const createGroup = async (req: Request, res: Response) => {
       type: "group",
     });
 
-    await Promise.all(
+    await redisClient.del(`userChats:${userId}`);
+    const [userChats] = await Promise.all(
       participants.map((userId: Types.ObjectId) =>
         redisClient.del(`userChats:${userId}`)
       )
     );
 
+    console.log("userchats after group creation", userChats);
     res.status(201).json({ success: true, chat: chat });
     logger.info("Group successfully created");
     return;
@@ -259,11 +262,14 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
       return;
     }
 
-    if (chat.participants.includes(userId)) {
-      res.status(401).json({
-        success: false,
-        message: "one user is already a member",
-      });
+    const alreadyExists = participants.some((participant: Types.ObjectId) =>
+      chat.participants.includes(participant)
+    );
+
+    if (alreadyExists) {
+      res
+        .status(401)
+        .json({ success: false, message: "One member already exists" });
       return;
     }
 
@@ -276,6 +282,7 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
         redisClient.del(`userChats:${userId}`)
       )
     );
+    await redisClient.del(`userChats:${userId}`);
 
     res.status(201).json({ success: true, message: "Users added to chat" });
     return;
@@ -307,14 +314,41 @@ export const removeMemberFromGroup = async (req: Request, res: Response) => {
     if (!chat.participants.includes(userId)) {
       res.status(401).json({
         success: false,
-        message: "Unauthorized access, you must be a member to update details",
+        message:
+          "Unauthorized access, you must be a member to remove other users",
       });
       return;
     }
 
-    chat.participants.filter((participant) => participant !== memberId);
-    await chat.save();
-    await redisClient.del(`userChats:${memberId}`);
+    if (mongoose.Types.ObjectId.isValid(memberId)) {
+      if (chat.participants.length <= 2) {
+        await chat.deleteOne();
+        await Message.deleteMany({ chatId: chatId });
+
+        await Promise.all([
+          redisClient.del(`permissions:${userId}`),
+          redisClient.del(`permissions:${memberId}`),
+          redisClient.del(`permittedChats:${chatId}`),
+          chat.participants.forEach(async (participant) => {
+            redisClient.del(`userChats:${participant}`);
+          }),
+        ]);
+      } else {
+        chat.participants = chat.participants.filter((participant) => {
+          return !participant.equals(memberId);
+        });
+
+        await chat.save();
+      }
+    }
+
+    const [userChats, permissions, permittedChats] = await Promise.all([
+      redisClient.del(`userChats:${memberId}`),
+      redisClient.del(`permissions:${memberId}`),
+      redisClient.del(`permittedChats:${chatId}`),
+    ]);
+
+    console.log(userChats, permissions, permittedChats);
     res.status(201).json({ success: true, message: "User removed from chat" });
     return;
   } catch (error) {
@@ -354,6 +388,8 @@ export const updateGroupDetails = async (req: Request, res: Response) => {
     chat.groupName = groupName || chat.groupName;
 
     await chat.save();
+
+    await redisClient.del(`userChats:${userId}`);
 
     res
       .status(201)

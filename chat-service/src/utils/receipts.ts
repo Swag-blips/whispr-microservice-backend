@@ -10,7 +10,6 @@ export const updateMessagesToDelivered = async (userId: Types.ObjectId) => {
       status: "sent",
     }).select("_id chatId");
 
-    console.log("io", io.sockets.adapter.rooms);
     if (!messages.length) return;
 
     const groupedByChat: Record<string, string[]> = {};
@@ -59,7 +58,6 @@ export const markMessagesAsSeen = async (chatId: string, userId: string) => {
         $set: { status: "seen" },
       }
     );
-    console.log("marked messages", messages);
 
     io.to(chatId).emit("messagesSeen", { receiverId: userId, chatId });
     await redisClient.del(`userChats:${userId}`);
