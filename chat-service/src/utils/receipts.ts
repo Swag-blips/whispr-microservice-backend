@@ -10,7 +10,7 @@ export const updateMessagesToDelivered = async (userId: Types.ObjectId) => {
       status: "sent",
     }).select("_id chatId");
 
-    console.log("io", io)
+    console.log("io", io.sockets.adapter.rooms);
     if (!messages.length) return;
 
     const groupedByChat: Record<string, string[]> = {};
@@ -23,13 +23,13 @@ export const updateMessagesToDelivered = async (userId: Types.ObjectId) => {
       }
       groupedByChat[chatId].push(msg._id.toString());
     }
+
     Object.entries(groupedByChat).forEach(([chatId, messageIds]) => {
-      console.log("emiting");
       io.to(chatId).emit("messagesDelivered", {
         chatId,
         messageIds,
+        receiverId: userId,
       });
-      console.log("emitted");
     });
 
     await Message.updateMany(

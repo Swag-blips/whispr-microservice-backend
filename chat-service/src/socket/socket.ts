@@ -74,11 +74,14 @@ io.on("connection", async (socket) => {
   socket.on("disconnect", async () => {
     logger.info(`user disconnected from socket ${socket.id}`);
 
-    await Promise.all([
-      redisClient.srem("onlineUsers", userId as unknown as string),
-      invalidatePermissions(userId),
-      redisClient.del(`userChats:${userId}`),
-      redisClient.del(`currentChat:${userId}`),
-    ]);
+    const [onlineUsers, permissions, userChats, currentChat] =
+      await Promise.all([
+        redisClient.srem("onlineUsers", userId as unknown as string),
+        invalidatePermissions(userId),
+        redisClient.del(`userChats:${userId}`),
+        redisClient.del(`currentChat:${userId}`),
+      ]);
+
+    console.log(onlineUsers, permissions, userChats, currentChat);
   });
 });
