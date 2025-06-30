@@ -297,7 +297,10 @@ export const removeMemberFromGroup = async (req: Request, res: Response) => {
     const { chatId } = req.params;
 
     const { memberId } = req.body;
-
+    if (!mongoose.Types.ObjectId.isValid(memberId)) {
+      res.status(400).json({ success: false, message: "invalid ID" });
+      return;
+    }
     const userId = req.userId;
 
     if (!chatId) {
@@ -320,35 +323,34 @@ export const removeMemberFromGroup = async (req: Request, res: Response) => {
       return;
     }
 
-    if (mongoose.Types.ObjectId.isValid(memberId)) {
-      if (chat.participants.length <= 2) {
-        await chat.deleteOne();
-        await Message.deleteMany({ chatId: chatId });
+    if (chat.participants.length <= 2) {
+      await chat.deleteOne();
+      await Message.deleteMany({ chatId: chatId });
 
-        await Promise.all([
-          redisClient.del(`permissions:${userId}`),
-          redisClient.del(`permissions:${memberId}`),
-          redisClient.del(`permittedChats:${chatId}`),
-          chat.participants.forEach(async (participant) => {
-            redisClient.del(`userChats:${participant}`);
-          }),
-        ]);
-      } else {
-        chat.participants = chat.participants.filter((participant) => {
-          return !participant.equals(memberId);
-        });
+      await Promise.all([
+        redisClient.srem(`permissions${chatId}`, memberId),
 
-        await chat.save();
-      }
+        redisClient.srem(`permittedChats${memberId}`, chatId),
+        chat.participants.forEach(async (participant) => {
+          redisClient.del(`userChats:${participant}`);
+        }),
+      ]);
+    } else {
+      chat.participants = chat.participants.filter((participant) => {
+        return !participant.equals(memberId);
+      });
+
+      await chat.save();
+
+      const [permissions, userChats, permittedChats] = await Promise.all([
+        redisClient.srem(`permissions${chatId}`, memberId),
+        redisClient.del(`userChats${memberId}`),
+        redisClient.srem(`permittedChats${memberId}`, chatId),
+      ]);
+
+      console.log(permissions, userChats, permittedChats);
     }
 
-    const [userChats, permissions, permittedChats] = await Promise.all([
-      redisClient.del(`userChats:${memberId}`),
-      redisClient.del(`permissions:${memberId}`),
-      redisClient.del(`permittedChats:${chatId}`),
-    ]);
-
-    console.log(userChats, permissions, permittedChats);
     res.status(201).json({ success: true, message: "User removed from chat" });
     return;
   } catch (error) {
