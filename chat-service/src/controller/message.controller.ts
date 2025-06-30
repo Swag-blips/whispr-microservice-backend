@@ -283,6 +283,11 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
       )
     );
     await redisClient.del(`userChats:${userId}`);
+    await redisClient.sadd(`permissions${chatId}`, ...participants);
+
+    participants.forEach(async (participant: string) => {
+      await redisClient.sadd(`permittedChats${participant}`, chatId);
+    });
 
     res.status(201).json({ success: true, message: "Users added to chat" });
     return;
