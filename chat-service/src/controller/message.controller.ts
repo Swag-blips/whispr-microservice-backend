@@ -145,8 +145,15 @@ export const sendMessage = async (req: Request, res: Response) => {
             : "sent",
       });
 
+      if (receiverCurrentChat !== chatId && receiver) {
+        io.to(receiverId).emit("addToChats", {
+          chatId,
+          content,
+        });
+      }
+
       await addMessageQueue.add(
-        "add-message",
+        "add-message", 
         {
           content: content,
           chatId: chatId,

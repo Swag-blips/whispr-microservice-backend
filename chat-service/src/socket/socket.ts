@@ -81,7 +81,6 @@ io.on("connection", async (socket) => {
         redisClient.del(`userChats:${userId}`),
         redisClient.del(`currentChat:${userId}`),
       ]);
-
     console.log(onlineUsers, permissions, userChats, currentChat);
   });
 });

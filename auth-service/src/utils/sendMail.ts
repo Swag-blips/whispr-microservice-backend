@@ -6,15 +6,14 @@ dotenv.config();
 
 const transporter = nodemailer.createTransport({
   service: "Gmail",
-
   auth: {
     user: process.env.NODEMAILER_EMAIL as string,
     pass: process.env.NODEMAILER_PASS as string,
   },
 });
-
+  
 export const sendVerificationMail = async (
-  email: string,
+  email: string,  
   username: string,
   token: string
 ) => {
