@@ -7,6 +7,7 @@ export interface AuthUser extends mongoose.Document {
   email: string;
   password: string;
   isVerified: boolean;
+  providers: Array<"password" | "google">;
   comparePassword: (candidatePassword: string) => Promise<boolean>;
 }
 

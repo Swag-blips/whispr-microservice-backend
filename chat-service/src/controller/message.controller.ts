@@ -82,7 +82,7 @@ export const sendMessage = async (req: Request, res: Response) => {
             receiverCurrentChat === chatId
               ? "seen"
               : receiverCurrentChat !== chatId && receiver
-              ? "delivered"
+              ? "delivered" 
               : "sent",
         },
         {
@@ -146,6 +146,7 @@ export const sendMessage = async (req: Request, res: Response) => {
       });
 
       if (receiverCurrentChat !== chatId && receiver) {
+        console.log("Block", io.sockets.adapter.rooms)
         io.to(receiverId).emit("addToChats", {
           chatId,
           content,

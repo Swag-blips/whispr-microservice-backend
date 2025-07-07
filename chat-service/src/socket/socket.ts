@@ -37,6 +37,7 @@ io.on("connection", async (socket) => {
   console.log(`user connected to socket server ${socket.id}`);
   const userId = socket.handshake.query.userId as unknown as Types.ObjectId;
 
+  socket.join(userId as unknown as string);
   await updateMessagesToDelivered(userId);
   if (userId) {
     await redisClient.sadd("onlineUsers", userId as unknown as string);
@@ -74,6 +75,7 @@ io.on("connection", async (socket) => {
   socket.on("disconnect", async () => {
     logger.info(`user disconnected from socket ${socket.id}`);
 
+    socket.leave(userId as unknown as string);
     const [onlineUsers, permissions, userChats, currentChat] =
       await Promise.all([
         redisClient.srem("onlineUsers", userId as unknown as string),

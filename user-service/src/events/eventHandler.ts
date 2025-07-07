@@ -15,6 +15,7 @@ export const handleCreateUser = async (user: IncomingUserMessage) => {
       email: user.email,
       username: user.username,
       ...(user.bio && { bio: user.bio }),
+      ...(user.avatar && { avatar: user.avatar }),
     });
 
     logger.info("User successfully created");

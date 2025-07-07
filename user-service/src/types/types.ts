@@ -5,6 +5,7 @@ export interface IncomingUserMessage {
   email: string;
   username: string;
   bio?: string;
+  avatar?: string;
 }
 
 export interface IncomingFriendsMessage {

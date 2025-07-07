@@ -12,7 +12,7 @@ const authSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+
       min: 6,
     },
     isVerified: {
@@ -20,6 +20,12 @@ const authSchema = new mongoose.Schema(
       required: true,
       default: false,
     },
+    providers: [
+      {
+        type: String,
+        enum: ["password", "google"],
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -29,7 +35,7 @@ authSchema.index({ email: "text" });
 authSchema.pre("save", async function save(next) {
   const schema = this;
 
-  if (schema.isModified("password")) {
+  if (schema.isModified("password") && schema.password) {
     try {
       schema.password = await argon2.hash(schema.password);
     } catch (error) {

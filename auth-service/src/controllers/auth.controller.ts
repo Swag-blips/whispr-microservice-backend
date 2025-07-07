@@ -5,7 +5,6 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/generateToken";
-import jwt from "jsonwebtoken";
 import redisClient from "../config/redis";
 import {
   LoginService,
@@ -13,7 +12,8 @@ import {
   resendOtpService,
   verifyEmailService,
 } from "../services/auth.service";
- 
+import { publishEvent } from "../config/rabbitMq";
+
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint hit");
   try {
@@ -33,7 +33,7 @@ export const register = async (req: Request, res: Response) => {
 
     await redisClient.del(`search:${username}`);
 
-    return
+    return;
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === "User already exists") {
@@ -113,7 +113,7 @@ export const Login = async (req: Request, res: Response) => {
 
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    const { otp, email } = req.body; 
+    const { otp, email } = req.body;
 
     console.log(otp, email);
 
@@ -255,5 +255,118 @@ export const resetPassword = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error(error);
     res.status(500).json({ success: false, error: error });
+  }
+};
+
+export const signInWithGoogle = async (req: Request, res: Response) => {
+  try {
+    const code = req.headers.authorization;
+
+    const response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      body: JSON.stringify({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: "http://localhost:3006/auth/callback/google/",
+        grant_type: "authorization_code",
+        access_type: "offline",
+      }),
+    });
+    const accessToken = await response.json();
+    if (!response.ok) {
+      const errorDetails = await response.json();
+      throw new Error(
+        `Token Exchange Failed: ${
+          errorDetails.error_description || response.statusText
+        }`
+      );
+    }
+
+    const userResponse = await fetch(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken.access_token}`,
+        },
+      }
+    );
+    if (!userResponse.ok) {
+      const errorDetails = await userResponse.json();
+      throw new Error(
+        `User Info Fetch Failed: ${
+          errorDetails.error_description || userResponse.statusText
+        }`
+      );
+    }
+    const userDetails = await userResponse.json();
+
+    console.log(userDetails);
+
+    const user = await Auth.findOne({
+      email: userDetails.email,
+    });
+
+    if (!user) {
+      const createdUser = await Auth.create({
+        email: userDetails.email,
+        isVerified: true,
+        providers: ["google"],
+      });
+
+      await publishEvent("user.created", {
+        _id: createdUser._id,
+        email: userDetails.email,
+        username: userDetails.name,
+        avatar: userDetails.picture,
+      });
+
+      const accessToken = generateAccessToken(createdUser._id);
+      const refreshToken = generateRefreshToken(createdUser._id);
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 15 * 24 * 60 * 60 * 1000,
+      });
+
+      res.cookie("accessToken", accessToken, {
+        httpOnly: false,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 15 * 60 * 1000,
+      });
+    } else {
+      if (!user.providers.includes("google")) {
+        user.providers.push("google");
+        await user.save();
+      }
+
+      const accessToken = generateAccessToken(user._id);
+      const refreshToken = generateRefreshToken(user._id);
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 15 * 24 * 60 * 60 * 1000,
+      });
+
+      res.cookie("accessToken", accessToken, {
+        httpOnly: false,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 15 * 60 * 1000,
+      });
+    }
+
+    res
+      .status(201)
+      .json({ success: true, message: "Authentication successful" });
+    return;
+  } catch (error: any) {
+    console.error("Error saving code:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

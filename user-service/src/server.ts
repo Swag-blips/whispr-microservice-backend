@@ -59,7 +59,7 @@ const startServer = async () => {
     await connectToRabbitMq();
     await consumeEvent<IncomingUserMessage>(
       "user.created",
-      "user.create.queue",
+      "user.create.queue", 
       handleCreateUser
     );
     await consumeEvent<IncomingFriendsMessage>(

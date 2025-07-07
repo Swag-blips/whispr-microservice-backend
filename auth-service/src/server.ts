@@ -13,7 +13,7 @@ import { v2 as cloudinary } from "cloudinary";
 import compression from "compression";
 import { initalizeImageWorker } from "./utils/imageWorker";
 import { initalizeEmailWorker } from "./utils/emailWorker";
-import cookieParser from "cookie-parser";
+
 dotenv.config();
 
 export const app = express();
@@ -40,7 +40,7 @@ app.use(limiter);
 
 app.use(errorHandler);
 app.use(logRequests);
-
+ 
 app.use("/api/auth", limiter, authRoutes);
 
 export const server = app.listen(PORT, async () => {
