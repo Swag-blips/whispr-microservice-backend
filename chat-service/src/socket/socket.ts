@@ -76,7 +76,7 @@ io.on("connection", async (socket) => {
     logger.info(`user disconnected from socket ${socket.id}`);
 
     socket.leave(userId as unknown as string);
-    const [onlineUsers, permissions, userChats, currentChat] =
+    const [onlineUsers, permissions, userChats, currentChat] = 
       await Promise.all([
         redisClient.srem("onlineUsers", userId as unknown as string),
         invalidatePermissions(userId),

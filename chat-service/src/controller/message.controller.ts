@@ -82,7 +82,7 @@ export const sendMessage = async (req: Request, res: Response) => {
             receiverCurrentChat === chatId
               ? "seen"
               : receiverCurrentChat !== chatId && receiver
-              ? "delivered" 
+              ? "delivered"
               : "sent",
         },
         {
@@ -146,7 +146,7 @@ export const sendMessage = async (req: Request, res: Response) => {
       });
 
       if (receiverCurrentChat !== chatId && receiver) {
-        console.log("Block", io.sockets.adapter.rooms)
+        console.log("Block", io.sockets.adapter.rooms);
         io.to(receiverId).emit("addToChats", {
           chatId,
           content,
@@ -154,7 +154,7 @@ export const sendMessage = async (req: Request, res: Response) => {
       }
 
       await addMessageQueue.add(
-        "add-message", 
+        "add-message",
         {
           content: content,
           chatId: chatId,
@@ -297,6 +297,23 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
       await redisClient.sadd(`permittedChats${participant}`, chatId);
     });
 
+    participants.forEach(async (participant: string) => {
+      const participantDetailsString = await redisClient.get(
+        `user:${participant}`
+      );
+      if (!participantDetailsString) return;
+      const participantDetails = JSON.parse(participantDetailsString);
+      io.to(chatId).emit("newMemberAdded", {
+        adminId: userId,
+        content: `added ${participantDetails.username}`,
+        avatar: participantDetails.avatar,
+      });
+      await Message.create({
+        chatId,
+        content: `${participantDetails.username} was added`,
+      });
+    });
+
     res.status(201).json({ success: true, message: "Users added to chat" });
     return;
   } catch (error) {
@@ -355,13 +372,27 @@ export const removeMemberFromGroup = async (req: Request, res: Response) => {
 
       await chat.save();
 
-      const [permissions, userChats, permittedChats] = await Promise.all([
+      await Promise.all([
         redisClient.srem(`permissions${chatId}`, memberId),
         redisClient.del(`userChats${memberId}`),
         redisClient.srem(`permittedChats${memberId}`, chatId),
       ]);
+    }
 
-      console.log(permissions, userChats, permittedChats);
+    const memberDetails = await redisClient.get(`user:${memberId}`);
+
+    if (memberDetails) {
+      const member = JSON.parse(memberDetails);
+      io.to(chatId).emit("memberRemoved", {
+        adminId: userId,
+        content: `admin removed  ${member.username}`,
+        avatar: member.avatar,
+      });
+
+      await Message.create({
+        chatId,
+        content: `${member.username} was removed`,
+      });
     }
 
     res.status(201).json({ success: true, message: "User removed from chat" });
