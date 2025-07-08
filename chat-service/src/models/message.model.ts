@@ -6,7 +6,6 @@ const messageSchema = new mongoose.Schema(
     senderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
     file: {
       type: String,
@@ -23,17 +22,30 @@ const messageSchema = new mongoose.Schema(
     ],
     content: {
       type: String,
-      required: true,
     },
     chatId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
-      required: true,
+      required: true, 
     },
     status: {
       type: String,
-
       enum: ["sent", "delivered", "seen"],
+    },
+
+    messageType: {
+      type: String,
+      enum: ["text", "file", "system"],
+      default: "text",
+    },
+  
+    systemAction: {
+      type: String,
+      enum: ["user_removed", "user_added", "left_group", "group_renamed", "user_promoted"],
+    },
+   
+    meta: {
+      type: mongoose.Schema.Types.Mixed,
     },
   },
   { timestamps: true }

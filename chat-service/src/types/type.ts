@@ -11,9 +11,18 @@ export interface MessageType {
   chatId: Types.ObjectId;
   status: "delivered" | "sent" | "seen";
   updatedAt: Date;
+  messageType?: "text" | "file" | "system";
+  systemAction?:
+    | "user_removed"
+    | "user_added"
+    | "left_group"
+    | "group_renamed"
+    | "user_promoted";
+  meta?: Record<string, any>;
 }
 
 export interface ChatSchema {
+  adminId?: Types.ObjectId;
   participants: Array<Types.ObjectId>;
   type: "private" | "group";
   lastMessage: string;

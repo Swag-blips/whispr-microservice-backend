@@ -56,7 +56,7 @@ export const sendMessage = async (req: Request, res: Response) => {
         receiverId: receiverId,
         chatId: chatId,
         createdAt: new Date(),
-
+        messageType: "text",
         status:
           receiverCurrentChat === chatId
             ? "seen"
@@ -136,7 +136,7 @@ export const sendMessage = async (req: Request, res: Response) => {
         receiverId: receiverId,
         chatId: chatId,
         createdAt: new Date(),
-
+        messageType: "text",
         status:
           receiverCurrentChat === chatId
             ? "seen"
@@ -146,7 +146,6 @@ export const sendMessage = async (req: Request, res: Response) => {
       });
 
       if (receiverCurrentChat !== chatId && receiver) {
-        console.log("Block", io.sockets.adapter.rooms);
         io.to(receiverId).emit("addToChats", {
           chatId,
           content,
@@ -227,6 +226,7 @@ export const createGroup = async (req: Request, res: Response) => {
     const userId = req.userId;
 
     const chat = await Chat.create({
+      adminId: userId,
       participants: [...participants, userId],
       groupName,
       bio: bio || "Not much yet, but this group is fireee",
@@ -270,6 +270,15 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
       return;
     }
 
+    if (chat.adminId?.toString() !== userId.toString()) {
+      res.status(401).json({
+        success: false,
+        message: "Youre not authorized to add a user",
+      });
+
+      return;
+    }  
+
     const alreadyExists = participants.some((participant: Types.ObjectId) =>
       chat.participants.includes(participant)
     );
@@ -303,14 +312,30 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
       );
       if (!participantDetailsString) return;
       const participantDetails = JSON.parse(participantDetailsString);
-      io.to(chatId).emit("newMemberAdded", {
-        adminId: userId,
-        content: `added ${participantDetails.username}`,
-        avatar: participantDetails.avatar,
-      });
-      await Message.create({
+      const message = await Message.create({
         chatId,
-        content: `${participantDetails.username} was added`,
+        messageType: "system",
+        content: `admin added ${participantDetails.username}`,
+        systemAction: "user_added",
+        meta: {
+          actorId: userId,
+          memberId: participant,
+          memberAvatar: participantDetails.avatar,
+        },
+      });
+      io.to(chatId).emit("memberAdded", {
+        messageId: message._id,
+        createdAt: new Date(),
+        chatId,
+        messageType: "system",
+        content: `admin added ${participantDetails.username}`,
+        systemAction: "user_added",
+
+        meta: {
+          actorId: userId,
+          memberId: participant,
+          memberAvatar: participantDetails.avatar,
+        },
       });
     });
 
@@ -342,8 +367,18 @@ export const removeMemberFromGroup = async (req: Request, res: Response) => {
 
     if (!chat) {
       res.status(400).json({ success: false, message: "chat not found" });
+      return; 
+    }
+
+    if (chat.adminId !== userId) {
+      res.status(401).json({
+        success: false,
+        message: "Youre not authorized to add a user",
+      });
+
       return;
     }
+
     if (!chat.participants.includes(userId)) {
       res.status(401).json({
         success: false,
@@ -383,15 +418,30 @@ export const removeMemberFromGroup = async (req: Request, res: Response) => {
 
     if (memberDetails) {
       const member = JSON.parse(memberDetails);
-      io.to(chatId).emit("memberRemoved", {
-        adminId: userId,
-        content: `admin removed  ${member.username}`,
-        avatar: member.avatar,
-      });
-
-      await Message.create({
+      const message = await Message.create({
+        senderId: userId,
         chatId,
-        content: `${member.username} was removed`,
+        content: `admin removed ${member.username}`,
+        systemAction: "user_removed",
+        messageType: "system",
+        meta: {
+          actorId: userId,
+          memberId,
+          memberAvatar: member.avatar,
+        },
+      });
+      io.to(chatId).emit("memberRemoved", {
+        messageId: message._id,
+        createdAt: new Date(),
+        chatId,
+        messageType: "system",
+        content: `admin removed ${member.username}`,
+        systemAction: "user_removed",
+        meta: {
+          actorId: userId,
+          memberId,
+          memberAvatar: member.avatar,
+        },
       });
     }
 
@@ -489,11 +539,11 @@ export const getUserChats = async (req: Request, res: Response) => {
 
         let unreadMessages: number | null = null;
         if (chat.type === "private") {
-          unreadMessages = await Message.find({
+          unreadMessages = await Message.countDocuments({
             chatId: chat._id,
             receiverId: userId,
             status: { $ne: "seen" },
-          }).countDocuments();
+          });
         }
 
         return {
@@ -525,8 +575,6 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
     const { chatId } = req.params;
     const { content, file } = req.body;
     const userId = req.userId;
-
-    console.log("GROUP MESSAGE");
 
     const permittedChats = await redisClient.smembers(
       `permittedChats${userId}`
@@ -634,7 +682,7 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
 
       await invalidateChatMessagesCache(chatId);
 
-      res
+      res  
         .status(201)
         .json({ success: true, message: "Message successfully sent" });
 

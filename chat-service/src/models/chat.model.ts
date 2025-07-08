@@ -3,11 +3,14 @@ import { ChatSchema } from "../types/type";
 
 const chatSchema = new mongoose.Schema(
   {
+    adminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     participants: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-
         required: true,
       },
     ],
@@ -35,4 +38,4 @@ chatSchema.index({ participants: 1 });
 
 const Chat = mongoose.model<ChatSchema>("Chat", chatSchema);
 
-export default Chat; 
+export default Chat;
