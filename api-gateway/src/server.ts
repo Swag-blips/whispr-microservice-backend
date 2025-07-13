@@ -17,7 +17,7 @@ const app = express();
 
 app.use(helmet());
 app.use(cors(corsOptions));
-app.use(express.json({ limit: "5mb" })); 
+app.use(express.json({ limit: "5mb" }));
 
 app.use(errorHandler);
 app.use(limiter);

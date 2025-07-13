@@ -33,7 +33,7 @@ app.use(logRequests);
 app.use(errorHandler);
 
 app.use("/api/chat", chatRoutes);
-const PORT = process.env.PORT || 3005;
+const PORT = process.env.PORT || 3009;
 
 export const startServer = async () => {
   try {

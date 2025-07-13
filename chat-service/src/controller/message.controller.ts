@@ -17,7 +17,7 @@ import mongoose from "mongoose";
 export const sendMessage = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
-    const { content, file } = req.body;
+    const { content, file, tempId } = req.body;
     const userId = req.userId;
 
     const permittedChats = await redisClient.smembers(
@@ -51,8 +51,10 @@ export const sendMessage = async (req: Request, res: Response) => {
       );
 
       io.to(chatId).emit("newMessage", {
+        _id: tempId,
         content: content,
         senderId: userId,
+        tempId: tempId,
         receiverId: receiverId,
         chatId: chatId,
         createdAt: new Date(),
@@ -131,8 +133,10 @@ export const sendMessage = async (req: Request, res: Response) => {
       );
 
       io.to(chatId).emit("newMessage", {
+        _id: tempId,
         content: content,
         senderId: userId,
+        tempId: tempId,
         receiverId: receiverId,
         chatId: chatId,
         createdAt: new Date(),
@@ -277,7 +281,7 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
       });
 
       return;
-    }  
+    }
 
     const alreadyExists = participants.some((participant: Types.ObjectId) =>
       chat.participants.includes(participant)
@@ -310,8 +314,13 @@ export const addMemberToGroup = async (req: Request, res: Response) => {
       const participantDetailsString = await redisClient.get(
         `user:${participant}`
       );
-      if (!participantDetailsString) return;
-      const participantDetails = JSON.parse(participantDetailsString);
+      let participantDetails;
+      if (participantDetailsString) {
+        participantDetails = JSON.parse(participantDetailsString);
+      } else {
+        participantDetails = await User.findById(participant);
+      }
+
       const message = await Message.create({
         chatId,
         messageType: "system",
@@ -367,13 +376,21 @@ export const removeMemberFromGroup = async (req: Request, res: Response) => {
 
     if (!chat) {
       res.status(400).json({ success: false, message: "chat not found" });
-      return; 
+      return;
     }
 
-    if (chat.adminId !== userId) {
+    if (!chat.participants.includes(memberId)) {
+      res
+        .status(400)
+        .json({ success: false, message: "User is not a member of the chat" });
+
+      return;
+    }
+
+    if (chat.adminId?.toString() !== userId.toString()) {
       res.status(401).json({
         success: false,
-        message: "Youre not authorized to add a user",
+        message: "Youre not authorized to remove a user",
       });
 
       return;
@@ -414,36 +431,42 @@ export const removeMemberFromGroup = async (req: Request, res: Response) => {
       ]);
     }
 
-    const memberDetails = await redisClient.get(`user:${memberId}`);
+    let memberDetails;
+    let member;
 
-    if (memberDetails) {
-      const member = JSON.parse(memberDetails);
-      const message = await Message.create({
-        senderId: userId,
-        chatId,
-        content: `admin removed ${member.username}`,
-        systemAction: "user_removed",
-        messageType: "system",
-        meta: {
-          actorId: userId,
-          memberId,
-          memberAvatar: member.avatar,
-        },
-      });
-      io.to(chatId).emit("memberRemoved", {
-        messageId: message._id,
-        createdAt: new Date(),
-        chatId,
-        messageType: "system",
-        content: `admin removed ${member.username}`,
-        systemAction: "user_removed",
-        meta: {
-          actorId: userId,
-          memberId,
-          memberAvatar: member.avatar,
-        },
-      });
+    memberDetails = await redisClient.get(`user:${memberId}`);
+
+    if (!memberDetails) {
+      member = await User.findById(memberId);
+    } else {
+      member = JSON.parse(memberDetails);
     }
+
+    const message = await Message.create({
+      senderId: userId,
+      chatId,
+      content: `admin removed ${member.username}`,
+      systemAction: "user_removed",
+      messageType: "system",
+      meta: {
+        actorId: userId,
+        memberId,
+        memberAvatar: member.avatar,
+      },
+    });
+    io.to(chatId).emit("memberRemoved", {
+      messageId: message._id,
+      createdAt: new Date(),
+      chatId,
+      messageType: "system",
+      content: `admin removed ${member.username}`,
+      systemAction: "user_removed",
+      meta: {
+        actorId: userId,
+        memberId,
+        memberAvatar: member.avatar,
+      },
+    });
 
     res.status(201).json({ success: true, message: "User removed from chat" });
     return;
@@ -573,7 +596,7 @@ export const getUserChats = async (req: Request, res: Response) => {
 export const sendGroupMessage = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
-    const { content, file } = req.body;
+    const { content, file, tempId } = req.body;
     const userId = req.userId;
 
     const permittedChats = await redisClient.smembers(
@@ -599,6 +622,8 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
       );
 
       io.to(chatId).emit("newMessage", {
+        _id: tempId,
+        tempId: tempId,
         content: content,
         senderId: userId,
         receivers: receivers,
@@ -656,6 +681,8 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
       }
 
       io.to(chatId).emit("newMessage", {
+        _id: tempId,
+        tempId: tempId,
         content: content,
         senderId: userId,
         receivers: receivers,
@@ -682,7 +709,7 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
 
       await invalidateChatMessagesCache(chatId);
 
-      res  
+      res
         .status(201)
         .json({ success: true, message: "Message successfully sent" });
 

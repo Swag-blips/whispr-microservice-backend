@@ -2,6 +2,7 @@ import Joi from "joi";
 
 export const messageSchema = Joi.object({
   content: Joi.string().required(),
+  tempId: Joi.string().uuid().required(),
 });
 
 export const createGroupSchema = Joi.object({

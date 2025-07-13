@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from "express";
-
 import jwt from "jsonwebtoken";
 import logger from "../utils/logger";
 import { Types } from "mongoose";
