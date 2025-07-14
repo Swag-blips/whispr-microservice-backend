@@ -1,4 +1,6 @@
+import { clients } from "../controller/notification.controller";
 import Notification from "../models/notification.model";
+import User from "../models/user.model";
 import { Notification as NotificationEvent } from "../types/type";
 import logger from "../utils/logger";
 
@@ -12,6 +14,20 @@ export const handleFriendRequestNotification = async (
       type: "Pending",
     });
 
+    const client = clients.get(event.to);
+    console.log(clients.keys());
+    console.log("event", event);
+
+    if (client) {
+      const sender = await User.findById(event.from).lean();
+      console.log("sender", sender);
+      client.write(
+        `data: ${JSON.stringify({
+          type: "sendFriendRequest",
+          sender,
+        })}\n\n`
+      );
+    }
     logger.info("Friend request notification created");
   } catch (error) {
     logger.error(error);
@@ -43,16 +59,28 @@ export const handleFriendRequestAccept = async (event: NotificationEvent) => {
     const notification = await Notification.findOne({
       from: event.from,
       to: event.to,
-    });  
+    });
 
     console.log("NOTIFICATION", notification);
- 
+
     if (!notification) {
       return;
     }
 
     notification.type = "Accepted";
     await notification.save();
+
+    const client = clients.get(event.from);
+
+    if (client) {
+      const sender = await User.findById(event.from).lean();
+      client.write(
+        `date: ${JSON.stringify({
+          type: "acceptFriendRequest",
+          sender,
+        })}\n\n`
+      );
+    }
     return;
   } catch (error) {
     logger.error(error);
