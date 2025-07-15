@@ -15,7 +15,7 @@ const validateRequest = (schema: ObjectSchema) => {
       logger.error(error);
       return;
     }
-
+ 
     next();
   };
 };

@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
     ],
   },
 
-  { timestamps: true, strict: true }
+  { timestamps: true, strict: false }
 );
 
 userSchema.index({ username: "text" });

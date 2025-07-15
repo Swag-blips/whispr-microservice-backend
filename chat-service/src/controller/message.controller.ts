@@ -238,13 +238,24 @@ export const createGroup = async (req: Request, res: Response) => {
     });
 
     await redisClient.del(`userChats:${userId}`);
-    const [userChats] = await Promise.all(
-      participants.map((userId: Types.ObjectId) =>
-        redisClient.del(`userChats:${userId}`)
-      )
+
+    await redisClient.sadd(`permissions${chat._id.toString()}`, userId);
+
+    await redisClient.sadd(`permittedChats${userId}`, chat._id.toString());
+    await Promise.all(
+      participants.map(async (userId: Types.ObjectId) => {
+        Promise.all([
+          redisClient.del(`userChats:${userId}`),
+          redisClient.sadd(`permittedChats${userId}`, chat._id.toString()),
+        ]);
+      })
     );
 
-    console.log("userchats after group creation", userChats);
+    await redisClient.sadd(
+      `permissions${chat._id.toString()}`,
+      ...participants
+    );
+
     res.status(201).json({ success: true, chat: chat });
     logger.info("Group successfully created");
     return;
