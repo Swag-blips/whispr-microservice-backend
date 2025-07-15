@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "Not much here yet... but trust me, I’m interesting.",
     },
+
     avatar: {
       type: String,
       default: "",
@@ -25,7 +26,8 @@ const userSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+
+  { timestamps: true, strict: true }
 );
 
 userSchema.index({ username: "text" });

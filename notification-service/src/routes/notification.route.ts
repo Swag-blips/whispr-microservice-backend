@@ -3,6 +3,7 @@ import authenticateRequest from "../middleware/authenticateRequest";
 import {
   getNotification,
   getNotificationEvent,
+  getUnreadNotifications,
   markNotificationsAsRead,
 } from "../controller/notification.controller";
 import validateRequest from "../middleware/validateRequest";
@@ -16,6 +17,11 @@ router.post(
   "/mark-as-read",
   validateRequest(notificationSchema),
   markNotificationsAsRead
+);
+router.get(
+  "/unread-notifications",
+  authenticateRequest,
+  getUnreadNotifications 
 );
 
 export default router;
