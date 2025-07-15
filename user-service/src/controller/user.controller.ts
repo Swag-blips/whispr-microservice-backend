@@ -15,12 +15,13 @@ export const getUser = async (req: Request, res: Response) => {
 
     const userId = req.userId;
 
-    if (req.body.length < 0) {
+    console.log(await User.listIndexes());
+    if (req.body.length > 0) {
       res.status(400).json({ success: false, message: "body not allowed" });
       return;
     }
     const expiryTime = 5 * 60;
-    if (!username) {
+    if (!username) { 
       res.status(400).json({ success: false, message: "Username required" });
       return;
     }

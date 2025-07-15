@@ -12,6 +12,7 @@ export const handleFriendRequestNotification = async (
       from: event.from,
       to: event.to,
       type: "Pending",
+      read: false,
     });
 
     const client = clients.get(event.to);
@@ -20,7 +21,7 @@ export const handleFriendRequestNotification = async (
 
     if (client) {
       const sender = await User.findById(event.from).lean();
-      console.log("sender", sender);
+
       client.write(
         `data: ${JSON.stringify({
           type: "sendFriendRequest",
@@ -73,9 +74,9 @@ export const handleFriendRequestAccept = async (event: NotificationEvent) => {
     const client = clients.get(event.from);
 
     if (client) {
-      const sender = await User.findById(event.from).lean();
+      const sender = await User.findById(event.to).lean();
       client.write(
-        `date: ${JSON.stringify({
+        `data: ${JSON.stringify({
           type: "acceptFriendRequest",
           sender,
         })}\n\n`

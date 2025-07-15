@@ -12,6 +12,13 @@ const notificationSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
+    read: {
+      type: Boolean,
+      default: false,
+      required: true,
+    },
+
     type: {
       type: String,
       enums: ["Accepted", "Pending", "Message", "Declined"],

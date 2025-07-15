@@ -30,6 +30,5 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ username: "text" });
 const User = mongoose.model<User>("User", userSchema);
-User.createIndexes();
 
 export default User;
