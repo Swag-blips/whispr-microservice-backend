@@ -4,21 +4,78 @@ services:
   redis:
     image: "redis:7-alpine"
     ports:
-      - "6379:6379" 
+      - "6379:6379"
   rabbitmq:
     image: rabbitmq:3-management-alpine
     ports:
       - "5672:5672"
       - "15672:15672"
-  
+
   chat-service:
     build: ./chat-service
     ports:
-      - "3000:3000"
-    depends_on: 
+      - "3005:3005"
+    depends_on:
       - redis
       - rabbitmq
     environment:
-        REDIS_HOST: redis
-        REDIS_PORT: 6379
-        RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - rabbitmq
+      - redis
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "3001:3001"
+    depends_on:
+      - redis
+      - rabbitmq
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+  friend-service:
+    build: ./friend-service
+    ports:
+      - "3003:3003"
+    depends_on:
+      - rabbitmq
+      - redis
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+
+  user-service:
+    build: ./user-service
+    ports:
+      - "3002:3002"
+    depends_on:
+      - rabbitmq
+      - redis
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+
+  notification-service:
+    build: ./notification-service
+    ports:
+      - "3004:3004"
+    depends_on:
+      - rabbitmq
+      - redis
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
