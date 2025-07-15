@@ -1,15 +1,19 @@
-version: "3.9"
 
 services:
   redis:
     image: "redis:7-alpine"
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data
+
   rabbitmq:
     image: rabbitmq:3-management-alpine
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
 
   chat-service:
     build: ./chat-service
@@ -22,7 +26,9 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-
+    env_file:
+      - ./chat-service/.env
+ 
   api-gateway:
     build: ./api-gateway
     ports:
@@ -33,6 +39,9 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
+    env_file:
+      - ./api-gateway/.env
+
   auth-service:
     build: ./auth-service
     ports:
@@ -44,6 +53,9 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    env_file:
+      - ./auth-service/.env
+
   friend-service:
     build: ./friend-service
     ports:
@@ -55,7 +67,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-
+    env_file:
+      - ./friend-service/.env
   user-service:
     build: ./user-service
     ports:
@@ -67,6 +80,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    env_file:
+      - ./user-service/.env
 
   notification-service:
     build: ./notification-service
@@ -79,3 +94,10 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    env_file:
+      - ./notification-service/.env
+
+
+volumes:
+  redis-data:
+  rabbitmq-data:
