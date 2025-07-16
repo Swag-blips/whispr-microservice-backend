@@ -52,10 +52,11 @@ app.use(
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
       if (proxyReqOpts.headers) {
         proxyReqOpts.headers["Content-Type"] = "application/json";
-      }
-
+      } 
+ 
       return proxyReqOpts;
-    },
+    },  
+    
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
       logger.info(
         `response gotten from user service ${proxyRes.statusCode} ${proxyResData}`
@@ -136,3 +137,4 @@ app.listen(PORT, () => {
 process.on("unhandledRejection", (error) => {
   logger.error("unhandledRejection", error);
 });
+

@@ -27,7 +27,7 @@ services:
       REDIS_PORT: 6379
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     env_file:
-      - ./chat-service/.env
+      - ./chat-service/.env.docker
  
   api-gateway:
     build: ./api-gateway
@@ -40,7 +40,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     env_file:
-      - ./api-gateway/.env
+      - ./api-gateway/.env.docker
 
   auth-service:
     build: ./auth-service
@@ -54,7 +54,7 @@ services:
       REDIS_PORT: 6379
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     env_file:
-      - ./auth-service/.env
+      - ./auth-service/.env.docker
 
   friend-service:
     build: ./friend-service
@@ -68,7 +68,7 @@ services:
       REDIS_PORT: 6379
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     env_file:
-      - ./friend-service/.env
+      - ./friend-service/.env.docker
   user-service:
     build: ./user-service
     ports:
@@ -81,7 +81,7 @@ services:
       REDIS_PORT: 6379
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     env_file:
-      - ./user-service/.env
+      - ./user-service/.env.docker
 
   notification-service:
     build: ./notification-service
@@ -95,7 +95,7 @@ services:
       REDIS_PORT: 6379
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     env_file:
-      - ./notification-service/.env
+      - ./notification-service/.env.docker
 
 
 volumes:
