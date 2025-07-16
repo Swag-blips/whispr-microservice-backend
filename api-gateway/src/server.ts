@@ -9,7 +9,15 @@ import cors from "cors";
 import logRequests from "./middleware/logRequests";
 import limiter from "./config/rateLimit";
 import { corsOptions } from "./config/corsOptions";
-dotenv.config();
+
+if (
+  process.env.NODE_ENV === "production" ||
+  process.env.RUNNING_IN_DOCKER === "true"
+) {
+  dotenv.config({ path: ".env.docker" });
+} else {
+  dotenv.config({ path: ".env.local" });
+}
 
 const PORT = process.env.PORT || 3000;
 
@@ -52,11 +60,11 @@ app.use(
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
       if (proxyReqOpts.headers) {
         proxyReqOpts.headers["Content-Type"] = "application/json";
-      } 
- 
+      }
+
       return proxyReqOpts;
-    },  
-    
+    },
+
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
       logger.info(
         `response gotten from user service ${proxyRes.statusCode} ${proxyResData}`
@@ -137,4 +145,3 @@ app.listen(PORT, () => {
 process.on("unhandledRejection", (error) => {
   logger.error("unhandledRejection", error);
 });
-

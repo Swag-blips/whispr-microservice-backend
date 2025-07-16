@@ -14,7 +14,15 @@ import compression from "compression";
 import { initalizeImageWorker } from "./utils/imageWorker";
 import { initalizeEmailWorker } from "./utils/emailWorker";
 
-dotenv.config();
+
+if (
+  process.env.NODE_ENV === "production" ||
+  process.env.RUNNING_IN_DOCKER === "true"
+) {
+  dotenv.config({ path: ".env.docker" });
+} else {
+  dotenv.config({ path: ".env.local" });
+}
 
 export const app = express();
 

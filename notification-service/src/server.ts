@@ -17,10 +17,16 @@ import {
 } from "./events/eventHandler";
 import notificationRoutes from "../src/routes/notification.route";
 
-dotenv.config();
+if (
+  process.env.NODE_ENV === "production" ||
+  process.env.RUNNING_IN_DOCKER === "true"
+) {
+  dotenv.config({ path: ".env.docker" });
+} else {
+  dotenv.config({ path: ".env.local" });
+}
 
 const app = express();
-
 
 app.use(cors({ origin: "http://localhost:3006", credentials: true }));
 app.use(helmet());

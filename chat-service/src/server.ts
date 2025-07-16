@@ -10,8 +10,15 @@ import cors from "cors";
 import errorHandler from "./middleware/errorHandler";
 import dotenv from "dotenv";
 import chatRoutes from "./routes/message.route";
- 
-dotenv.config();
+
+if (
+  process.env.NODE_ENV === "production" ||
+  process.env.RUNNING_IN_DOCKER === "true"
+) {
+  dotenv.config({ path: ".env.docker" });
+} else {
+  dotenv.config({ path: ".env.local" });
+}
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
