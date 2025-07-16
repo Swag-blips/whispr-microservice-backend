@@ -10,7 +10,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@socket.io/cluster-adapter": "^0.2.2",
     "@socket.io/redis-adapter": "^8.3.0",
+    "@socket.io/sticky": "^1.0.4",
     "amqplib": "^0.10.7",
     "bullmq": "^5.51.1",
     "cloudinary": "^2.6.0",

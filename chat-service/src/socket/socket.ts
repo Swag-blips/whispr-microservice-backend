@@ -7,8 +7,8 @@ import {
   fetchPermissions,
   invalidatePermissions,
 } from "../utils/fetchPermissions";
-import { createAdapter } from "@socket.io/redis-adapter";
-import pubClient from "../config/redis";
+// // import { createAdapter } from "@socket.io/redis-adapter";
+// import pubClient from "../config/redis";
 import redisClient from "../config/redis";
 import {
   markMessagesAsSeen,
@@ -19,7 +19,7 @@ export const app = express();
 export const server = http.createServer(app);
 
 const activeUsers = new Map<Types.ObjectId, string>();
-const subClient = pubClient.duplicate();
+// const subClient = pubClient.duplicate();
 
 export const getReceiverSocketId = (userId: Types.ObjectId) => {
   console.log("ACTIVE USERS", activeUsers);
@@ -28,19 +28,23 @@ export const getReceiverSocketId = (userId: Types.ObjectId) => {
 
 export const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3006"],
+    origin: "*",
   },
-  adapter: createAdapter(pubClient, subClient),
+
+  // adapter: createAdapter(pubClient, subClient),
+  allowEIO3: true,
 });
 
 io.on("connection", async (socket) => {
   console.log(`user connected to socket server ${socket.id}`);
+
   const userId = socket.handshake.query.userId as unknown as Types.ObjectId;
 
-  socket.join(userId as unknown as string);
   await updateMessagesToDelivered(userId);
   if (userId) {
     await redisClient.sadd("onlineUsers", userId as unknown as string);
+
+    socket.join(userId as unknown as string);
   }
 
   // io.emit("getOnlineUsers", await redisClient.smembers("onlineUsers"));
@@ -76,7 +80,7 @@ io.on("connection", async (socket) => {
     logger.info(`user disconnected from socket ${socket.id}`);
 
     socket.leave(userId as unknown as string);
-    const [onlineUsers, permissions, userChats, currentChat] = 
+    const [onlineUsers, permissions, userChats, currentChat] =
       await Promise.all([
         redisClient.srem("onlineUsers", userId as unknown as string),
         invalidatePermissions(userId),

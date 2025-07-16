@@ -19,8 +19,8 @@ export async function connectToRabbitMq(retries = 5) {
       console.error("RabbitMQ not ready, retrying...");
       retries--;
       await new Promise((res) => setTimeout(res, 10000));
-    }
-  }
+    } 
+  } 
   throw new Error("RabbitMQ not available after multiple attempts");
 }
 
