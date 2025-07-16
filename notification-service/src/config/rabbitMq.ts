@@ -10,25 +10,30 @@ const RETRY_QUEUE = "notification.create.retry.queue";
 const RETRY_DELAY = 10000;
 const MAX_RETRIES = 5;
 
-export const connectToRabbitMq = async () => {
-  try {
-    connection = await amq.connect(process.env.RABBITMQ_URL as string);
-    channel = await connection.createChannel();
+export const connectToRabbitMq = async (retries = 5) => {
+  while (retries) {
+    try {
+      connection = await amq.connect(process.env.RABBITMQ_URL as string);
+      channel = await connection.createChannel();
 
-    await channel.assertExchange(EXCHANGE_NAME, "topic", { durable: true });
-    await channel.assertQueue(RETRY_QUEUE, {
-      durable: true,
-      arguments: {
-        "x-dead-letter-exchange": EXCHANGE_NAME,
-        "x-dead-letter-routing-name": RETRY_QUEUE,
-        "x-message-ttl": RETRY_DELAY,
-      },
-    });
-    logger.info("Connected to rabbitmq");
-    return channel;
-  } catch (error) {
-    logger.error(error);
+      await channel.assertExchange(EXCHANGE_NAME, "topic", { durable: true });
+      await channel.assertQueue(RETRY_QUEUE, {
+        durable: true,
+        arguments: {
+          "x-dead-letter-exchange": EXCHANGE_NAME,
+          "x-dead-letter-routing-name": RETRY_QUEUE,
+          "x-message-ttl": RETRY_DELAY,
+        },
+      });
+      logger.info("Connected to rabbitmq");
+      return channel;
+    } catch (error) {
+      logger.error(error);
+      retries--;
+      await new Promise((res) => setTimeout(res, 10000));
+    }
   }
+  throw new Error("RabbitMQ not available after multiple attempts");
 };
 export const consumeEvent = async (
   routingKey: string,

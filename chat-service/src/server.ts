@@ -48,6 +48,7 @@ export const startServer = async () => {
 
     server.listen(Number(PORT), "0.0.0.0", () => {
       logger.info(`chat service is listening on port ${PORT}`);
+      console.log("NODE ENV", process.env.NODE_ENV);
     });
   } catch (error) {
     logger.error(error);

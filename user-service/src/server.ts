@@ -29,7 +29,7 @@ if (
   dotenv.config({ path: ".env.docker" });
 } else {
   dotenv.config({ path: ".env.local" });
-}
+} 
 const app = express();
 
 cloudinary.config({

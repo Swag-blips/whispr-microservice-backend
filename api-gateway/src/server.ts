@@ -140,6 +140,7 @@ app.use(
 
 app.listen(PORT, () => {
   logger.info(`api gateway is running on port ${PORT}`);
+  console.log(process.env.NODE_ENV);
 });
 
 process.on("unhandledRejection", (error) => {
