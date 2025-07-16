@@ -3,7 +3,6 @@ import logger from "../utils/logger";
 import redisClient from "../config/redis";
 import Message from "../models/message.model";
 import Chat from "../models/chat.model";
-import { io } from "../socket/socket";
 import { queue as addMessageQueue } from "../utils/addMessageWorker";
 import {
   cacheMessages,
@@ -13,6 +12,7 @@ import {
 import { Types } from "mongoose";
 import User from "../models/user.model";
 import mongoose from "mongoose";
+import { io } from "../server";
 
 export const sendMessage = async (req: Request, res: Response) => {
   try {

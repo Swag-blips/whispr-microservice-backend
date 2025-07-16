@@ -1,8 +1,6 @@
 import cluster from "cluster";
 import os from "os";
-import express from "express";
 import http from "http";
-import { Server } from "socket.io";
 import logger from "./utils/logger";
 import { Types } from "mongoose";
 
@@ -21,13 +19,13 @@ import {
   fetchPermissions,
   invalidatePermissions,
 } from "./utils/fetchPermissions";
-import { startServer } from "./server";
+import { io, server, startServer } from "./server";
+import connectToMongo from "./config/dbConnect";
 
 const numOfCpus = os.cpus().length;
 const PORT = process.env.PORT || 3005;
 
 if (cluster.isPrimary) {
-  // Master process
   const httpServer = http.createServer();
 
   // Setup sticky sessions so socket connection stick to workers
@@ -52,18 +50,9 @@ if (cluster.isPrimary) {
     cluster.fork();
   });
 } else {
-  // Worker process
-  const app = express();
-  const server = http.createServer(app);
-
-  const io = new Server(server, {
-    cors: {
-      origin: "*",
-    },
-    allowEIO3: true,
-  });
-
-  // Setup cluster adapter for worker
+  (async () => {
+    await connectToMongo();
+  })();
   io.adapter(createAdapter());
   setupWorker(io);
 
@@ -131,12 +120,11 @@ if (cluster.isPrimary) {
       "chat.created",
       handleCreateChat
     );
+
     consumeEvent<ChatDeletedEvent>(
       "chat.deleted.queue",
       "chat.deleted",
       handleDeleteFriends
     );
   }
-
-  startServer();
 }

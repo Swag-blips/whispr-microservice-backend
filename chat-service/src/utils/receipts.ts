@@ -1,7 +1,9 @@
 import { Types } from "mongoose";
 import Message from "../models/message.model";
-import { io } from "../socket/socket";
+
 import redisClient from "../config/redis";
+import { io } from "../server";
+import logger from "./logger";
 
 export const updateMessagesToDelivered = async (userId: Types.ObjectId) => {
   try {
@@ -40,6 +42,8 @@ export const updateMessagesToDelivered = async (userId: Types.ObjectId) => {
         $set: { status: "delivered" },
       }
     );
+
+    logger.info("updated messages to delivered")  
     return;
   } catch (error) {
     console.error("Failed to update messages to delivered:", error);
