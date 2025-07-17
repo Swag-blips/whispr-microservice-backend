@@ -29,7 +29,7 @@ if (
   dotenv.config({ path: ".env.docker" });
 } else {
   dotenv.config({ path: ".env.local" });
-} 
+}
 const app = express();
 
 cloudinary.config({
@@ -40,7 +40,7 @@ cloudinary.config({
 
 app.use(
   cors({
-    origin: "http://localhost:3006",
+    origin: ["https://whispr-liard.vercel.app", "http://localhost:3006"],
     credentials: true,
   })
 );
@@ -65,7 +65,7 @@ const startServer = async () => {
     await connectToRabbitMq();
     await consumeEvent<IncomingUserMessage>(
       "user.created",
-      "user.create.queue", 
+      "user.create.queue",
       handleCreateUser
     );
     await consumeEvent<IncomingFriendsMessage>(

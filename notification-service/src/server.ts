@@ -28,7 +28,12 @@ if (
 
 const app = express();
 
-app.use(cors({ origin: "http://localhost:3006", credentials: true }));
+app.use(
+  cors({
+    origin: ["https://whispr-liard.vercel.app", "http://localhost:3006"],
+    credentials: true,
+  })
+);
 app.use(helmet());
 app.use(express.json());
 

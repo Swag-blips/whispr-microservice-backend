@@ -14,7 +14,6 @@ import compression from "compression";
 import { initalizeImageWorker } from "./utils/imageWorker";
 import { initalizeEmailWorker } from "./utils/emailWorker";
 
-
 if (
   process.env.NODE_ENV === "production" ||
   process.env.RUNNING_IN_DOCKER === "true"
@@ -35,20 +34,20 @@ cloudinary.config({
 app.use(
   cors({
     credentials: true,
-    origin: "http://localhost:3006",
+    origin: ["https://whispr-liard.vercel.app", "http://localhost:3006"],
   })
 );
 app.use(helmet());
 app.use(compression());
 
 app.use(express.json({ limit: "5mb" }));
-const PORT = process.env.PORT || 3001; 
+const PORT = process.env.PORT || 3001;
 
 app.use(limiter);
 
 app.use(errorHandler);
 app.use(logRequests);
- 
+
 app.use("/api/auth", limiter, authRoutes);
 
 export const server = app.listen(PORT, async () => {

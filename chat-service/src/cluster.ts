@@ -48,11 +48,11 @@ if (cluster.isPrimary) {
   cluster.on("exit", (worker, code, signal) => {
     logger.info(`Worker ${worker.process.pid} died. Restarting...`);
     cluster.fork();
-  });
+  }); 
 } else {
   (async () => {
     await connectToMongo();
-  })();
+  })(); 
   io.adapter(createAdapter());
   setupWorker(io);
 
