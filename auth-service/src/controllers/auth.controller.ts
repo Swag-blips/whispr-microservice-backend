@@ -63,7 +63,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
     res.status(200).json({
       success: true,
-      message: "Email verified successfully please login",
+      message: "Email verification successful",
     });
 
     return;

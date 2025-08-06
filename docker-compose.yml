@@ -1,4 +1,3 @@
-
 services:
   redis:
     image: "redis:7-alpine"
@@ -28,7 +27,7 @@ services:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     env_file:
       - ./chat-service/.env.docker
- 
+
   api-gateway:
     build: ./api-gateway
     ports:
@@ -96,7 +95,6 @@ services:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     env_file:
       - ./notification-service/.env.docker
-
 
 volumes:
   redis-data:
