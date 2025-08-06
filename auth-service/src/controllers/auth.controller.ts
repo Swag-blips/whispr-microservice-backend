@@ -62,7 +62,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     await verifyEmailService(token);
 
     res.status(200).json({
-      success: true,
+      success: true, 
       message: "Email verification successful",
     });
 

@@ -27,6 +27,7 @@ export const registerUser = async (
       password,
       email,
       isVerified: false,
+      providers: ["email/password"],
     });
 
     const token = generateMailToken(user._id, email);
