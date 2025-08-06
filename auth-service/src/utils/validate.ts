@@ -25,3 +25,7 @@ export const validateRegistration = (data: AuthUser) => {
 export const resetPasswordSchema = Joi.object({
   newPassword: Joi.string().min(6).required(),
 });
+
+export const resendVerificationSchema = Joi.object({
+  email: Joi.string().email().required(),
+});

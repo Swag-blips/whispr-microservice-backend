@@ -3,6 +3,7 @@ import logger from "../utils/logger";
 import Auth from "../models/auth.model";
 import {
   generateAccessToken,
+  generateMailToken,
   generateRefreshToken,
 } from "../utils/generateToken";
 import redisClient from "../config/redis";
@@ -13,6 +14,7 @@ import {
   verifyEmailService,
 } from "../services/auth.service";
 import { publishEvent } from "../config/rabbitMq";
+import { queue as emailQueue } from "../utils/emailWorker";
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint hit");
@@ -62,7 +64,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     await verifyEmailService(token);
 
     res.status(200).json({
-      success: true, 
+      success: true,
       message: "Email verification successful",
     });
 
@@ -368,5 +370,49 @@ export const signInWithGoogle = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error saving code:", error);
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const resendVerificationEmail = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    const user = await Auth.findOne({
+      email,
+    }).lean();
+
+    if (!user) {
+      res.status(404).json({ success: false, message: "user not found" });
+      return;
+    }
+
+    if (user.isVerified) {
+      res
+        .status(400)
+        .json({ success: false, message: "email already verified" });
+      return;
+    }
+
+    const token = generateMailToken(user._id, email);
+
+    await emailQueue.add(
+      "send-email",
+      {
+        email: email,
+        token: token,
+      },
+      {
+        attempts: 3,
+        backoff: { type: "exponential", delay: 3000 },
+        removeOnComplete: true,
+        removeOnFail: true,
+      }
+    );
+
+    res.status(200).json({ success: true, message: "Verification email sent" });
+    return;
+  } catch (error) {
+    logger.error(error);
+    res.status(200).json({ success: false, message: "Internal server error" });
   }
 };

@@ -11,9 +11,9 @@ const transporter = nodemailer.createTransport({
     pass: process.env.NODEMAILER_PASS as string,
   },
 });
-  
+
 export const sendVerificationMail = async (
-  email: string,  
+  email: string,
   username: string,
   token: string
 ) => {
@@ -26,7 +26,7 @@ export const sendVerificationMail = async (
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0;">
 
 
-    <h2 style="color: #333;">Hey ${username},</h2>
+    <h2 style="color: #333;">Hey ${username || "user"},</h2>
     
     <p style="font-size: 16px; color: #555;">Welcome to <strong>Whispr Chat</strong> 🎉</p>
     

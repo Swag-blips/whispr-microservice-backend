@@ -21,17 +21,17 @@ const authSchema = new mongoose.Schema(
       default: false,
     },
     providers: [
-      {
+      { 
         type: String,
-        enum: ["password", "google"],
+        enum: ["email/password", "google"],
       },
     ],
-  },
-  { timestamps: true }
-);
+  },   
+  { timestamps: true } 
+); 
 
-authSchema.index({ email: "text" });
-
+authSchema.index({ email: "text" }); 
+ 
 authSchema.pre("save", async function save(next) {
   const schema = this;
 
