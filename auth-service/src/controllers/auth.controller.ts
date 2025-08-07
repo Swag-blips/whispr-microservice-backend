@@ -164,6 +164,9 @@ export const verifyOtp = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: "Otp successfully verified",
+      data: {
+        username: user.username,
+      },
     });
 
     return;
@@ -363,9 +366,13 @@ export const signInWithGoogle = async (req: Request, res: Response) => {
       });
     }
 
-    res
-      .status(201)
-      .json({ success: true, message: "Authentication successful" });
+    res.status(201).json({
+      success: true,
+      message: "Authentication successful",
+      data: {
+        username: user?.username,
+      },
+    });
     return;
   } catch (error: any) {
     console.error("Error saving code:", error);
@@ -400,6 +407,7 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
       {
         email: email,
         token: token,
+        username: user.username,
       },
       {
         attempts: 3,

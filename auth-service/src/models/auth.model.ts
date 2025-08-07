@@ -15,23 +15,26 @@ const authSchema = new mongoose.Schema(
 
       min: 6,
     },
+    username: {
+      type: String,
+    },
     isVerified: {
       type: Boolean,
       required: true,
       default: false,
     },
     providers: [
-      { 
+      {
         type: String,
         enum: ["email/password", "google"],
       },
     ],
-  },   
-  { timestamps: true } 
-); 
+  },
+  { timestamps: true }
+);
 
-authSchema.index({ email: "text" }); 
- 
+authSchema.index({ email: "text" });
+
 authSchema.pre("save", async function save(next) {
   const schema = this;
 

@@ -25,6 +25,7 @@ export const registerUser = async (
 
     const user = new Auth({
       password,
+      username,
       email,
       isVerified: false,
       providers: ["email/password"],
