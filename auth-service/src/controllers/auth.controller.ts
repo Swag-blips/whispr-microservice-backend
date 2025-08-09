@@ -313,18 +313,19 @@ export const signInWithGoogle = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      const createdUser = await Auth.create({
-        email: userDetails.email,
+      const createdUser = await Auth.create({ 
+        email: userDetails.email, 
+        username: userDetails.name,
         isVerified: true,
         providers: ["google"],
       });
 
-      await publishEvent("user.created", {
+      await publishEvent("user.created", {  
         _id: createdUser._id,
         email: userDetails.email,
         username: userDetails.name,
-        avatar: userDetails.picture,
-      });
+        avatar: userDetails.picture, 
+      }); 
 
       const accessToken = generateAccessToken(createdUser._id);
       const refreshToken = generateRefreshToken(createdUser._id);
@@ -370,7 +371,7 @@ export const signInWithGoogle = async (req: Request, res: Response) => {
       success: true,
       message: "Authentication successful",
       data: {
-        username: user?.username,
+        username: user?.username || userDetails.name,
       },
     });
     return;

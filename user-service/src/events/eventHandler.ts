@@ -7,15 +7,17 @@ import {
   IncomingUserMessage,
 } from "../types/types";
 import logger from "../utils/logger";
+import { getAvatarImage } from "../utils/getRandomImage";
 
 export const handleCreateUser = async (user: IncomingUserMessage) => {
+  const altAvatar = getAvatarImage();
   try {
     await User.create({
       _id: user._id,
       email: user.email,
       username: user.username,
       ...(user.bio && { bio: user.bio }),
-      ...(user.avatar && { avatar: user.avatar }),
+      avatar: user.avatar || altAvatar,
     });
 
     logger.info("User successfully created");
