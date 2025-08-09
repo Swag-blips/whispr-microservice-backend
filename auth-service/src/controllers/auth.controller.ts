@@ -195,7 +195,8 @@ export const resendOtp = async (req: Request, res: Response) => {
     if (error instanceof Error) {
       if (error.message.startsWith("An OTP was recently")) {
         res.status(429).json({ success: false, message: error.message });
-      }
+        return;
+      }  
     }
     logger.error(error);
     res.status(500).json({ message: error });
@@ -313,19 +314,19 @@ export const signInWithGoogle = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      const createdUser = await Auth.create({ 
-        email: userDetails.email, 
+      const createdUser = await Auth.create({
+        email: userDetails.email,
         username: userDetails.name,
         isVerified: true,
         providers: ["google"],
       });
 
-      await publishEvent("user.created", {  
+      await publishEvent("user.created", {
         _id: createdUser._id,
         email: userDetails.email,
         username: userDetails.name,
-        avatar: userDetails.picture, 
-      }); 
+        avatar: userDetails.picture,
+      });
 
       const accessToken = generateAccessToken(createdUser._id);
       const refreshToken = generateRefreshToken(createdUser._id);

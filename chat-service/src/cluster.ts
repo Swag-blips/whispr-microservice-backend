@@ -48,11 +48,11 @@ if (cluster.isPrimary) {
   cluster.on("exit", (worker, code, signal) => {
     logger.info(`Worker ${worker.process.pid} died. Restarting...`);
     cluster.fork();
-  }); 
+  });
 } else {
   (async () => {
     await connectToMongo();
-  })(); 
+  })();
   io.adapter(createAdapter());
   setupWorker(io);
 
@@ -67,6 +67,10 @@ if (cluster.isPrimary) {
 
       socket.join(userId.toString());
     }
+
+    const onlineUsers = await redisClient.smembers("onlineUsers");
+
+    io.emit("onlineUsers", JSON.stringify(onlineUsers));
 
     socket.on("joinRoom", async (chatId) => {
       logger.info("Socket joins room: " + chatId);
