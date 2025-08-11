@@ -68,11 +68,11 @@ if (cluster.isPrimary) {
       socket.join(userId.toString());
     }
 
-    const onlineUsers = await redisClient.smembers("onlineUsers");
+    const onlineUsers = await redisClient.smembers("onlineUsers");  
 
     io.emit("onlineUsers", JSON.stringify(onlineUsers));
 
-    socket.on("joinRoom", async (chatId) => {
+    socket.on("joinRoom", async (chatId) => {  
       logger.info("Socket joins room: " + chatId);
       socket.join(chatId);
       await redisClient.set(`currentChat:${userId}`, chatId);

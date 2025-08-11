@@ -21,6 +21,7 @@ import {
   IncomingProfilePic,
   IncomingUserMessage,
 } from "./types/types";
+import User from "./models/user.model";
 
 if (
   process.env.NODE_ENV === "production" ||
@@ -61,23 +62,26 @@ const startServer = async () => {
       logger.info(`user service is running on port ${PORT}`);
     });
 
-    await connectToMongo();
-    await connectToRabbitMq();
-    await consumeEvent<IncomingUserMessage>(
-      "user.created",
-      "user.create.queue",
-      handleCreateUser
-    );
-    await consumeEvent<IncomingFriendsMessage>(
-      "friends.accept.created",
-      "friends.accept.create.queue",
-      handleAddFriends
-    );
-    await consumeEvent<IncomingProfilePic>(
-      "avatar.uploaded",
-      "avatar.uploaded.queue",
-      handleSaveAvatar
-    );
+    await Promise.all([
+      connectToMongo(),
+      connectToRabbitMq(),
+      consumeEvent<IncomingUserMessage>(
+        "user.created",
+        "user.create.queue",
+        handleCreateUser
+      ),
+      consumeEvent<IncomingFriendsMessage>(
+        "friends.accept.created",
+        "friends.accept.create.queue",
+        handleAddFriends
+      ),
+      consumeEvent<IncomingProfilePic>(
+        "avatar.uploaded",
+        "avatar.uploaded.queue",
+        handleSaveAvatar
+      ),
+      User.init(),
+    ]);
   } catch (error) {
     logger.error(error);
   }
@@ -85,6 +89,6 @@ const startServer = async () => {
 
 startServer();
 process.on("unhandledRejection", (error) => {
-  console.error(`unhandled rejection ${error}`);
+  console.error(`unhandled rejection ${error}`);  
   process.exit(1);
 });

@@ -12,7 +12,7 @@ export const getUser = async (req: Request, res: Response) => {
   console.log("GET USER ENDPOINT HIT");
   try {
     const username = req.params.username;
-    await User.init();
+
     const userId = req.userId;
 
     if (req.body.length > 0) {
