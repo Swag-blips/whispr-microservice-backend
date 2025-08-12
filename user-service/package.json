@@ -14,6 +14,7 @@
     "bullmq": "^5.51.1",
     "cloudinary": "^2.6.0",
     "compression": "^1.8.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@types/amqplib": "^0.10.7",
     "@types/compression": "^1.7.5",
+    "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",

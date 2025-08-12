@@ -22,6 +22,7 @@ import {
   IncomingUserMessage,
 } from "./types/types";
 import User from "./models/user.model";
+import cookieParser from "cookie-parser";
 
 if (
   process.env.NODE_ENV === "production" ||
@@ -49,6 +50,7 @@ app.use(helmet());
 app.use(express.json());
 const PORT = process.env.PORT || 3002;
 
+app.use(cookieParser());
 app.use(limiter);
 app.use(compression());
 app.use(errorHandler);

@@ -9,6 +9,7 @@ import limiter from "./config/rateLimit";
 import connectToMongo from "./config/dbConnect";
 import friendRoutes from "./routes/friendRequest.route";
 import { connectToRabbitMq } from "./config/rabbitMq";
+import cookieParser from "cookie-parser";
 
 if (
   process.env.NODE_ENV === "production" ||
@@ -27,6 +28,8 @@ app.use(
     credentials: true,
   })
 );
+
+app.use(cookieParser());
 app.use(helmet());
 app.use(express.json());
 const PORT = process.env.PORT || 3003;

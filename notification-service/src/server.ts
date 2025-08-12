@@ -10,10 +10,11 @@ import limiter from "./config/rateLimit";
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
 import {
   handleFriendRequestAccept,
-  handleFriendRequestDecline, 
+  handleFriendRequestDecline,
   handleFriendRequestNotification,
 } from "./events/eventHandler";
 import notificationRoutes from "../src/routes/notification.route";
+import cookieParser from "cookie-parser";
 
 if (
   process.env.NODE_ENV === "production" ||
@@ -33,6 +34,7 @@ app.use(
   })
 );
 app.use(helmet());
+app.use(cookieParser());
 app.use(express.json());
 
 app.use("/api/notifications", notificationRoutes);

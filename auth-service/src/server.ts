@@ -13,6 +13,7 @@ import { v2 as cloudinary } from "cloudinary";
 import compression from "compression";
 import { initalizeImageWorker } from "./utils/imageWorker";
 import { initalizeEmailWorker } from "./utils/emailWorker";
+import cookieParser from "cookie-parser";
 
 if (
   process.env.NODE_ENV === "production" ||
@@ -39,12 +40,13 @@ app.use(
 );
 app.use(helmet());
 app.use(compression());
+app.use(cookieParser());
 
 app.use(express.json({ limit: "5mb" }));
 const PORT = process.env.PORT || 3001;
- 
+
 app.use(limiter);
-   
+
 app.use(errorHandler);
 app.use(logRequests);
 

@@ -11,7 +11,7 @@ import errorHandler from "./middleware/errorHandler";
 import dotenv from "dotenv";
 import chatRoutes from "./routes/message.route";
 import { Server } from "socket.io";
-
+import cookieParser from "cookie-parser";
 if (
   process.env.NODE_ENV === "production" ||
   process.env.RUNNING_IN_DOCKER === "true"
@@ -45,6 +45,8 @@ app.use(
 );
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
+
+app.use(cookieParser());
 app.use(limiter);
 
 app.use(logRequests);

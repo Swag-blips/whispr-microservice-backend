@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from "express";
-import { getCookie } from "../utils/getCookie";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import logger from "../utils/logger";
@@ -8,16 +7,12 @@ interface DecodedUser {
   userId: Types.ObjectId;
 }
 
-
 export const refreshMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const refreshToken = getCookie(req)
-    ?.find((cookie) => cookie.startsWith("refreshToken"))
-    ?.slice(13); 
-
+  const refreshToken = req.cookies.refreshToken;
   if (!refreshToken) {
     res.status(401).json({ success: false, message: "refresh token Missing" });
     return;
