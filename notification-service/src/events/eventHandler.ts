@@ -1,7 +1,7 @@
 import { clients } from "../controller/notification.controller";
 import Notification from "../models/notification.model";
 import User from "../models/user.model";
-import { Notification as NotificationEvent } from "../types/type";
+import { NotificationInterface as NotificationEvent } from "../types/type";
 import logger from "../utils/logger";
 
 export const handleFriendRequestNotification = async (

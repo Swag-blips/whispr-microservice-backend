@@ -19,7 +19,6 @@ const chatSchema = new mongoose.Schema(
     },
     bio: {
       type: String,
-      default: "",
     },
     type: {
       type: String,

@@ -1,6 +1,6 @@
 import amq from "amqplib";
 import logger from "../utils/logger";
-import { Notification } from "../types/type";
+import { NotificationInterface } from "../types/type";
 
 let connection: amq.ChannelModel | null = null;
 let channel: amq.Channel | null = null;
@@ -38,7 +38,7 @@ export const connectToRabbitMq = async (retries = 5) => {
 export const consumeEvent = async (
   routingKey: string,
   queueName: string,
-  callback: (content: Notification) => void
+  callback: (content: NotificationInterface) => void
 ) => {
   if (!channel) {
     await connectToRabbitMq();

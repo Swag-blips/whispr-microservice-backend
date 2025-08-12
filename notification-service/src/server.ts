@@ -7,12 +7,10 @@ import logRequests from "./middleware/logRequests";
 import logger from "./utils/logger";
 import connectToMongo from "./config/dbConnect";
 import limiter from "./config/rateLimit";
-import User from "./models/user.model";
-
 import { connectToRabbitMq, consumeEvent } from "./config/rabbitMq";
 import {
   handleFriendRequestAccept,
-  handleFriendRequestDecline,
+  handleFriendRequestDecline, 
   handleFriendRequestNotification,
 } from "./events/eventHandler";
 import notificationRoutes from "../src/routes/notification.route";

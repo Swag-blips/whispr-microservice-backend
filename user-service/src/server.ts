@@ -80,8 +80,9 @@ const startServer = async () => {
         "avatar.uploaded.queue",
         handleSaveAvatar
       ),
-      User.init(),
+      User.syncIndexes(),
     ]);
+    logger.info("User servvice is running");
   } catch (error) {
     logger.error(error);
   }
@@ -89,6 +90,6 @@ const startServer = async () => {
 
 startServer();
 process.on("unhandledRejection", (error) => {
-  console.error(`unhandled rejection ${error}`);  
+  console.error(`unhandled rejection ${error}`);
   process.exit(1);
 });

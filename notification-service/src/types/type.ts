@@ -1,7 +1,8 @@
 import { Types } from "mongoose";
 
-export interface Notification {
+export interface NotificationInterface {
   from: Types.ObjectId;
-  to: Types.ObjectId
+  to: Types.ObjectId;
+  read: boolean;
+  type: "Accepted" | "Pending" | "Declined";
 }
-

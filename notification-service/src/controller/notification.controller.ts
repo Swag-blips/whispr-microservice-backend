@@ -10,8 +10,15 @@ export const getNotification = async (req: Request, res: Response) => {
     const userId = req.userId;
 
     const notifications = await Notification.find({
-      to: userId,
-    }).populate("from", "username avatar bio", User);
+      $or: [
+        { to: userId },
+        { from: userId, type: "Accepted" },
+        { from: userId, type: "Declined" },
+      ],
+    })
+      .populate("from", "username avatar bio", User)
+      .populate("to", "username avatar bio", User)
+      .lean();
 
     if (!notifications.length) {
       res.status(200).json({ sucess: false, notifications: [] });
@@ -89,7 +96,7 @@ export const getUnreadNotifications = async (req: Request, res: Response) => {
     res.status(200).json({ success: true, notifications });
     return;
   } catch (error) {
-    logger.error(error);
+    logger.error(error); 
     res.status(500).json({
       error: error,
     });

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { NotificationInterface } from "../types/type";
 
 const notificationSchema = new mongoose.Schema(
   {
@@ -29,6 +30,6 @@ const notificationSchema = new mongoose.Schema(
 
 notificationSchema.index({ from: 1 });
 notificationSchema.index({ to: 1 });
-const Notification = mongoose.model("Notification", notificationSchema);
+const Notification = mongoose.model<NotificationInterface>("Notification", notificationSchema);
 
 export default Notification;
