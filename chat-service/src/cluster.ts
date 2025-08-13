@@ -78,7 +78,7 @@ if (cluster.isPrimary) {
       await redisClient.set(`currentChat:${userId}`, chatId);
       await markMessagesAsSeen(chatId, userId.toString());
     });
- 
+
     socket.on("startTyping", (data) => {
       const { chatId, userId } = data;
       socket.to(chatId).emit("userTyping", { chatId, userId });
@@ -86,7 +86,7 @@ if (cluster.isPrimary) {
 
     socket.on("stopTyping", (data) => {
       const { chatId } = data;
-      socket.to(chatId).emit("stopTyping");
+      socket.to(chatId).emit("stopTyping", { chatId, userId });
     });
 
     socket.on("leaveRoom", async (chatId) => {
