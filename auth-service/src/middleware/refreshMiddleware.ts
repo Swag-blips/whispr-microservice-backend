@@ -18,8 +18,6 @@ export const refreshMiddleware = (
     return;
   }
 
-  console.log(refreshToken);
-
   try {
     const decodedToken = jwt.verify(
       refreshToken,
@@ -46,3 +44,4 @@ export const refreshMiddleware = (
     }
   }
 };
+ 
