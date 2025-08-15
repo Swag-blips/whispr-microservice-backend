@@ -20,7 +20,8 @@ const addMessage = async (
   imagePath?: string,
   status?: string,
   fileType?: string,
-  fileName?: string
+  fileName?: string,
+  fileSize?: number
 ) => {
   let session: mongoose.mongo.ClientSession | null | undefined = null;
   let tempConnection: typeof mongoose | null = null;
@@ -50,6 +51,7 @@ const addMessage = async (
             ...(imagePath && { file: imagePath }),
             ...(status && { status: status }),
             ...(fileName && { fileName }),
+            ...(fileSize && { fileSize }),
           },
         ],
         { session }
@@ -97,6 +99,7 @@ const worker = new Worker(
       status?: string;
       fileType?: string;
       fileName?: string;
+      fileSize?: number;
     };
   }) => {
     try {
@@ -110,6 +113,7 @@ const worker = new Worker(
         status,
         fileName,
         fileType,
+        fileSize,
       } = job.data;
       await addMessage(
         content,
@@ -120,7 +124,8 @@ const worker = new Worker(
         imagePath,
         status,
         fileType,
-        fileName
+        fileName,
+        fileSize
       );
     } catch (error) {
       console.log(error);

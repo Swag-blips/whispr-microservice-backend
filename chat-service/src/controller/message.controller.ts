@@ -17,7 +17,7 @@ import { io } from "../server";
 export const sendMessage = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
-    const { content, file, tempId, fileType, fileName } = req.body;
+    const { content, file, tempId, fileType, fileName, fileSize } = req.body;
     const userId = req.userId;
 
     const permittedChats = await redisClient.smembers(
@@ -83,6 +83,7 @@ export const sendMessage = async (req: Request, res: Response) => {
           imagePath: file,
           fileType: fileType,
           fileName: fileName,
+          fileSize: fileSize,
           status:
             receiverCurrentChat === chatId
               ? "seen"
@@ -171,6 +172,7 @@ export const sendMessage = async (req: Request, res: Response) => {
           imagePath: file,
           fileType,
           fileName,
+          fileSize,
           status:
             receiverCurrentChat === chatId
               ? "seen"
@@ -212,7 +214,7 @@ export const getMessages = async (req: Request, res: Response) => {
     if (cached) {
       res.status(200).json({ success: true, messages: cached });
       return;
-    } 
+    }
 
     const messages = await Message.find({ chatId }).lean();
     if (!messages.length) {
@@ -613,7 +615,7 @@ export const getUserChats = async (req: Request, res: Response) => {
 export const sendGroupMessage = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
-    const { content, file, tempId, fileType, fileName } = req.body;
+    const { content, file, tempId, fileType, fileName, fileSize } = req.body;
     const userId = req.userId;
 
     const permittedChats = await redisClient.smembers(
@@ -632,7 +634,7 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
       if (!chat.participants.includes(userId)) {
         res.status(401).json({ success: false, message: "Not permitted" });
         return;
-      }
+      } 
 
       const receivers = chat.participants.filter(
         (user) => user.toString() !== userId
@@ -664,6 +666,7 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
           imagePath: file,
           fileType,
           fileName,
+          fileSize,
         },
         {
           attempts: 3,
@@ -723,6 +726,7 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
           imagePath: file,
           fileType: fileType,
           fileName: fileName,
+          fileSize: fileSize,
         },
         {
           attempts: 3,

@@ -26,6 +26,12 @@ const messageSchema = new mongoose.Schema(
     fileType: {
       type: String,
     },
+    fileName: {
+      type: String,
+    },
+    fileSize: {
+      type: Number,
+    },
     chatId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
