@@ -1,8 +1,11 @@
 import Joi from "joi";
 
 export const messageSchema = Joi.object({
-  content: Joi.string().required(),
+  content: Joi.string().optional(),
   tempId: Joi.string().uuid().required(),
+  file: Joi.string().uri(),
+  fileType: Joi.string(),
+  fileName: Joi.string(),
 });
 
 export const createGroupSchema = Joi.object({

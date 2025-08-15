@@ -23,10 +23,13 @@ const messageSchema = new mongoose.Schema(
     content: {
       type: String,
     },
+    fileType: {
+      type: String,
+    },
     chatId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
-      required: true, 
+      required: true,
     },
     status: {
       type: String,
@@ -38,12 +41,18 @@ const messageSchema = new mongoose.Schema(
       enum: ["text", "file", "system"],
       default: "text",
     },
-  
+
     systemAction: {
       type: String,
-      enum: ["user_removed", "user_added", "left_group", "group_renamed", "user_promoted"],
+      enum: [
+        "user_removed",
+        "user_added",
+        "left_group",
+        "group_renamed",
+        "user_promoted",
+      ],
     },
-   
+
     meta: {
       type: mongoose.Schema.Types.Mixed,
     },

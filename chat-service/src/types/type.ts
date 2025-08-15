@@ -19,6 +19,7 @@ export interface MessageType {
     | "group_renamed"
     | "user_promoted";
   meta?: Record<string, any>;
+  fileType?: string;
 }
 
 export interface ChatSchema {

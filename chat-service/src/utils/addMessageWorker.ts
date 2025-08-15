@@ -1,7 +1,7 @@
 import { Queue, Worker } from "bullmq";
 import redisClient from "../config/redis";
 import Message from "../models/message.model";
-import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
+import { UploadApiResponse } from "cloudinary";
 import logger from "./logger";
 import mongoose, { Types } from "mongoose";
 import { connection } from "../config/dbConnect";
@@ -18,9 +18,10 @@ const addMessage = async (
   receiverId?: Types.ObjectId,
   receivers?: Array<Types.ObjectId>,
   imagePath?: string,
-  status?: string
+  status?: string,
+  fileType?: string,
+  fileName?: string
 ) => {
-  let result: UploadApiResponse | null = null;
   let session: mongoose.mongo.ClientSession | null | undefined = null;
   let tempConnection: typeof mongoose | null = null;
 
@@ -32,14 +33,6 @@ const addMessage = async (
       );
     }
 
-    if (imagePath) {
-      result = await cloudinary.uploader.upload(imagePath, {
-        folder: "messages_images",
-        public_id: `message_${chatId}_${Date.now()}`,
-      });
-      logger.info("📸 Image uploaded successfully to Cloudinary");
-    }
-
     session = connection
       ? await connection.startSession()
       : await tempConnection?.startSession();
@@ -49,12 +42,14 @@ const addMessage = async (
         [
           {
             chatId,
-            content,
+            ...(content && { content }),
             ...(receiverId && { receiverId }),
             ...(receivers?.length && { receivers }),
+            ...(fileType && { fileType }),
             senderId: userId,
-            ...(result?.secure_url && { file: result.secure_url }),
+            ...(imagePath && { file: imagePath }),
             ...(status && { status: status }),
+            ...(fileName && { fileName }),
           },
         ],
         { session }
@@ -100,6 +95,8 @@ const worker = new Worker(
       userId: Types.ObjectId;
       imagePath?: string;
       status?: string;
+      fileType?: string;
+      fileName?: string;
     };
   }) => {
     try {
@@ -111,6 +108,8 @@ const worker = new Worker(
         imagePath,
         receivers,
         status,
+        fileName,
+        fileType,
       } = job.data;
       await addMessage(
         content,
@@ -119,7 +118,9 @@ const worker = new Worker(
         receiverId,
         receivers,
         imagePath,
-        status
+        status,
+        fileType,
+        fileName
       );
     } catch (error) {
       console.log(error);

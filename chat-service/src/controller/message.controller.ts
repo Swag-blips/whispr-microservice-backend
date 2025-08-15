@@ -17,7 +17,7 @@ import { io } from "../server";
 export const sendMessage = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
-    const { content, file, tempId } = req.body;
+    const { content, file, tempId, fileType, fileName } = req.body;
     const userId = req.userId;
 
     const permittedChats = await redisClient.smembers(
@@ -56,6 +56,8 @@ export const sendMessage = async (req: Request, res: Response) => {
         senderId: userId,
         tempId: tempId,
         receiverId: receiverId,
+        ...(file && { file }),
+        ...(fileType && { fileType }),
         chatId: chatId,
         createdAt: new Date(),
         messageType: "text",
@@ -78,8 +80,9 @@ export const sendMessage = async (req: Request, res: Response) => {
           chatId: chatId,
           userId: userId,
           receiverId: receiverId,
-
           imagePath: file,
+          fileType: fileType,
+          fileName: fileName,
           status:
             receiverCurrentChat === chatId
               ? "seen"
@@ -137,6 +140,8 @@ export const sendMessage = async (req: Request, res: Response) => {
         content: content,
         senderId: userId,
         tempId: tempId,
+        ...(file && { file }),
+        ...(fileType && { fileType }),
         receiverId: receiverId,
         chatId: chatId,
         createdAt: new Date(),
@@ -164,6 +169,8 @@ export const sendMessage = async (req: Request, res: Response) => {
           userId: userId,
           receiverId: receiverId,
           imagePath: file,
+          fileType,
+          fileName,
           status:
             receiverCurrentChat === chatId
               ? "seen"
@@ -195,7 +202,6 @@ export const sendMessage = async (req: Request, res: Response) => {
 export const getMessages = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
-    const userId = req.userId;
 
     if (!chatId) {
       res.status(400).json({ success: false, message: "Chat Id is required" });
@@ -206,7 +212,7 @@ export const getMessages = async (req: Request, res: Response) => {
     if (cached) {
       res.status(200).json({ success: true, messages: cached });
       return;
-    }
+    } 
 
     const messages = await Message.find({ chatId }).lean();
     if (!messages.length) {
@@ -607,7 +613,7 @@ export const getUserChats = async (req: Request, res: Response) => {
 export const sendGroupMessage = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
-    const { content, file, tempId } = req.body;
+    const { content, file, tempId, fileType, fileName } = req.body;
     const userId = req.userId;
 
     const permittedChats = await redisClient.smembers(
@@ -636,6 +642,8 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
         _id: tempId,
         tempId: tempId,
         content: content,
+        ...(file && { file }),
+        ...(fileType && { fileType }),
         senderId: userId,
         receivers: receivers,
         chatId: chatId,
@@ -654,6 +662,8 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
           receivers: receivers,
           userId: userId,
           imagePath: file,
+          fileType,
+          fileName,
         },
         {
           attempts: 3,
@@ -698,6 +708,8 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
         senderId: userId,
         receivers: receivers,
         chatId: chatId,
+        ...(file && { file }),
+        ...(fileType && { fileType }),
         createdAt: new Date(),
       });
 
@@ -709,6 +721,8 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
           receivers: receivers,
           userId: userId,
           imagePath: file,
+          fileType: fileType,
+          fileName: fileName,
         },
         {
           attempts: 3,
