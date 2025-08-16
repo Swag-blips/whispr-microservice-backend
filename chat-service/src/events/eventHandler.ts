@@ -22,7 +22,7 @@ export const handleCreateChat = async (content: ChatCreatedEvent) => {
   } catch (error) {
     logger.error("error creating a chat", error);
   }
-};
+}; 
 
 let session: mongoose.mongo.ClientSession | undefined;
 export const handleDeleteFriends = async (content: ChatDeletedEvent) => {

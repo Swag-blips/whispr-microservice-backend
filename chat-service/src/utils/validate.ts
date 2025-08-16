@@ -6,6 +6,7 @@ export const messageSchema = Joi.object({
   file: Joi.string().uri(),
   fileType: Joi.string(),
   fileName: Joi.string(),
+  fileSize: Joi.number(),
 });
 
 export const createGroupSchema = Joi.object({
