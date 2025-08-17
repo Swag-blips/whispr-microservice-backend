@@ -21,10 +21,10 @@ const messageSchema = new mongoose.Schema(
       },
     ], 
     content: {
-      type: String,
+      type: String, 
     },
     fileType: {
-      type: String,
+      type: String, 
     },
     fileName: {
       type: String,
@@ -32,7 +32,7 @@ const messageSchema = new mongoose.Schema(
     fileSize: {
       type: Number,
     },
-    chatId: {
+    chatId: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
       required: true,

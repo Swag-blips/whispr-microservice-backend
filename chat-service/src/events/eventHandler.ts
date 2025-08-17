@@ -7,27 +7,31 @@ import Message from "../models/message.model";
 import redisClient from "../config/redis";
 
 export const handleCreateChat = async (content: ChatCreatedEvent) => {
-  logger.info("handle create chat event");
   try {
     const { participants } = content;
 
-    await redisClient.del(`userChats${participants[0]}`);
-    await redisClient.del(`userChats${participants[1]}`);
+    await Promise.all([
+      redisClient.del(`userChats${participants[0]}`),
+      redisClient.del(`userChats${participants[1]}`),
+      redisClient.del(`permittedChats${participants[0]}`),
+      redisClient.del(`permittedChats${participants[1]}`),
+    ]);
 
     await Chat.create({
-      participants,
-      type: "private",
+      participants, 
+      type: "private", 
     });
     logger.info("Chat created successfully");
   } catch (error) {
     logger.error("error creating a chat", error);
+    console.log(error);
   }
-}; 
+};
 
-let session: mongoose.mongo.ClientSession | undefined;
+let session: mongoose.mongo.ClientSession | undefined; 
 export const handleDeleteFriends = async (content: ChatDeletedEvent) => {
   try {
-    const { user1, user2 } = content;
+    const { user1, user2 } = content; 
     session = await connection?.startSession();
 
     await session?.withTransaction(async () => {
