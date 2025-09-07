@@ -15,15 +15,15 @@ import {
 } from "./events/eventHandler";
 import notificationRoutes from "../src/routes/notification.route";
 import cookieParser from "cookie-parser";
-
+  
 if (
-  process.env.NODE_ENV === "production" ||
+  process.env.NODE_ENV === "production" || 
   process.env.RUNNING_IN_DOCKER === "true"
 ) {
   dotenv.config({ path: ".env.docker" });
 } else {
   dotenv.config({ path: ".env.local" });
-}
+} 
 
 const app = express();
 

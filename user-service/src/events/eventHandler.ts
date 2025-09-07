@@ -49,6 +49,8 @@ export const handleAddFriends = async (content: IncomingFriendsMessage) => {
         { session }
       );
     });
+
+    
   } catch (error) {
     logger.error("Transaction failed", error);
   } finally {

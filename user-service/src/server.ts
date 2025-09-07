@@ -75,16 +75,16 @@ const startServer = async () => {
       consumeEvent<IncomingFriendsMessage>(
         "friends.accept.created",
         "friends.accept.create.queue",
-        handleAddFriends
+        handleAddFriends 
       ),
       consumeEvent<IncomingProfilePic>(
         "avatar.uploaded",
-        "avatar.uploaded.queue",
+        "avatar.uploaded.queue", 
         handleSaveAvatar
-      ),
-      User.syncIndexes(),
+      ), 
+      User.syncIndexes(), 
     ]);
-    logger.info("User servvice is running");
+    logger.info("User servvice is running"); 
   } catch (error) {
     logger.error(error);
   }

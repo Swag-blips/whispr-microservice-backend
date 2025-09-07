@@ -18,15 +18,6 @@ export const sendMessage = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
     const { content, file, tempId, fileType, fileName, fileSize } = req.body;
-
-    console.log("payload", {
-      content,
-      file,
-      tempId,
-      fileType,
-      fileName,
-      fileSize, 
-    });
     const userId = req.userId;
 
     const permittedChats = await redisClient.smembers(

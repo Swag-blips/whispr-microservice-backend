@@ -21,6 +21,7 @@ import {
 } from "./utils/fetchPermissions";
 import { io, server, startServer } from "./server";
 import connectToMongo from "./config/dbConnect";
+import { joinRoom } from "./utils/joinRoom";
 
 const numOfCpus = os.cpus().length;
 const PORT = process.env.PORT || 3005;
@@ -64,8 +65,8 @@ if (cluster.isPrimary) {
     if (userId) {
       await updateMessagesToDelivered(userId);
       await redisClient.sadd("onlineUsers", userId.toString());
-
       socket.join(userId.toString());
+      await joinRoom(userId, socket);
     }
 
     const onlineUsers = await redisClient.smembers("onlineUsers");
@@ -73,13 +74,14 @@ if (cluster.isPrimary) {
     io.emit("onlineUsers", JSON.stringify(onlineUsers));
 
     socket.on("joinRoom", async (chatId) => {
-      logger.info("Socket joins room: " + chatId);
+      console.log("Socket joins room: " + chatId, userId);
       socket.join(chatId);
       await redisClient.set(`currentChat:${userId}`, chatId);
       await markMessagesAsSeen(chatId, userId.toString());
     });
 
     socket.on("startTyping", (data) => {
+      
       const { chatId, userId } = data;
       socket.to(chatId).emit("userTyping", { chatId, userId });
     });
@@ -90,31 +92,31 @@ if (cluster.isPrimary) {
     });
 
     socket.on("leaveRoom", async (chatId) => {
+      console.log("LEFT")
       socket.leave(chatId);
-      await redisClient.del(`currentChat:${userId}`, chatId);
+      await redisClient.del(`currentChat:${userId}`);
     });
 
     if (userId) {
       await fetchPermissions(userId);
-    }
+    }  
 
     socket.on("disconnect", async () => {
       logger.info(`User disconnected from socket ${socket.id}`);
 
       socket.leave(userId.toString());
 
-      const [onlineUsers, permissions, userChats, currentChat] =
-        await Promise.all([
-          redisClient.srem("onlineUsers", userId.toString()),
-          invalidatePermissions(userId),
-          redisClient.del(`userChats:${userId}`),
-          redisClient.del(`currentChat:${userId}`),
-        ]);
+      const [onlineUsers, permissions, userChats] = await Promise.all([
+        redisClient.srem("onlineUsers", userId.toString()),
+        invalidatePermissions(userId),
+        redisClient.del(`userChats:${userId}`),
+        // redisClient.del(`currentChat:${userId}`),
+      ]);
       const newOnlineUsers = await redisClient.smembers("onlineUsers");
       io.emit("onlineUsers", JSON.stringify(newOnlineUsers));
 
       logger.info(
-        `Clean up done on disconnect: ${onlineUsers}, ${permissions}, ${userChats}, ${currentChat}`
+        `Clean up done on disconnect: ${onlineUsers}, ${permissions}, ${userChats}`
       );
     });
   });

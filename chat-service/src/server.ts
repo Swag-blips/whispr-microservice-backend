@@ -34,6 +34,8 @@ export const io = new Server(server, {
   cors: {
     origin: "*",
   },
+  pingInterval: 10000,
+  pingTimeout: 20000,
   allowEIO3: true,
 });
 
@@ -65,9 +67,10 @@ export const startServer = async () => {
   } catch (error) {
     logger.error(error);
   }
-};
+}; 
 
 process.on("unhandledRejection", (error) => {
   console.error(`unhandled rejection ${error}`);
-  process.exit(1);
+  process.exit(1); 
 });
+ 
