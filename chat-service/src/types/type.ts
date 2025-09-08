@@ -20,6 +20,10 @@ export interface MessageType {
     | "user_promoted";
   meta?: Record<string, any>;
   fileType?: string;
+  file?: string;
+  fileName?: string;
+  fileSize?: number;
+  starredBy?: Array<Types.ObjectId>;
 }
 
 export interface ChatSchema {

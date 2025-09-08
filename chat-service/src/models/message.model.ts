@@ -19,12 +19,12 @@ const messageSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
-    ], 
+    ],
     content: {
-      type: String, 
+      type: String,
     },
     fileType: {
-      type: String, 
+      type: String,
     },
     fileName: {
       type: String,
@@ -32,7 +32,7 @@ const messageSchema = new mongoose.Schema(
     fileSize: {
       type: Number,
     },
-    chatId: { 
+    chatId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
       required: true,
@@ -62,6 +62,12 @@ const messageSchema = new mongoose.Schema(
     meta: {
       type: mongoose.Schema.Types.Mixed,
     },
+    starredBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );

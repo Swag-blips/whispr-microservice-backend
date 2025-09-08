@@ -22,3 +22,8 @@ export const addToGroupSchema = Joi.object({
 export const removeFromGroupSchema = Joi.object({
   memberId: Joi.string().required(),
 });
+
+
+export const starMessageSchema = Joi.object({
+  messageId: Joi.string().required()
+})

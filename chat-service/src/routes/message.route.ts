@@ -3,11 +3,14 @@ import authenticateRequest from "../middleware/authenticateRequest";
 import {
   addMemberToGroup,
   createGroup,
+  getChatFiles,
   getMessages,
+  getStarredMessages,
   getUserChats,
   removeMemberFromGroup,
   sendGroupMessage,
   sendMessage,
+  starMessage,
   updateGroupDetails,
 } from "../controller/message.controller";
 import validateRequest from "../middleware/validateRequest";
@@ -16,10 +19,10 @@ import {
   createGroupSchema,
   messageSchema,
   removeFromGroupSchema,
+  starMessageSchema,
 } from "../utils/validate";
 
 const router = express.Router();
-
 
 router.post(
   "/message/:chatId",
@@ -59,6 +62,18 @@ router.post(
   sendGroupMessage
 );
 
+router.get(
+  "/starred-messages/:chatId",
+  authenticateRequest,
+  getStarredMessages
+);
+router.post(
+  "/star-message/:chatId",
+  validateRequest(starMessageSchema),
+  authenticateRequest,
+  starMessage
+);
 
+router.get("/chat-files/:chatId", authenticateRequest, getChatFiles);
 
 export default router;

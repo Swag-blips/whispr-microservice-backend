@@ -749,3 +749,122 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
     res.status(500).json({ error: error });
   }
 };
+
+export const getChatFiles = async (req: Request, res: Response) => {
+  try {
+    const chatId = req.params.chatId;
+    const userId = req.userId;
+
+    if (!chatId) {
+      res.status(400).json({ success: false, message: "Chat Id is required" });
+      return;
+    }
+
+    const files = await Message.find({
+      senderId: userId,
+      chatId,
+      file: { $exists: true },
+    }).lean();
+
+    res.status(200).json({
+      success: true,
+      message: "Files fetched successfully",
+      data: files,
+    });
+
+    return;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error });
+  }
+};
+
+export const starMessage = async (req: Request, res: Response) => {
+  try {
+    const chatId = req.params.chatId;
+    const { messageId } = req.body;
+
+    const userId = req.userId;
+    if (!chatId) {
+      res.status(400).json({ success: false, message: "Chat Id is required" });
+      return;
+    }
+
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) {
+      res.status(404).json({ success: false, message: "Chat does not exist" });
+      return;
+    }
+
+    if (!chat.participants.includes(userId)) {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      res.status(404).json({ success: false, message: "message not found" });
+      return;
+    }
+
+    if (message.starredBy?.includes(userId)) {
+      res
+        .status(400)
+        .json({ success: false, message: " You already starred this message" });
+
+      return;
+    }
+
+    if (!message.starredBy) {
+      message.starredBy = [];
+    }
+
+    message.starredBy.push(userId);
+    await message.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Message starred successfully",
+    });
+
+    return;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error });
+  }
+};
+
+export const getStarredMessages = async (req: Request, res: Response) => {
+  try {
+    const chatId = req.params.chatId;
+    const userId = req.userId;
+
+    if (!chatId) {
+      res.status(400).json({ success: false, message: "Chat Id is required" });
+      return;
+    }
+
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) {
+      res.status(404).json({ success: false, message: "Chat does not exist" });
+      return;
+    }
+
+    const messages = await Message.find({
+      chatId,
+      starredBy: { $in: [userId] },
+    }).lean();
+
+    res.status(200).json({
+      success: true,
+      message: "starred messages fetched successfully",
+      data: messages,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error });
+  }
+};
