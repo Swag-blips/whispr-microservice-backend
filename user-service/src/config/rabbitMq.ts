@@ -10,7 +10,7 @@ const MAX_RETRIES = 5;
 const RETRY_DELAY = 10000;
 const RETRY_QUEUE = "user.create.retry.queue";
 
-export async function connectToRabbitMq(retries = 5) {
+export async function connectToRabbitMq(retries = 10) {
   while (retries) {
     try {
       connection = await amq.connect(process.env.RABBITMQ_URL as string);

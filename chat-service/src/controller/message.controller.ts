@@ -50,6 +50,8 @@ export const sendMessage = async (req: Request, res: Response) => {
         `currentChat:${receiverId}`
       );
 
+      console.log("RECEIVER", receiver);
+
       io.to(chatId).emit("newMessage", {
         _id: tempId,
         content: content,
@@ -62,7 +64,7 @@ export const sendMessage = async (req: Request, res: Response) => {
         createdAt: new Date(),
         messageType: "text",
         status:
-          receiverCurrentChat === chatId
+          receiverCurrentChat === chatId && receiver
             ? "seen"
             : receiverCurrentChat !== chatId && receiver
             ? "delivered"
@@ -85,7 +87,7 @@ export const sendMessage = async (req: Request, res: Response) => {
           fileName: fileName,
           fileSize: fileSize,
           status:
-            receiverCurrentChat === chatId
+            receiverCurrentChat === chatId && receiver
               ? "seen"
               : receiverCurrentChat !== chatId && receiver
               ? "delivered"
@@ -148,7 +150,7 @@ export const sendMessage = async (req: Request, res: Response) => {
         createdAt: new Date(),
         messageType: "text",
         status:
-          receiverCurrentChat === chatId
+          receiverCurrentChat === chatId && receiver
             ? "seen"
             : receiverCurrentChat !== chatId && receiver
             ? "delivered"
@@ -174,7 +176,7 @@ export const sendMessage = async (req: Request, res: Response) => {
           fileName,
           fileSize,
           status:
-            receiverCurrentChat === chatId
+            receiverCurrentChat === chatId && receiver
               ? "seen"
               : receiverCurrentChat !== chatId && receiver
               ? "delivered"

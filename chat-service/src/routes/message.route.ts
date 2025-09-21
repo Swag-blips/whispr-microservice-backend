@@ -67,13 +67,14 @@ router.get(
   authenticateRequest,
   getStarredMessages
 );
+
 router.post(
   "/star-message/:chatId",
   validateRequest(starMessageSchema),
   authenticateRequest,
   starMessage
 );
-
+ 
 router.get("/chat-files/:chatId", authenticateRequest, getChatFiles);
 
 export default router;
