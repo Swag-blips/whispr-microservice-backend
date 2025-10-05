@@ -763,7 +763,7 @@ export const getChatFiles = async (req: Request, res: Response) => {
     }
 
     const files = await Message.find({
-      senderId: userId,
+  
       chatId,
       file: { $exists: true },
     }).lean();
