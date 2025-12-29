@@ -16,8 +16,7 @@ export const handleFriendRequestNotification = async (
     });
 
     const client = clients.get(event.to);
-    console.log(clients.keys());
-    console.log("event", event);
+
 
     if (client) {
       const sender = await User.findById(event.from).lean();
@@ -62,7 +61,7 @@ export const handleFriendRequestAccept = async (event: NotificationEvent) => {
       to: event.to,
     });
 
-    console.log("NOTIFICATION", notification);
+ 
 
     if (!notification) {
       return;

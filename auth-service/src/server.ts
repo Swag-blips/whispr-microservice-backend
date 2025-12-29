@@ -19,7 +19,7 @@ if (
   process.env.NODE_ENV === "production" ||
   process.env.RUNNING_IN_DOCKER === "true"
 ) {
-  dotenv.config({ path: ".env.docker" });
+  dotenv.config({ path: ".env.production" });
 } else {
   dotenv.config({ path: ".env.local" });
 }
