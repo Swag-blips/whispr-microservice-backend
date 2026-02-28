@@ -14,6 +14,27 @@ const proxyOptions = {
       error: err,
     });
   },
+  preserveHeaderKeyCase: true,
+  followRedirects: true,
+  changeOrigin: true,
+  pathRewrite: {
+    "^/v1": "/api",
+  },
+  onProxyReq: (proxyReq: any, req: Request, res: Response) => {
+    if (req.headers.authorization) {
+      proxyReq.setHeader("Authorization", req.headers.authorization);
+    }
+    if (req.headers.cookie) {
+      proxyReq.setHeader("Cookie", req.headers.cookie);
+    }
+  },
+  onError: (err: Error, req: Request, res: Response) => {
+    logger.error(`proxy error: ${err.message}`, { url: req.url });
+    res.status(503).json({
+      message: "Service unavailable",
+      error: err.message,
+    });
+  },
 };
 
 export default proxyOptions;
