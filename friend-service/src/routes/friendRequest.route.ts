@@ -1,5 +1,6 @@
 import express from "express";
 import authenticateRequest from "../middleware/authenticateRequest";
+import validateFriendRequest from "../middleware/validateFriendRequest";
 import {
   acceptFriendRequest,
   declineFriendRequest,
@@ -8,9 +9,9 @@ import {
 
 const router = express.Router();
 
-router.post("/sendFriendRequest", authenticateRequest, sendFriendRequest);
+router.post("/sendFriendRequest", authenticateRequest, validateFriendRequest, sendFriendRequest);
 router.post("/acceptFriendRequest", authenticateRequest, acceptFriendRequest);
-router.get(
+router.delete(
   "/declineFriendRequest/:id",
   authenticateRequest,
   declineFriendRequest

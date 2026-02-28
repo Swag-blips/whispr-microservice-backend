@@ -18,7 +18,7 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
       return;
     }
 
-    if (receiverId !== senderId) {
+    if (receiverId === senderId) {
       res.status(400).json({
         success: false,
         message: "You cant send a request to yourself",
@@ -39,7 +39,7 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
       res.status(400).json({
         success: false,
         message:
-          "You’ve already sent a request or received one, no need to resend",
+          "You've already sent a request or received one, no need to resend",
       });
       return;
     }
@@ -150,7 +150,7 @@ export const declineFriendRequest = async (req: Request, res: Response) => {
       return;
     }
 
-    friendRequest.status = "Accepted";
+    friendRequest.status = "Declined";
     await friendRequest.save();
 
     await publishEvent("friendRequest.declined", {
