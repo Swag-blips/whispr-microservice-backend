@@ -122,6 +122,7 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
     await redisClient.del(`userChats:${receiverId}`);
 
     return;
+    
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: error });

@@ -10,7 +10,7 @@ interface DecodedUser {
 const authenticateRequest = (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const token = req.cookies.accessToken;
@@ -21,11 +21,11 @@ const authenticateRequest = (
 
     const decodedToken = jwt.verify(
       token,
-      process.env.JWT_SECRET_KEY as string,
+      process.env.JWT_SECRET_KEY as string
     ) as DecodedUser;
 
     if (decodedToken) {
-      req.userId = undefined;
+      req.userId = decodedToken.userId;
       next();
     }
   } catch (error) {

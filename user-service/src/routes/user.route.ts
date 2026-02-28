@@ -15,12 +15,13 @@ const router = express.Router();
 router.get("/friends", authenticateRequest, getFriends);
 router.get("/currentUser", authenticateRequest, getCurrentUser);
 router.get("/:username", authenticateRequest, getUser);
-router.post("/currentUser", authenticateRequest, updateUserInfo);
+router.put("/currentUser", authenticateRequest, updateUserInfo);
 router.post(
   "/friends/remove",
   authenticateRequest,
   validateRequest(removeFriendSchema),
-  removeFriend,
+  removeFriend
 );
+
 
 export default router;

@@ -28,30 +28,30 @@ router.post(
   "/message/:chatId",
   authenticateRequest,
   validateRequest(messageSchema),
-  sendMessage,
+  sendMessage
 );
 
 router.get("/message/:chatId", authenticateRequest, getMessages);
-router.get("/user-chats", authenticateRequest, getMessages);
+router.get("/user-chats", authenticateRequest, getUserChats);
 
 router.post(
   "/group",
   authenticateRequest,
   validateRequest(createGroupSchema),
-  createGroup,
+  createGroup
 );
 router.post(
   "/group/add/:chatId",
   authenticateRequest,
   validateRequest(addToGroupSchema),
-  addMemberToGroup,
+  addMemberToGroup
 );
 
 router.post(
   "/group/remove/:chatId",
   authenticateRequest,
   validateRequest(removeFromGroupSchema),
-  removeMemberFromGroup,
+  removeMemberFromGroup
 );
 
 router.put("/group/:chatId", authenticateRequest, updateGroupDetails);
@@ -59,22 +59,22 @@ router.post(
   "/group/:chatId",
   authenticateRequest,
   validateRequest(messageSchema),
-  sendGroupMessage,
+  sendGroupMessage
 );
 
 router.get(
   "/starred-messages/:chatId",
   authenticateRequest,
-  getStarredMessages,
+  getStarredMessages
 );
 
 router.post(
   "/star-message/:chatId",
   validateRequest(starMessageSchema),
   authenticateRequest,
-  starMessage,
+  starMessage
 );
-
+ 
 router.get("/chat-files/:chatId", authenticateRequest, getChatFiles);
 
 export default router;
