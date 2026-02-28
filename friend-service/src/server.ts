@@ -40,16 +40,42 @@ app.use(logRequests);
 
 app.use("/api/friend", friendRoutes);
 
+const checkDatabaseHealth = async (): Promise<boolean> => {
+  try {
+    logger.info("Performing database health check...");
+    await connectToMongo();
+    logger.info("Database connection health check passed");
+    return true;
+  } catch (error) {
+    logger.error(
+      `Database health check failed: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return false;
+  }
+};
+
 const startServer = async () => {
   try {
-    await connectToMongo();
+    logger.info("Starting friend service initialization...");
+
+    const isDatabaseHealthy = await checkDatabaseHealth();
+    if (!isDatabaseHealthy) {
+      logger.error(
+        "Failed to establish database connection. Server startup aborted."
+      );
+      process.exit(1);
+    }
+
     await connectToRabbitMq();
 
     app.listen(PORT, async () => {
       logger.info(`friend service is running on port ${PORT}`);
     });
   } catch (error) {
-    logger.error(error);
+    logger.error(
+      `Server startup failed: ${error instanceof Error ? error.message : String(error)}`
+    );
+    process.exit(1);
   }
 };
 

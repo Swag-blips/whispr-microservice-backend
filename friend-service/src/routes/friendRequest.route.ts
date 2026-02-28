@@ -16,4 +16,27 @@ router.delete(
   declineFriendRequest,
 );
 
+router.get("/health", async (req, res) => {
+  try {
+    res.status(200).json({
+      status: "ok",
+      message: "Friend service is healthy",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: "error",
+      message: "Friend service health check failed",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+router.get("/ping", (req, res) => {
+  res.status(200).json({
+    status: "pong",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 export default router;
