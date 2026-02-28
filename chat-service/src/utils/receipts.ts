@@ -40,10 +40,10 @@ export const updateMessagesToDelivered = async (userId: Types.ObjectId) => {
       },
       {
         $set: { status: "delivered" },
-      }
+      },
     );
 
-    logger.info("updated messages to delivered")  
+    logger.info("updated messages to delivered");
     return;
   } catch (error) {
     console.error("Failed to update messages to delivered:", error);
@@ -56,11 +56,11 @@ export const markMessagesAsSeen = async (chatId: string, userId: string) => {
       {
         chatId: chatId,
         receiverId: userId,
-        status: { $ne: "seen" },
+        status: "seen",
       },
       {
         $set: { status: "seen" },
-      }
+      },
     );
 
     io.to(chatId).emit("messagesSeen", { receiverId: userId, chatId });

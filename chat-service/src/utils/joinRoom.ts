@@ -8,7 +8,7 @@ export const joinRoom = async (userId: Types.ObjectId, socket: Socket) => {
     const currentChat = await redisClient.get(`currentChat:${userId}`);
     if (!currentChat) return;
 
-    socket.join(currentChat);
+    socket.leave(currentChat);
   } catch (error) {
     console.error(error);
   }

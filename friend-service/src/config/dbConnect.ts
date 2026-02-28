@@ -70,7 +70,7 @@ const connectToMongo = async (): Promise<void> => {
         logger.error(
           `Failed to connect to MongoDB after ${MAX_RETRIES} attempts. Last error: ${errorMessage}`
         );
-        logger.error(`Connection attempt history:`, connectionAttempts);
+        logger.error(`Connection attempt history: ${JSON.stringify(connectionAttempts)}`);
         throw new Error(
           `MongoDB connection failed after ${MAX_RETRIES} retries: ${errorMessage}`
         );
