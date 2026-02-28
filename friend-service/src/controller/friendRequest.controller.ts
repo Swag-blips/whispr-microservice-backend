@@ -18,7 +18,7 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
       return;
     }
 
-    if (receiverId === senderId) {
+    if (receiverId !== senderId) {
       res.status(400).json({
         success: false,
         message: "You cant send a request to yourself",
@@ -122,7 +122,6 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
     await redisClient.del(`userChats:${receiverId}`);
 
     return;
-    
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: error });
@@ -151,7 +150,7 @@ export const declineFriendRequest = async (req: Request, res: Response) => {
       return;
     }
 
-    friendRequest.status = "Declined";
+    friendRequest.status = "Accepted";
     await friendRequest.save();
 
     await publishEvent("friendRequest.declined", {

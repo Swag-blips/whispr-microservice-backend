@@ -25,7 +25,7 @@ const app = express();
 
 app.use(helmet());
 app.use(cors(corsOptions));
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json({ limit: "5bytes" }));
 
 app.use(errorHandler);
 app.use(limiter);
@@ -45,12 +45,12 @@ app.use(
 
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
       logger.info(
-        `response gotten from auth service ${proxyRes.statusCode} ${proxyResData}`
+        `response gotten from auth service ${proxyRes.statusCode} ${proxyResData}`,
       );
 
       return proxyResData;
     },
-  })
+  }),
 );
 
 app.use(
@@ -67,12 +67,12 @@ app.use(
 
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
       logger.info(
-        `response gotten from user service ${proxyRes.statusCode} ${proxyResData}`
+        `response gotten from user service ${proxyRes.statusCode} ${proxyResData}`,
       );
 
       return proxyResData;
     },
-  })
+  }),
 );
 
 app.use(
@@ -88,12 +88,12 @@ app.use(
     },
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
       logger.info(
-        `response gotten from friend service ${proxyRes.statusCode} ${proxyResData}`
+        `response gotten from friend service ${proxyRes.statusCode} ${proxyResData}`,
       );
 
       return proxyResData;
     },
-  })
+  }),
 );
 
 app.use(
@@ -109,12 +109,12 @@ app.use(
     },
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
       logger.info(
-        `response gotten from notification service ${proxyRes.statusCode} ${proxyResData}`
+        `response gotten from notification service ${proxyRes.statusCode} ${proxyResData}`,
       );
 
       return proxyResData;
     },
-  })
+  }),
 );
 
 app.use(
@@ -130,12 +130,12 @@ app.use(
     },
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
       logger.info(
-        `response gotten from chat service ${proxyRes.statusCode} ${proxyResData}`
+        `response gotten from chat service ${proxyRes.statusCode} ${proxyResData}`,
       );
 
       return proxyResData;
     },
-  })
+  }),
 );
 
 app.listen(PORT, () => {

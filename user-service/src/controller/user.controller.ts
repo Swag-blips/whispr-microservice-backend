@@ -40,7 +40,7 @@ export const getUser = async (req: Request, res: Response) => {
 
     const results = await User.find(
       { $text: { $search: username } },
-      { score: { $meta: "textScore" } }
+      { score: { $meta: "textScore" } },
     )
       .sort({ score: { $meta: "textScore" } })
       .limit(10)
@@ -48,7 +48,7 @@ export const getUser = async (req: Request, res: Response) => {
       .select("-email");
 
     const filteredResults = results.filter(
-      (user) => user._id.toString() !== userId.toString()
+      (user) => user._id.toString() !== userId.toString(),
     );
 
     res.status(200).json({ success: true, results: filteredResults });
@@ -58,7 +58,7 @@ export const getUser = async (req: Request, res: Response) => {
         `search:${username}`,
         JSON.stringify(filteredResults),
         "EX",
-        expiryTime
+        expiryTime,
       );
     }
 
@@ -123,7 +123,7 @@ export const updateUserInfo = async (req: Request, res: Response) => {
           },
           removeOnComplete: true,
           removeOnFail: true,
-        }
+        },
       );
     }
 
@@ -164,7 +164,7 @@ export const removeFriend = async (req: Request, res: Response) => {
         {
           $pull: { friends: friendId },
         },
-        { session }
+        { session },
       );
 
       await User.findByIdAndUpdate(
@@ -172,7 +172,7 @@ export const removeFriend = async (req: Request, res: Response) => {
         {
           $pull: { friends: userId },
         },
-        { session }
+        { session },
       );
     });
 
@@ -201,7 +201,7 @@ export const getFriends = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
 
-    const user = await User.findById(userId).lean();
+    const user = await User.findById(userId).select("-friends").lean();
 
     if (!user) {
       res.status(404).json({ success: false, message: "User not found" });
@@ -222,7 +222,7 @@ export const getFriends = async (req: Request, res: Response) => {
         return {
           ...friendDetails,
         };
-      })
+      }),
     );
 
     res.status(200).json({ success: true, friends });
