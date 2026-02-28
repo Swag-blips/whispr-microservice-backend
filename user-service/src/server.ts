@@ -51,12 +51,13 @@ app.use(express.json());
 const PORT = process.env.PORT || 3002;
 
 app.use(cookieParser());
-app.use(limiter);
 app.use(compression());
-app.use(errorHandler);
 app.use(logRequests);
+app.use(limiter);
 
-app.use("/api/user", limiter, userRoutes);
+app.use("/api/user", userRoutes);
+
+app.use(errorHandler);
 
 const startServer = async () => {
   try {

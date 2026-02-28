@@ -15,7 +15,12 @@ export const getUser = async (req: Request, res: Response) => {
 
     const userId = req.userId;
 
-    if (req.body.length > 0) {
+    if (!userId) {
+      res.status(401).json({ success: false, message: "User not authenticated" });
+      return;
+    }
+
+    if (req.body && Object.keys(req.body).length > 0) {
       res.status(400).json({ success: false, message: "body not allowed" });
       return;
     }
@@ -75,6 +80,11 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
 
+    if (!userId) {
+      res.status(401).json({ success: false, message: "User not authenticated" });
+      return;
+    }
+
     const cachedUser = await redisClient.get(`user:${userId}`);
 
     if (cachedUser) {
@@ -105,6 +115,12 @@ export const updateUserInfo = async (req: Request, res: Response) => {
   try {
     const { username, bio, avatar } = req.body;
     const userId = req.userId;
+
+    if (!userId) {
+      res.status(401).json({ success: false, message: "User not authenticated" });
+      return;
+    }
+
     const currentUser = await User.findById(userId);
     if (!currentUser) {
       res.status(404).json({ success: false, message: "user not found" });
@@ -148,6 +164,11 @@ export const removeFriend = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const { friendId } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ success: false, message: "User not authenticated" });
+      return;
+    }
 
     session = await connection?.startSession();
 
@@ -201,14 +222,19 @@ export const getFriends = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
 
-    const user = await User.findById(userId).select("-friends").lean();
+    if (!userId) {
+      res.status(401).json({ success: false, message: "User not authenticated" });
+      return;
+    }
+
+    const user = await User.findById(userId).lean();
 
     if (!user) {
       res.status(404).json({ success: false, message: "User not found" });
       return;
     }
 
-    if (!user.friends.length) {
+    if (!user.friends || user.friends.length === 0) {
       res.status(200).json({ success: true, friends: [] });
       return;
     }
