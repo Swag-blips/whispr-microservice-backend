@@ -26,12 +26,20 @@ app.use(
   cors({
     origin: ["http://localhost:3006", "https://whispr-liard.vercel.app"],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   })
 );
 
 app.use(cookieParser());
 app.use(helmet());
 app.use(express.json());
+
+app.use((req: Request, res: Response, next) => {
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
+
 const PORT = process.env.PORT || 3003;
 
 app.use(limiter);
