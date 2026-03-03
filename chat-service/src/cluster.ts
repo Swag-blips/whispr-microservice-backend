@@ -110,7 +110,7 @@ if (cluster.isPrimary) {
         redisClient.srem("onlineUsers", userId.toString()),
         invalidatePermissions(userId),
         redisClient.del(`userChats:${userId}`),
-        // redisClient.del(`currentChat:${userId}`),
+        redisClient.del(`currentChat:${userId}`),
       ]);
       const newOnlineUsers = await redisClient.smembers("onlineUsers");
       io.emit("onlineUsers", JSON.stringify(newOnlineUsers));
