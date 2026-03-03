@@ -56,7 +56,7 @@ export const markMessagesAsSeen = async (chatId: string, userId: string) => {
       {
         chatId: chatId,
         receiverId: userId,
-        status: "seen",
+        status: { $in: ["sent", "delivered"] },
       },
       {
         $set: { status: "seen" },
