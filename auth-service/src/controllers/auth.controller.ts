@@ -15,6 +15,10 @@ import {
 } from "../services/auth.service";
 import { publishEvent } from "../config/rabbitMq";
 import { queue as emailQueue } from "../utils/emailWorker";
+import {
+  accessTokenCookieOptions,
+  refreshTokenCookieOptions,
+} from "../utils/cookieOptions";
 
 export const register = async (req: Request, res: Response) => {
   logger.info("Registration endpoint hit");
@@ -147,19 +151,9 @@ export const verifyOtp = async (req: Request, res: Response) => {
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      maxAge: 15 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: false,
-      secure: false,
-      sameSite: "lax",
-      maxAge: 15 * 60 * 1000,
-    });
+    res.cookie("accessToken", accessToken, accessTokenCookieOptions);
 
     res.status(200).json({
       success: true,
@@ -208,12 +202,7 @@ export const refreshToken = async (req: Request, res: Response) => {
   try {
     const accessToken = generateAccessToken(userId);
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: false,
-      secure: false,
-      sameSite: "lax",
-      maxAge: 15 * 60 * 1000,
-    });
+    res.cookie("accessToken", accessToken, accessTokenCookieOptions);
     res.status(200).json({ success: true });
   } catch (error) {
     if (error instanceof Error) {
@@ -331,19 +320,9 @@ export const signInWithGoogle = async (req: Request, res: Response) => {
       const accessToken = generateAccessToken(createdUser._id);
       const refreshToken = generateRefreshToken(createdUser._id);
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 15 * 24 * 60 * 60 * 1000,
-      });
+      res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
-      res.cookie("accessToken", accessToken, {
-        httpOnly: false,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 15 * 60 * 1000,
-      });
+      res.cookie("accessToken", accessToken, accessTokenCookieOptions);
     } else {
       if (!user.providers.includes("google")) {
         user.providers.push("google");
@@ -353,19 +332,9 @@ export const signInWithGoogle = async (req: Request, res: Response) => {
       const accessToken = generateAccessToken(user._id);
       const refreshToken = generateRefreshToken(user._id);
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 15 * 24 * 60 * 60 * 1000,
-      });
+      res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
-      res.cookie("accessToken", accessToken, {
-        httpOnly: false,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 15 * 60 * 1000,
-      });
+      res.cookie("accessToken", accessToken, accessTokenCookieOptions);
     }
 
     res.status(201).json({
