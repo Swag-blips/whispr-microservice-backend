@@ -134,7 +134,7 @@ export const updateUserInfo = async (req: Request, res: Response) => {
 
     res
       .status(201)
-      .json({ success: false, message: "Profile updated successfully" });
+      .json({ success: true, message: "Profile updated successfully" });
     return;
   } catch (error) {
     logger.error("An error occured in the getCurrentUser controller", error);
