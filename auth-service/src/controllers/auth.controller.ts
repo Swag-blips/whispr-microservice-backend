@@ -259,6 +259,9 @@ export const signInWithGoogle = async (req: Request, res: Response) => {
 
     const response = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         code,
         client_id: process.env.GOOGLE_CLIENT_ID,
@@ -268,12 +271,13 @@ export const signInWithGoogle = async (req: Request, res: Response) => {
         access_type: "offline",
       }),
     });
-    const accessToken = await response.json();
+
+    const tokenData = await response.json();
+
     if (!response.ok) {
-      const errorDetails = await response.json();
       throw new Error(
         `Token Exchange Failed: ${
-          errorDetails.error_description || response.statusText
+          tokenData.error_description || response.statusText
         }`
       );
     }
@@ -282,7 +286,7 @@ export const signInWithGoogle = async (req: Request, res: Response) => {
       "https://www.googleapis.com/oauth2/v3/userinfo",
       {
         headers: {
-          Authorization: `Bearer ${accessToken.access_token}`,
+          Authorization: `Bearer ${tokenData.access_token}`,
         },
       }
     );
