@@ -22,6 +22,12 @@ router.post(
   validateRequest(removeFriendSchema),
   removeFriend
 );
+router.delete(
+  "/friends/remove",
+  authenticateRequest,
+  validateRequest(removeFriendSchema),
+  removeFriend
+);
 
 
 export default router;
