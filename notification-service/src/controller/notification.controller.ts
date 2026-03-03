@@ -4,7 +4,7 @@ import Notification from "../models/notification.model";
 import User from "../models/user.model";
 import { Types } from "mongoose";
 
-export const clients = new Map();
+export const clients = new Map<Types.ObjectId | string, Response>();
 export const getNotification = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
@@ -35,12 +35,8 @@ export const getNotification = async (req: Request, res: Response) => {
 
 export const getNotificationEvent = async (req: Request, res: Response) => {
   try {
-    const userId = req.query.userId;
+    const userId = req.userId;
 
-    if (!userId) {
-      res.status(400).json({ success: false, message: "Missing userId" });
-      return;
-    }
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
