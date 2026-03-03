@@ -11,8 +11,8 @@ export const handleCreateChat = async (content: ChatCreatedEvent) => {
     const { participants } = content;
 
     await Promise.all([
-      redisClient.del(`userChats${participants[0]}`),
-      redisClient.del(`userChats${participants[1]}`),
+      redisClient.del(`userChats:${participants[0]}`),
+      redisClient.del(`userChats:${participants[1]}`),
       redisClient.del(`permittedChats${participants[0]}`),
       redisClient.del(`permittedChats${participants[1]}`),
     ]);
