@@ -604,7 +604,9 @@ export const getUserChats = async (req: Request, res: Response) => {
 
     await redisClient.set(
       `userChats:${userId}`,
-      JSON.stringify(transformedChats)
+      JSON.stringify(transformedChats),
+      "EX",
+      300
     );
     res.status(200).json({ success: true, chats: transformedChats });
     return;
