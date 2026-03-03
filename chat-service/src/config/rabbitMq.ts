@@ -39,8 +39,8 @@ export const connectToRabbitMq = async (retries = 5) => {
 };
 
 export const consumeEvent = async <T>(
-  queueName: string,
   routingKey: string,
+  queueName: string,
   callback: (content: T) => void
 ) => {
   logger.info("consume event started");

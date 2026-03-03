@@ -124,14 +124,14 @@ if (cluster.isPrimary) {
   if (cluster.worker?.id === 1) {
     connectToRabbitMq();
     consumeEvent<ChatCreatedEvent>(
-      "chat.created.queue",
       "chat.created",
+      "chat.created.queue",
       handleCreateChat
     );
 
     consumeEvent<ChatDeletedEvent>(
-      "chat.deleted.queue",
       "chat.deleted",
+      "chat.deleted.queue",
       handleDeleteFriends
     );
   }
