@@ -423,6 +423,6 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     logger.error(error);
-    res.status(200).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
