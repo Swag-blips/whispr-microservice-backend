@@ -12,7 +12,7 @@ import { notificationSchema } from "../utils/validate";
 const router = express.Router();
 
 router.get("/", authenticateRequest, getNotification);
-router.get("/events", getNotificationEvent);
+router.get("/events", authenticateRequest, getNotificationEvent);
 router.post(
   "/mark-as-read",
   validateRequest(notificationSchema),
