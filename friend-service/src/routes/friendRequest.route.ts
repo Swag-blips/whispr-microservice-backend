@@ -3,6 +3,7 @@ import authenticateRequest from "../middleware/authenticateRequest";
 import {
   acceptFriendRequest,
   declineFriendRequest,
+  getPendingRequests,
   sendFriendRequest,
 } from "../controller/friendRequest.controller";
 
@@ -10,11 +11,12 @@ const router = express.Router();
 
 router.post("/sendFriendRequest", authenticateRequest, sendFriendRequest);
 router.post("/acceptFriendRequest", authenticateRequest, acceptFriendRequest);
-router.get(
+router.put(
   "/declineFriendRequest/:id",
   authenticateRequest,
   declineFriendRequest,
 );
+router.get("/pendingRequests", authenticateRequest, getPendingRequests);
 
 router.get("/health", async (req, res) => {
   try {

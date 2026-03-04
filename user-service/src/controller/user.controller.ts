@@ -179,6 +179,8 @@ export const removeFriend = async (req: Request, res: Response) => {
     logger.info("TRANSACTION COMPLETE");
     await invalidatePermissions(userId);
     await invalidatePermissions(friendId);
+    await redisClient.del(`friends:${userId}`);
+    await redisClient.del(`friends:${friendId}`);
 
     publishEvent("chat.deleted", {
       user1: userId,
@@ -201,6 +203,13 @@ export const getFriends = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
 
+    // (3) Redis cache read
+    const cachedFriends = await redisClient.get(`friends:${userId}`);
+    if (cachedFriends) {
+      res.status(200).json({ success: true, friends: JSON.parse(cachedFriends) });
+      return;
+    }
+
     const user = await User.findById(userId).lean();
 
     if (!user) {
@@ -213,16 +222,20 @@ export const getFriends = async (req: Request, res: Response) => {
       return;
     }
 
-    const friends = await Promise.all(
-      user.friends.map(async (friend) => {
-        const friendDetails = await User.findById(friend)
-          .lean()
-          .select("username avatar _id bio");
+    // (1) Single query replacing the N+1 pattern
+    const friendsRaw = await User.find({ _id: { $in: user.friends } })
+      .lean()
+      .select("username avatar _id bio");
 
-        return {
-          ...friendDetails,
-        };
-      })
+    // (2) Filter out null entries (deleted users)
+    const friends = friendsRaw.filter((friend) => friend !== null && friend !== undefined);
+
+    // (3) Redis cache write with 60-second TTL
+    await redisClient.set(
+      `friends:${userId}`,
+      JSON.stringify(friends),
+      "EX",
+      60
     );
 
     res.status(200).json({ success: true, friends });
