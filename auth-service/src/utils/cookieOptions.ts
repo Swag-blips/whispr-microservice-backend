@@ -1,7 +1,7 @@
 export const isProduction = process.env.NODE_ENV === 'production';
 
 export const accessTokenCookieOptions = {
-  httpOnly: false,
+  httpOnly: true,
   secure: isProduction,
   sameSite: 'lax' as const,
   maxAge: 15 * 60 * 1000, // 15 minutes in milliseconds
