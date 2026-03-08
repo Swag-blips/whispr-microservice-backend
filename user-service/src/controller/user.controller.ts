@@ -91,7 +91,8 @@ export const getCurrentUser = async (req: Request, res: Response) => {
       return;
     }
 
-    await redisClient.set(`user:${userId}`, JSON.stringify(currentUser));
+    const USER_CACHE_TTL = 5 * 60;
+    await redisClient.set(`user:${userId}`, JSON.stringify(currentUser), "EX", USER_CACHE_TTL);
 
     res.status(200).json({ success: true, currentUser });
     return;
