@@ -169,3 +169,27 @@ export const declineFriendRequest = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getPendingRequests = async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId;
+
+    const pendingRequests = await FriendRequest.find({
+      to: userId,
+      status: "Pending",
+    });
+
+    res.status(200).json({ success: true, data: pendingRequests });
+    return;
+  } catch (error) {
+    logger.error(error);
+
+    if (error instanceof Error) {
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        details: error.message,
+      });
+    }
+  }
+};
