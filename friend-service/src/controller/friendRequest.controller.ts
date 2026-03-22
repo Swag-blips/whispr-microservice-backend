@@ -151,6 +151,14 @@ export const declineFriendRequest = async (req: Request, res: Response) => {
       return;
     }
 
+    if (friendRequest.to.toString() !== req.userId) {
+      res.status(403).json({
+        success: false,
+        message: "You are not authorized to decline this friend request",
+      });
+      return;
+    }
+
     friendRequest.status = "Declined";
     await friendRequest.save();
 
