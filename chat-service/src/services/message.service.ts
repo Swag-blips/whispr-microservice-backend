@@ -15,7 +15,7 @@ import { io } from "../server";
 
 export const sendMessageService = async (params: {
   chatId: string;
-  userId: string;
+  userId: Types.ObjectId;
   content: string;
   file?: string;
   tempId?: string;
@@ -23,7 +23,16 @@ export const sendMessageService = async (params: {
   fileName?: string;
   fileSize?: number;
 }) => {
-  const { chatId, userId, content, file, tempId, fileType, fileName, fileSize } = params;
+  const {
+    chatId,
+    userId,
+    content,
+    file,
+    tempId,
+    fileType,
+    fileName,
+    fileSize,
+  } = params;
 
   const permittedChats = await redisClient.smembers(`permittedChats${userId}`);
   const chatParticipants = await redisClient.smembers(`permissions${chatId}`);
@@ -35,23 +44,23 @@ export const sendMessageService = async (params: {
       throw new Error("Chat not found");
     }
 
-    if (!chat.participants.includes(userId)) {
+    if (!chat.participants.some((p) => p.toString() === userId.toString())) {
       throw new Error("Not permitted");
     }
 
     const receiverId = chat.participants.find(
-      (user) => user.toString() !== userId
+      (user) => user.toString() !== userId.toString(),
     );
 
     const receiver = await redisClient.sismember(
       "onlineUsers",
-      receiverId as unknown as string
+      receiverId as unknown as string,
     );
     const receiverCurrentChat = await redisClient.get(
-      `currentChat:${receiverId}`
+      `currentChat:${receiverId}`,
     );
 
-    io.to(chatId).emit("newMessage", {
+    io.emit("newMessage", {
       _id: tempId,
       content: content,
       senderId: userId,
@@ -66,8 +75,8 @@ export const sendMessageService = async (params: {
         receiverCurrentChat === chatId && receiver
           ? "seen"
           : receiverCurrentChat !== chatId && receiver
-          ? "delivered"
-          : "sent",
+            ? "delivered"
+            : "sent",
     });
 
     await addMessageQueue.add(
@@ -85,21 +94,21 @@ export const sendMessageService = async (params: {
           receiverCurrentChat === chatId && receiver
             ? "seen"
             : receiverCurrentChat !== chatId && receiver
-            ? "delivered"
-            : "sent",
+              ? "delivered"
+              : "sent",
       },
       {
         attempts: 3,
         backoff: { type: "exponential", delay: 3000 },
         removeOnComplete: true,
         removeOnFail: true,
-      }
+      },
     );
 
     await redisClient.sadd(`permittedChats${userId}`, chat._id.toString());
     await redisClient.sadd(
       `permissions${chatId}`,
-      ...chat.participants.map((id) => id.toString())
+      ...chat.participants.map((id) => id.toString()),
     );
 
     await invalidateChatMessagesCache(chatId);
@@ -110,12 +119,12 @@ export const sendMessageService = async (params: {
       throw new Error("Not permitted");
     }
 
-    if (!chatParticipants.includes(userId)) {
+    if (!chatParticipants.includes(userId.toString())) {
       throw new Error("Not permitted");
     }
 
     const receiverId = chatParticipants.find(
-      (user) => user.toString() !== userId.toString()
+      (user) => user.toString() !== userId.toString(),
     );
 
     if (!receiverId) {
@@ -124,13 +133,13 @@ export const sendMessageService = async (params: {
 
     const receiver = await redisClient.sismember(
       "onlineUsers",
-      receiverId as unknown as string
+      receiverId as unknown as string,
     );
     const receiverCurrentChat = await redisClient.get(
-      `currentChat:${receiverId}`
+      `currentChat:${receiverId}`,
     );
 
-    io.to(chatId).emit("newMessage", {
+    io.emit("newMessage", {
       _id: tempId,
       content: content,
       senderId: userId,
@@ -145,8 +154,8 @@ export const sendMessageService = async (params: {
         receiverCurrentChat === chatId && receiver
           ? "seen"
           : receiverCurrentChat !== chatId && receiver
-          ? "delivered"
-          : "sent",
+            ? "delivered"
+            : "sent",
     });
 
     if (receiverCurrentChat !== chatId && receiver) {
@@ -171,15 +180,15 @@ export const sendMessageService = async (params: {
           receiverCurrentChat === chatId && receiver
             ? "seen"
             : receiverCurrentChat !== chatId && receiver
-            ? "delivered"
-            : "sent",
+              ? "delivered"
+              : "sent",
       },
       {
         attempts: 3,
         backoff: { type: "exponential", delay: 3000 },
         removeOnComplete: true,
         removeOnFail: true,
-      }
+      },
     );
 
     await invalidateChatMessagesCache(chatId);
@@ -233,13 +242,10 @@ export const createGroupService = async (params: {
         redisClient.del(`userChats:${participantId}`),
         redisClient.sadd(`permittedChats${participantId}`, chat._id.toString()),
       ]);
-    })
+    }),
   );
 
-  await redisClient.sadd(
-    `permissions${chat._id.toString()}`,
-    ...participants
-  );
+  await redisClient.sadd(`permissions${chat._id.toString()}`, ...participants);
 
   logger.info("Group successfully created");
 
@@ -264,7 +270,7 @@ export const addMemberToGroupService = async (params: {
   }
 
   const alreadyExists = participants.some((participant: any) =>
-    chat.participants.includes(participant)
+    chat.participants.some((p) => p.toString() === participant.toString()),
   );
 
   if (alreadyExists) {
@@ -277,8 +283,8 @@ export const addMemberToGroupService = async (params: {
 
   await Promise.all(
     participants.map((participantId: any) =>
-      redisClient.del(`userChats:${participantId}`)
-    )
+      redisClient.del(`userChats:${participantId}`),
+    ),
   );
   await redisClient.del(`userChats:${userId}`);
   await redisClient.sadd(`permissions${chatId}`, ...participants);
@@ -289,7 +295,7 @@ export const addMemberToGroupService = async (params: {
 
   participants.forEach(async (participant: string) => {
     const participantDetailsString = await redisClient.get(
-      `user:${participant}`
+      `user:${participant}`,
     );
     let participantDetails;
     if (participantDetailsString) {
@@ -344,7 +350,7 @@ export const removeMemberFromGroupService = async (params: {
     throw new Error("Chat not found");
   }
 
-  if (!chat.participants.includes(memberId)) {
+  if (!chat.participants.some((p) => p.toString() === memberId.toString())) {
     throw new Error("User is not a member of the chat");
   }
 
@@ -352,9 +358,9 @@ export const removeMemberFromGroupService = async (params: {
     throw new Error("Youre not authorized to remove a user");
   }
 
-  if (!chat.participants.includes(userId)) {
+  if (!chat.participants.some((p) => p.toString() === userId.toString())) {
     throw new Error(
-      "Unauthorized access, you must be a member to remove other users"
+      "Unauthorized access, you must be a member to remove other users",
     );
   }
 
@@ -366,7 +372,7 @@ export const removeMemberFromGroupService = async (params: {
       redisClient.srem(`permissions${chatId}`, memberId),
       redisClient.srem(`permittedChats${memberId}`, chatId),
       chat.participants.forEach(async (participant) => {
-        redisClient.del(`userChats:${participant}`);
+        redisClient.del(`userChats:${participant.toString()}`);
       }),
     ]);
   } else {
@@ -437,9 +443,9 @@ export const updateGroupDetailsService = async (params: {
     throw new Error("Chat not found");
   }
 
-  if (!chat.participants.includes(userId)) {
+  if (!chat.participants.some((p) => p.toString() === userId.toString())) {
     throw new Error(
-      "Unauthorized access, you must be a member to update details"
+      "Unauthorized access, you must be a member to update details",
     );
   }
 
@@ -473,7 +479,7 @@ export const getUserChatsService = async (params: { userId: string }) => {
   const transformedChats = await Promise.all(
     chats.map(async (chat) => {
       const otherUsers = chat.participants.filter(
-        (participant) => participant.toString() !== userId.toString()
+        (participant) => participant.toString() !== userId.toString(),
       );
 
       const time = chat.updatedAt;
@@ -482,8 +488,8 @@ export const getUserChatsService = async (params: { userId: string }) => {
       const otherUsersDetails = await Promise.all(
         otherUsers.map(
           async (user) =>
-            await User.findById(user._id).select("username avatar bio").lean()
-        )
+            await User.findById(user._id).select("username avatar bio").lean(),
+        ),
       );
 
       let unreadMessages: number | null = null;
@@ -504,14 +510,14 @@ export const getUserChatsService = async (params: { userId: string }) => {
             : otherUsersDetails[0],
         unreadMessages: unreadMessages,
       };
-    })
+    }),
   );
 
   await redisClient.set(
     `userChats:${userId}`,
     JSON.stringify(transformedChats),
     "EX",
-    300
+    300,
   );
 
   return transformedChats;
@@ -527,7 +533,16 @@ export const sendGroupMessageService = async (params: {
   fileName?: string;
   fileSize?: number;
 }) => {
-  const { chatId, userId, content, file, tempId, fileType, fileName, fileSize } = params;
+  const {
+    chatId,
+    userId,
+    content,
+    file,
+    tempId,
+    fileType,
+    fileName,
+    fileSize,
+  } = params;
 
   const permittedChats = await redisClient.smembers(`permittedChats${userId}`);
   const chatParticipants = await redisClient.smembers(`permissions${chatId}`);
@@ -539,15 +554,15 @@ export const sendGroupMessageService = async (params: {
       throw new Error("Chat not found");
     }
 
-    if (!chat.participants.includes(userId)) {
+    if (!chat.participants.some((p) => p.toString() === userId.toString())) {
       throw new Error("Not permitted");
     }
 
     const receivers = chat.participants.filter(
-      (user) => user.toString() !== userId
+      (user) => user.toString() !== userId,
     );
 
-    io.to(chatId).emit("newMessage", {
+    io.emit("newMessage", {
       _id: tempId,
       tempId: tempId,
       content: content,
@@ -576,13 +591,13 @@ export const sendGroupMessageService = async (params: {
         backoff: { type: "exponential", delay: 3000 },
         removeOnComplete: true,
         removeOnFail: true,
-      }
+      },
     );
 
     await redisClient.sadd(`permittedChats${userId}`, chat._id.toString());
     await redisClient.sadd(
       `permissions${chatId}`,
-      ...chat.participants.map((id) => id.toString())
+      ...chat.participants.map((id) => id.toString()),
     );
 
     await invalidateChatMessagesCache(chatId);
@@ -598,13 +613,13 @@ export const sendGroupMessageService = async (params: {
     }
 
     const receivers = chatParticipants.filter(
-      (user) => user.toString() !== userId
+      (user) => user.toString() !== userId,
     );
     if (!receivers.length) {
       throw new Error("No receivers");
     }
 
-    io.to(chatId).emit("newMessage", {
+    io.emit("newMessage", {
       _id: tempId,
       tempId: tempId,
       content: content,
@@ -633,7 +648,7 @@ export const sendGroupMessageService = async (params: {
         backoff: { type: "exponential", delay: 3000 },
         removeOnComplete: true,
         removeOnFail: true,
-      }
+      },
     );
 
     await invalidateChatMessagesCache(chatId);
@@ -669,7 +684,7 @@ export const starMessageService = async (params: {
     throw new Error("Chat does not exist");
   }
 
-  if (!chat.participants.includes(userId)) {
+  if (!chat.participants.some((p) => p.toString() === userId.toString())) {
     throw new Error("Unauthorized");
   }
 
@@ -679,7 +694,7 @@ export const starMessageService = async (params: {
     throw new Error("message not found");
   }
 
-  if (message.starredBy?.includes(userId)) {
+  if (message.starredBy?.some((p) => p.toString() === userId.toString())) {
     throw new Error("You already starred this message");
   }
 
@@ -687,7 +702,7 @@ export const starMessageService = async (params: {
     message.starredBy = [];
   }
 
-  message.starredBy.push(userId);
+  message.starredBy.push(userId as unknown as Types.ObjectId);
   await message.save();
 
   return;

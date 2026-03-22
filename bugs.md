@@ -17,160 +17,17 @@ The `friends` array references `"Chat"` instead of `"User"`. Any `.populate("fri
 
 ---
 
-## 2. **Wrong HTTP Method for Decline Friend Request** (Injected Bug — Still Present)
+## 5. **`removeMemberFromGroup` Has Wrong Redis Key**
 
-- **File:** `friend-service/src/routes/friendRequest.route.ts` (Line 13)
-- **Service:** `friend-service`
-- **Severity:** 🔴 Critical
-
-The route uses `router.get` instead of `router.delete`. Frontend DELETE requests to decline friend requests will get a 404.
-
-```diff
-- router.get(
-+ router.delete(
-    "/declineFriendRequest/:id",
-```
-
----
-
-## 3. **`updateUserInfo` Returns `success: false` on Success**
-
-- **File:** `user-service/src/controller/user.controller.ts` (Line 137)
-- **Service:** `user-service`
-- **Severity:** 🟡 Medium
-
-When the profile is successfully updated, the response body says `success: false`:
-
-```diff
-- .json({ success: false, message: "Profile updated successfully" });
-+ .json({ success: true, message: "Profile updated successfully" });
-```
-
----
-
-## 4. **`resendVerificationEmail` Returns 200 on Internal Server Error**
-
-- **File:** `auth-service/src/controllers/auth.controller.ts` (Line 426)
-- **Service:** `auth-service`
-- **Severity:** 🟡 Medium
-
-The catch block returns HTTP 200 instead of 500, masking errors from the client:
-
-```diff
-- res.status(200).json({ success: false, message: "Internal server error" });
-+ res.status(500).json({ success: false, message: "Internal server error" });
-```
-
----
-
-## 5. **Google OAuth Double `response.json()` Call**
-
-- **File:** `auth-service/src/controllers/auth.controller.ts` (Lines 282-284)
-- **Service:** `auth-service`
-- **Severity:** 🔴 Critical
-
-The response body is consumed on line 282 (`const accessToken = await response.json()`), then consumed again on line 284 (`const errorDetails = await response.json()`). The second `.json()` call will throw because the body stream is already consumed.
-
-```typescript
-const accessToken = await response.json();   // body consumed here
-if (!response.ok) {
-  const errorDetails = await response.json(); // ❌ throws — body already consumed
-```
-
----
-
-## 6. **Cookies Set with `secure: false` in Production**
-
-- **File:** `auth-service/src/controllers/auth.controller.ts` (Lines 150-162)
-- **Service:** `auth-service`
-- **Severity:** 🟡 Medium
-
-Both `accessToken` and `refreshToken` cookies are hardcoded with `secure: false`. In production over HTTPS, browsers may refuse to send these cookies, breaking authentication.
-
-```typescript
-res.cookie("accessToken", accessToken, {
-  httpOnly: false,
-  secure: false,         // ❌ Should be true in production
-  sameSite: "lax",
-```
-
----
-
-## 7. **`accessToken` Cookie Not `httpOnly`**
-
-- **File:** `auth-service/src/controllers/auth.controller.ts` (Line 158)
-- **Service:** `auth-service`
-- **Severity:** 🟡 Medium
-
-The `accessToken` is set with `httpOnly: false`, making it accessible to JavaScript and vulnerable to XSS attacks.
-
----
-
-## 8. **Notification `getNotification` Typo in Empty Response**
-
-- **File:** `notification-service/src/controller/notification.controller.ts` (Line 24)
-- **Service:** `notification-service`
-- **Severity:** 🟢 Low
-
-The empty-notifications response has `sucess` instead of `success`:
-
-```diff
-- res.status(200).json({ sucess: false, notifications: [] });
-+ res.status(200).json({ success: true, notifications: [] });
-```
-
-Note: It should also be `true` since returning empty notifications is a valid success case.
-
----
-
-## 9. **SSE Notifications Endpoint Not Authenticated**
-
-- **File:** `notification-service/src/controller/notification.controller.ts` (Line 38)
-- **Service:** `notification-service`
-- **Severity:** 🔴 Critical
-
-`getNotificationEvent` takes `userId` from `req.query.userId` instead of `req.userId`. Anyone can subscribe to another user's notifications by passing an arbitrary `userId` query parameter — there is no authentication check.
-
----
-
-## 10. **`consumeEvent` Arguments Swapped in `cluster.ts`**
-
-- **File:** `chat-service/src/cluster.ts` (Lines 126-136)
-- **Service:** `chat-service`
-- **Severity:** 🔴 Critical
-
-The `consumeEvent` calls in the cluster file have the queue name and routing key arguments swapped compared to the other services. The notification service calls it as `consumeEvent(routingKey, queueName, handler)`, but cluster.ts calls it as `consumeEvent(queueName, routingKey, handler)`. This could cause incorrect RabbitMQ bindings.
-
----
-
-## 11. **Chat Event Handler Uses Wrong Redis Key Format**
-
-- **File:** `chat-service/src/events/eventHandler.ts` (Lines 14-15)
+- **File:** `chat-service/src/services/message.service.ts` (Line 387)
 - **Service:** `chat-service`
 - **Severity:** 🟡 Medium
 
-Cache invalidation uses `userChats${id}` (no colon), while the rest of the codebase uses `userChats:${id}` (with a colon). These keys will never match, so the cache won't actually be invalidated when a new chat is created.
-
-```diff
-- redisClient.del(`userChats${participants[0]}`),
-- redisClient.del(`userChats${participants[1]}`),
-+ redisClient.del(`userChats:${participants[0]}`),
-+ redisClient.del(`userChats:${participants[1]}`),
-```
+`redisClient.del(`userChats${memberId}`)` is missing the colon separator. Should be `userChats:${memberId}` to match the format used everywhere else in the codebase.
 
 ---
 
-## 12. **`removeMemberFromGroup` Also Has Wrong Redis Key**
-
-- **File:** `chat-service/src/controller/message.controller.ts` (Line 450)
-- **Service:** `chat-service`
-- **Severity:** 🟡 Medium
-
-`redisClient.del(`userChats${memberId}`)` is missing the colon separator. Should be `userChats:${memberId}`.
-
----
-
-## 13. **`removeFriend` Missing `await` on `publishEvent`**
+## 6. **`removeFriend` Missing `await` on `publishEvent`**
 
 - **File:** `user-service/src/controller/user.controller.ts` (Line 183)
 - **Service:** `user-service`
@@ -185,7 +42,7 @@ The `publishEvent("chat.deleted", ...)` call is not awaited. If it fails, the er
 
 ---
 
-## 14. **`resend-verification-email` Route Uses GET but Expects `req.body`**
+## 7. **`resend-verification-email` Route Uses GET but Expects `req.body`**
 
 - **File:** `auth-service/src/routes/auth.route.ts` (Line 38)
 - **Service:** `auth-service`
@@ -195,10 +52,90 @@ The route is registered as `router.get("/resend-verification-email", ...)` but t
 
 ---
 
-## 15. **Module-Level `session` Variable in `user.controller.ts`**
+## 8. **Module-Level `session` Variable in `user.controller.ts`**
 
 - **File:** `user-service/src/controller/user.controller.ts` (Line 145)
 - **Service:** `user-service`
 - **Severity:** 🟡 Medium
 
 `let session` is declared at module level. Under concurrent requests, one request's session could overwrite another's, leading to race conditions and potential data corruption. It should be scoped inside the `removeFriend` function.
+
+---
+
+## 9. **`getUser` Search Cache Contamination**
+
+- **File:** `user-service/src/controller/user.controller.ts` (Line 50-63)
+- **Service:** `user-service`
+- **Severity:** 🔴 Critical
+
+Search results are filtered to exclude the current user (the searcher) and then cached globally in Redis. This means if User A searches for "Alex", their own profile is excluded from the results, and this "A-less" result set is cached for everyone. Subsequent users searching for "Alex" will also miss User A's profile.
+
+---
+
+## 12. **Authorization Bypass in `markNotificationsAsRead`**
+
+- **File:** `notification-service/src/controller/notification.controller.ts` (Lines 60-82)
+- **Service:** `notification-service`
+- **Severity:** 🟡 Medium
+
+The endpoint updates multiple notifications based on `notificationIds` provided in the request body but does not filter the update query to the current user's `userId`. This allows an attacker to mark any user's notifications as read if they know the IDs.
+
+---
+
+## 13. **Brittle Array Match for Chat Deletion**
+
+- **File:** `chat-service/src/events/eventHandler.ts` (Line 38-46)
+- **Service:** `chat-service`
+- **Severity:** 🟡 Medium
+
+`Chat.findOneAndDelete` uses an exact array match `{ participants: [user1, user2] }`. In MongoDB, array order matters for exact matches. If the chat was created as `[user2, user1]`, this deletion will fail silently. Use `$all` or enforce a sorted order during creation/deletion.
+
+---
+
+## 14. **Group Message Worker Cache Persistence**
+
+- **File:** `chat-service/src/utils/addMessageWorker.ts` (Line 73-76)
+- **Service:** `chat-service`
+- **Severity:** 🟡 Medium
+
+The worker only clears the `userChats` cache for the sender and a one `receiverId`. In group chats, it fails to invalidate the cache for all other participants in the group, leaving them with stale `lastMessage` data in their chat lists.
+
+---
+
+## 15. **`getChatFilesService` Authorization Bypass**
+
+- **File:** `chat-service/src/services/message.service.ts` (Line 660-672)
+- **Service:** `chat-service`
+- **Severity:** 🔴 Critical / Security
+
+This service retrieves files for a `chatId` without verifying if the `userId` is a member of that chat. Any authenticated user can access private files from any chat by discovering the `chatId`.
+
+---
+
+## 16. **Inconsistent Redis Key Schema**
+
+- **File:** `chat-service/src/services/message.service.ts` (Multiple lines)
+- **Service:** `chat-service`
+- **Severity:** 🔵 Minor
+
+The service uses `permittedChats${userId}` (no separator) but `userChats:${userId}` (colon separator). This inconsistency complicates key management and invalidation logic.
+
+---
+
+## 17. **Global Message Broadcast (Privacy Leak)**
+
+- **File:** `chat-service/src/services/message.service.ts` (Multiple lines)
+- **Service:** `chat-service`
+- **Severity:** 🔴 Critical / Security
+
+Every message sent is broadcasted to ALL connected users via `io.emit("newMessage", ...)` instead of being restricted to the specific chat room with `io.to(chatId).emit(...)`. This exposes every private conversation to everyone online.
+
+---
+
+## 18. **Password Comparison Bypass**
+
+- **File:** `auth-service/src/services/auth.service.ts` (Line 108)
+- **Service:** `auth-service`
+- **Severity:** 🔴 Critical / Security
+
+The `isValid` check in `LoginService` has been hardcoded to `true`, effectively disabling password verification. Any user can trigger an OTP for any email address using an arbitrary password.

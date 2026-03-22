@@ -13,6 +13,7 @@ import {
   starMessageService,
   getStarredMessagesService,
 } from "../services/message.service";
+import { Types } from "mongoose";
 
 const getErrorStatus = (message: string): number => {
   if (
@@ -48,7 +49,7 @@ export const sendMessage = async (req: Request, res: Response) => {
   try {
     const { chatId } = req.params;
     const { content, file, tempId, fileType, fileName, fileSize } = req.body;
-    const userId = req.userId;
+    const userId = req.userId as Types.ObjectId;
 
     await sendMessageService({
       chatId,
@@ -61,7 +62,9 @@ export const sendMessage = async (req: Request, res: Response) => {
       userId,
     });
 
-    res.status(201).json({ success: true, message: "Message successfully sent" });
+    res
+      .status(201)
+      .json({ success: true, message: "Message successfully sent" });
   } catch (error: any) {
     logger.error(`An error occurred while sending message ${error}`);
     const status = getErrorStatus(error?.message ?? "");
@@ -82,7 +85,7 @@ export const getMessages = async (req: Request, res: Response) => {
       return;
     }
 
-    const messages = await getMessagesService(chatId);
+    const messages = await getMessagesService({ chatId });
 
     res.status(200).json({ success: true, messages });
     return;
@@ -102,7 +105,12 @@ export const createGroup = async (req: Request, res: Response) => {
     const { participants, groupName, bio } = req.body;
     const userId = req.userId;
 
-    const chat = await createGroupService({ participants, groupName, bio, userId });
+    const chat = await createGroupService({
+      participants,
+      groupName,
+      bio,
+      userId,
+    });
 
     res.status(201).json({ success: true, chat });
     logger.info("Group successfully created");
@@ -183,7 +191,9 @@ export const updateGroupDetails = async (req: Request, res: Response) => {
 
     await updateGroupDetailsService({ chatId, bio, groupName, userId });
 
-    res.status(201).json({ success: true, message: "group successfully updated" });
+    res
+      .status(201)
+      .json({ success: true, message: "group successfully updated" });
     return;
   } catch (error: any) {
     logger.error(`error updating group details ${error}`);
@@ -233,7 +243,9 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
       userId,
     });
 
-    res.status(201).json({ success: true, message: "Message successfully sent" });
+    res
+      .status(201)
+      .json({ success: true, message: "Message successfully sent" });
     return;
   } catch (error: any) {
     logger.error(`An error occurred while sending group message ${error}`);
