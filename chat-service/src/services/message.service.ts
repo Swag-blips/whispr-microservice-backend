@@ -60,7 +60,7 @@ export const sendMessageService = async (params: {
       `currentChat:${receiverId}`,
     );
 
-    io.emit("newMessage", {
+    io.to(chatId).emit("newMessage", {
       _id: tempId,
       content: content,
       senderId: userId,
@@ -139,7 +139,7 @@ export const sendMessageService = async (params: {
       `currentChat:${receiverId}`,
     );
 
-    io.emit("newMessage", {
+    io.to(chatId).emit("newMessage", {
       _id: tempId,
       content: content,
       senderId: userId,
@@ -562,7 +562,7 @@ export const sendGroupMessageService = async (params: {
       (user) => user.toString() !== userId,
     );
 
-    io.emit("newMessage", {
+    io.to(chatId).emit("newMessage", {
       _id: tempId,
       tempId: tempId,
       content: content,
@@ -619,7 +619,7 @@ export const sendGroupMessageService = async (params: {
       throw new Error("No receivers");
     }
 
-    io.emit("newMessage", {
+    io.to(chatId).emit("newMessage", {
       _id: tempId,
       tempId: tempId,
       content: content,
@@ -661,7 +661,17 @@ export const getChatFilesService = async (params: {
   chatId: string;
   userId: string;
 }) => {
-  const { chatId } = params;
+  const { chatId, userId } = params;
+
+  const chat = await Chat.findById(chatId);
+
+  if (!chat) {
+    throw new Error("404");
+  }
+
+  if (!chat.participants.some((p) => p.toString() === userId.toString())) {
+    throw new Error("Unauthorized");
+  }
 
   const files = await Message.find({
     chatId,
