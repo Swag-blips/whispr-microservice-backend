@@ -4,7 +4,7 @@ import Notification from "../models/notification.model";
 import User from "../models/user.model";
 import { Types } from "mongoose";
 
-export const clients = new Map<Types.ObjectId | string, Response>();
+export const clients = new Map<string, Response[]>();
 export const getNotification = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
@@ -21,7 +21,7 @@ export const getNotification = async (req: Request, res: Response) => {
       .lean();
 
     if (!notifications.length) {
-      res.status(200).json({ sucess: false, notifications: [] });
+      res.status(200).json({ success: true, notifications: [] });
       return;
     }
 
@@ -36,6 +36,7 @@ export const getNotification = async (req: Request, res: Response) => {
 export const getNotificationEvent = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
+    const userIdStr = String(userId);
 
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
@@ -43,13 +44,17 @@ export const getNotificationEvent = async (req: Request, res: Response) => {
 
     res.write("event: ping\ndata: connected\n\n");
 
-    clients.set(userId, res);
+    const userClients = clients.get(userIdStr) ?? [];
+    userClients.push(res);
+    clients.set(userIdStr, userClients);
 
-    console.log(`User ${userId} connected`);
+    console.log(`User ${userIdStr} connected`);
 
     req.on("close", () => {
-      clients.delete(userId);
-      console.log(`User ${userId} disconnected`);
+      const updated = clients.get(userIdStr)?.filter(r => r !== res) ?? [];
+      if (updated.length) clients.set(userIdStr, updated);
+      else clients.delete(userIdStr);
+      console.log(`User ${userIdStr} disconnected`);
     });
   } catch (error) {
     logger.error(`an error occured ${error}`);

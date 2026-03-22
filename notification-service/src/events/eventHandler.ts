@@ -15,10 +15,9 @@ export const handleFriendRequestNotification = async (
       read: false,
     });
 
-    const client = clients.get(event.to);
+    const userClients = clients.get(String(event.to)) ?? [];
 
-
-    if (client) {
+    for (const client of userClients) {
       const sender = await User.findById(event.from).lean();
 
       client.write(
@@ -70,9 +69,9 @@ export const handleFriendRequestAccept = async (event: NotificationEvent) => {
     notification.type = "Accepted";
     await notification.save();
 
-    const client = clients.get(event.from);
+    const userClients = clients.get(String(event.from)) ?? [];
 
-    if (client) {
+    for (const client of userClients) {
       const sender = await User.findById(event.to).lean();
       client.write(
         `data: ${JSON.stringify({
